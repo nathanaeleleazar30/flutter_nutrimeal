@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'core/constants/app_colors.dart';
 import 'screens/login_screen.dart';
 import 'screens/preview_shell.dart';
+import 'screens/register_screen.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
@@ -39,6 +40,7 @@ class NutriMealApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
         '/preview': (context) => const PreviewShell(),
       },
     );
