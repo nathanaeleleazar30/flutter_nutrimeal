@@ -23,6 +23,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _konfirmasiPasswordController =
       TextEditingController();
 
+  String? _namaError;
+  String? _emailError;
+  String? _whatsappError;
+  String? _passwordError;
+  String? _konfirmasiError;
   bool _isLoading = false;
 
   @override
@@ -35,50 +40,102 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  // ── Validasi ──────────────────────────────────────────
+  bool _validateNama(String value) {
+    if (value.trim().isEmpty) {
+      setState(() => _namaError = 'Nama lengkap tidak boleh kosong.');
+      return false;
+    }
+    if (value.trim().length < 3) {
+      setState(() => _namaError = 'Nama minimal 3 karakter.');
+      return false;
+    }
+    setState(() => _namaError = null);
+    return true;
+  }
+
+  bool _validateEmail(String value) {
+    final emailRegex = RegExp(r'^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$');
+    if (value.trim().isEmpty) {
+      setState(() => _emailError = 'Email tidak boleh kosong.');
+      return false;
+    }
+    if (!emailRegex.hasMatch(value.trim())) {
+      setState(() =>
+          _emailError = 'Format email tidak valid (contoh : nama@gmail.com)');
+      return false;
+    }
+    setState(() => _emailError = null);
+    return true;
+  }
+
+  bool _validateWhatsapp(String value) {
+    if (value.trim().isEmpty) {
+      setState(() => _whatsappError = 'Nomor WhatsApp tidak boleh kosong.');
+      return false;
+    }
+    if (value.trim().length < 8) {
+      setState(
+          () => _whatsappError = 'Nomor WhatsApp minimal 8 digit.');
+      return false;
+    }
+    setState(() => _whatsappError = null);
+    return true;
+  }
+
+  bool _validatePassword(String value) {
+    final hasNumber = RegExp(r'\d').hasMatch(value);
+    if (value.isEmpty) {
+      setState(() => _passwordError = 'Password tidak boleh kosong.');
+      return false;
+    }
+    if (value.length < 8 || !hasNumber) {
+      setState(() => _passwordError =
+          'Password minimal 8 karakter dan mengandung angka.');
+      return false;
+    }
+    setState(() => _passwordError = null);
+    return true;
+  }
+
+  bool _validateKonfirmasi(String value) {
+    if (value.isEmpty) {
+      setState(
+          () => _konfirmasiError = 'Konfirmasi password tidak boleh kosong.');
+      return false;
+    }
+    if (value != _passwordController.text) {
+      setState(
+          () => _konfirmasiError = 'Password dan konfirmasi tidak cocok.');
+      return false;
+    }
+    setState(() => _konfirmasiError = null);
+    return true;
+  }
+
+  // ── Handler ───────────────────────────────────────────
   void _handleDaftar() {
-    final nama = _namaController.text.trim();
-    final email = _emailController.text.trim();
-    final whatsapp = _whatsappController.text.trim();
-    final password = _passwordController.text;
-    final konfirmasi = _konfirmasiPasswordController.text;
+    final namaOk = _validateNama(_namaController.text);
+    final emailOk = _validateEmail(_emailController.text);
+    final waOk = _validateWhatsapp(_whatsappController.text);
+    final passOk = _validatePassword(_passwordController.text);
+    final konfirmOk = _validateKonfirmasi(_konfirmasiPasswordController.text);
 
-    if (nama.isEmpty ||
-        email.isEmpty ||
-        whatsapp.isEmpty ||
-        password.isEmpty ||
-        konfirmasi.isEmpty) {
-      _showSnackBar('Harap isi semua kolom terlebih dahulu.',
-          AppColors.textDark);
-      return;
-    }
-
-    if (password != konfirmasi) {
-      _showSnackBar('Password dan konfirmasi password tidak cocok.',
-          Colors.redAccent);
-      return;
-    }
-
-    if (password.length < 6) {
-      _showSnackBar('Password minimal 6 karakter.', Colors.redAccent);
-      return;
-    }
+    if (!namaOk || !emailOk || !waOk || !passOk || !konfirmOk) return;
 
     setState(() => _isLoading = true);
-
-    // Simulasi proses daftar
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSnackBar('Pendaftaran berhasil! Silakan masuk.', AppColors.primaryGreen);
+      _showSnackBar(
+          'Pendaftaran berhasil! Silakan masuk.', AppColors.primaryGreen);
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (mounted) Navigator.pop(context);
       });
     });
   }
 
-  void _handleGoogleRegister() {
-    _showSnackBar('Daftar dengan Akun Google...', AppColors.textDark);
-  }
+
 
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -89,7 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -116,7 +174,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 return SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
                     child: IntrinsicHeight(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,11 +194,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     icon: Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.85),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.85),
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.08),
+                                            color: Colors.black
+                                                .withValues(alpha: 0.08),
                                             blurRadius: 8,
                                           ),
                                         ],
@@ -152,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                   ),
                                 ),
-                                // Logo center
+                                // Logo
                                 const Center(
                                   child: NutriMealLogo(
                                     fontSize: 34,
@@ -175,17 +236,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.06),
+                                    color:
+                                        Colors.black.withValues(alpha: 0.06),
                                     blurRadius: 20,
                                     offset: const Offset(0, -6),
                                   ),
                                 ],
                               ),
-                              padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
+                              padding:
+                                  const EdgeInsets.fromLTRB(28, 28, 28, 24),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Headline
                                   Text(
                                     'Bergabung Bersama',
                                     style: AppTextStyles.loginTitle,
@@ -199,6 +261,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     controller: _namaController,
                                     keyboardType: TextInputType.name,
                                     textInputAction: TextInputAction.next,
+                                    errorText: _namaError,
+                                    onChanged: (val) {
+                                      if (_namaError != null)
+                                        _validateNama(val);
+                                    },
                                   ),
                                   const SizedBox(height: 16),
 
@@ -209,6 +276,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     controller: _emailController,
                                     keyboardType: TextInputType.emailAddress,
                                     textInputAction: TextInputAction.next,
+                                    errorText: _emailError,
+                                    onChanged: (val) {
+                                      if (_emailError != null)
+                                        _validateEmail(val);
+                                    },
                                   ),
                                   const SizedBox(height: 16),
 
@@ -218,24 +290,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     style: AppTextStyles.inputLabel,
                                   ),
                                   const SizedBox(height: 8),
-                                  Container(
+                                  AnimatedContainer(
+                                    duration:
+                                        const Duration(milliseconds: 200),
                                     height: 52,
                                     decoration: BoxDecoration(
-                                      color: AppColors.inputBackground,
-                                      borderRadius: BorderRadius.circular(14),
+                                      color: _whatsappError != null
+                                          ? const Color(0xFFFFF5F5)
+                                          : AppColors.inputBackground,
+                                      borderRadius:
+                                          BorderRadius.circular(14),
+                                      border: _whatsappError != null
+                                          ? Border.all(
+                                              color:
+                                                  const Color(0xFFEF4444),
+                                              width: 1.5)
+                                          : Border.all(
+                                              color: Colors.transparent,
+                                              width: 1.5),
                                     ),
                                     child: Row(
                                       children: [
-                                        // Prefix +62
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 14),
                                           decoration: BoxDecoration(
-                                            color: AppColors.primaryGreen
+                                            color: (_whatsappError != null
+                                                    ? const Color(0xFFEF4444)
+                                                    : AppColors.primaryGreen)
                                                 .withValues(alpha: 0.1),
-                                            borderRadius: const BorderRadius.only(
+                                            borderRadius:
+                                                const BorderRadius.only(
                                               topLeft: Radius.circular(14),
-                                              bottomLeft: Radius.circular(14),
+                                              bottomLeft:
+                                                  Radius.circular(14),
                                             ),
                                           ),
                                           alignment: Alignment.center,
@@ -243,37 +331,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             '+62',
                                             style: AppTextStyles.inputText
                                                 .copyWith(
-                                              color: AppColors.primaryGreen,
+                                              color: _whatsappError != null
+                                                  ? const Color(0xFFEF4444)
+                                                  : AppColors.primaryGreen,
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ),
-                                        // Input nomor
                                         Expanded(
                                           child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12),
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 12),
                                             child: TextField(
-                                              controller: _whatsappController,
-                                              keyboardType: TextInputType.phone,
+                                              controller:
+                                                  _whatsappController,
+                                              keyboardType:
+                                                  TextInputType.phone,
                                               textInputAction:
                                                   TextInputAction.next,
                                               inputFormatters: [
                                                 FilteringTextInputFormatter
                                                     .digitsOnly,
                                               ],
-                                              style: AppTextStyles.inputText,
+                                              style:
+                                                  AppTextStyles.inputText,
                                               cursorColor:
-                                                  AppColors.primaryGreen,
+                                                  _whatsappError != null
+                                                      ? const Color(
+                                                          0xFFEF4444)
+                                                      : AppColors
+                                                          .primaryGreen,
+                                              onChanged: (val) {
+                                                if (_whatsappError != null)
+                                                  _validateWhatsapp(val);
+                                              },
                                               decoration: InputDecoration(
                                                 isDense: true,
                                                 contentPadding:
-                                                    const EdgeInsets.symmetric(
+                                                    const EdgeInsets
+                                                        .symmetric(
                                                         vertical: 14),
                                                 border: InputBorder.none,
-                                                hintText: '8xx-xxxx-xxxx',
-                                                hintStyle:
-                                                    AppTextStyles.inputHint,
+                                                hintText: '8XX-XXXX-XXXX',
+                                                hintStyle: AppTextStyles
+                                                    .inputHint
+                                                    .copyWith(
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: 0.5,
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -281,6 +387,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       ],
                                     ),
                                   ),
+                                  if (_whatsappError != null) ...[
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                            Icons.error_outline_rounded,
+                                            size: 13,
+                                            color: Color(0xFFEF4444)),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            _whatsappError!,
+                                            style: AppTextStyles.inputHint
+                                                .copyWith(
+                                              color:
+                                                  const Color(0xFFEF4444),
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                   const SizedBox(height: 16),
 
                                   // Password
@@ -291,6 +421,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     obscureText: true,
                                     enablePasswordToggle: true,
                                     textInputAction: TextInputAction.next,
+                                    errorText: _passwordError,
+                                    onChanged: (val) {
+                                      if (_passwordError != null)
+                                        _validatePassword(val);
+                                    },
                                   ),
                                   const SizedBox(height: 16),
 
@@ -298,10 +433,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   CustomTextField(
                                     label: 'KONFIRMASI PASSWORD',
                                     hintText: '****',
-                                    controller: _konfirmasiPasswordController,
+                                    controller:
+                                        _konfirmasiPasswordController,
                                     obscureText: true,
                                     enablePasswordToggle: true,
                                     textInputAction: TextInputAction.done,
+                                    errorText: _konfirmasiError,
+                                    onChanged: (val) {
+                                      if (_konfirmasiError != null)
+                                        _validateKonfirmasi(val);
+                                    },
                                     onSubmitted: (_) => _handleDaftar(),
                                   ),
                                   const SizedBox(height: 24),
@@ -327,12 +468,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       child: Text.rich(
                                         TextSpan(
                                           text: 'Sudah mempunyai akun?  ',
-                                          style: AppTextStyles.footerRegular,
+                                          style:
+                                              AppTextStyles.footerRegular,
                                           children: [
                                             TextSpan(
                                               text: 'Masuk',
-                                              style:
-                                                  AppTextStyles.footerGreenLink,
+                                              style: AppTextStyles
+                                                  .footerGreenLink,
                                             ),
                                           ],
                                         ),
@@ -341,7 +483,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                   const SizedBox(height: 12),
 
-                                  // Atau masuk dengan
+                                  // Divider Label
                                   Center(
                                     child: Text(
                                       'Atau masuk dengan',
@@ -350,11 +492,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                   const SizedBox(height: 12),
 
-                                  // Google
-                                  Center(
-                                    child: GoogleSignInButton(
-                                      onTap: _handleGoogleRegister,
-                                    ),
+                                  // Google Sign In (Display only)
+                                  const Center(
+                                    child: GoogleSignInButton(),
                                   ),
 
                                   SizedBox(

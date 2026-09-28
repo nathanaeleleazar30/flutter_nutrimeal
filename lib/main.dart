@@ -36,7 +36,7 @@ class NutriMealApp extends StatelessWidget {
           surface: Colors.white,
         ),
       ),
-      initialRoute: '/preview',
+      initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
