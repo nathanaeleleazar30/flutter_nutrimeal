@@ -54,17 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleRegister() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Navigasi ke halaman pendaftaran...',
-          style: AppTextStyles.inputText.copyWith(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primaryGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    Navigator.pushNamed(context, '/register');
   }
 
   void _handleForgotPassword() {
