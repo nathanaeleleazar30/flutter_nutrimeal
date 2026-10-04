@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'controllers/auth_controller.dart';
+import 'controllers/menu_controller.dart';
 import 'core/constants/app_colors.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_navigation_shell.dart';
 import 'screens/preview_shell.dart';
 import 'screens/register_screen.dart';
 import 'screens/splash_screen.dart';
@@ -24,6 +26,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => NutriMealMenuController()),
       ],
       child: const NutriMealApp(),
     ),
@@ -47,13 +50,15 @@ class NutriMealApp extends StatelessWidget {
           surface: Colors.white,
         ),
       ),
-      initialRoute: '/preview',
+      initialRoute: '/login',
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/verify-email': (context) => const VerifyEmailScreen(),
+        '/home': (context) => const MainNavigationShell(),
+        '/menu': (context) => const MainNavigationShell(initialIndex: 1),
         '/preview': (context) => const PreviewShell(),
       },
     );

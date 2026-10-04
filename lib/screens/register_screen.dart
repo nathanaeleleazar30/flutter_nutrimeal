@@ -43,6 +43,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'Password minimal 8 karakter mengandung angka',
         );
       });
+    } else {
+      // Default dummy data so user can directly proceed to Menu/Home
+      _namaController.text = 'Nathanael Eleazar';
+      _emailController.text = 'nathan@student.ub.ac.id';
+      _whatsappController.text = '81234567890';
+      _passwordController.text = 'password123';
+      _konfirmasiPasswordController.text = 'password123';
     }
   }
 
@@ -72,7 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Pendaftaran berhasil! Silakan masuk.',
+            'Pendaftaran berhasil! Selamat datang di NutriMeal.',
             style: AppTextStyles.inputText.copyWith(color: Colors.white),
           ),
           backgroundColor: AppColors.primaryGreen,
@@ -80,9 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
-      Future.delayed(const Duration(milliseconds: 900), () {
-        if (mounted) Navigator.pop(context);
-      });
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 
@@ -100,6 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
+      Navigator.pushReplacementNamed(context, '/home');
     });
   }
 

@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../controllers/menu_controller.dart';
 import '../core/constants/app_colors.dart';
-import '../widgets/google_account_sheet.dart';
-import 'forgot_password_screen.dart';
+import 'beranda_screen.dart';
+import 'galeri_menu_screen.dart';
 import 'login_screen.dart';
+import 'main_navigation_shell.dart';
+import 'menu_detail_screen.dart';
 import 'register_screen.dart';
-import 'verify_email_screen.dart';
 
 enum ViewMode {
+  beranda,
+  galeriMenu,
+  detailMenu,
+  navigationShell,
   login,
   register,
-  googleModal,
-  registerError,
-  forgotPassword,
-  verifyEmail,
   allScreens,
 }
 
@@ -24,7 +27,7 @@ class PreviewShell extends StatefulWidget {
 }
 
 class _PreviewShellState extends State<PreviewShell> {
-  ViewMode _currentMode = ViewMode.login;
+  ViewMode _currentMode = ViewMode.beranda;
 
   @override
   Widget build(BuildContext context) {
@@ -62,34 +65,34 @@ class _PreviewShellState extends State<PreviewShell> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildSwitchItem(
-                        title: '1. Login',
+                        title: '1. Beranda',
+                        icon: Icons.home_rounded,
+                        mode: ViewMode.beranda,
+                      ),
+                      _buildSwitchItem(
+                        title: '2. Galeri Menu',
+                        icon: Icons.restaurant_menu_rounded,
+                        mode: ViewMode.galeriMenu,
+                      ),
+                      _buildSwitchItem(
+                        title: '3. Detail Menu',
+                        icon: Icons.dinner_dining_rounded,
+                        mode: ViewMode.detailMenu,
+                      ),
+                      _buildSwitchItem(
+                        title: 'App + BottomNav',
+                        icon: Icons.smartphone_rounded,
+                        mode: ViewMode.navigationShell,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Login (Dummy)',
                         icon: Icons.login_rounded,
                         mode: ViewMode.login,
                       ),
                       _buildSwitchItem(
-                        title: '2. Register',
+                        title: 'Register (Dummy)',
                         icon: Icons.person_add_rounded,
                         mode: ViewMode.register,
-                      ),
-                      _buildSwitchItem(
-                        title: '3. Google Pop-up',
-                        icon: Icons.account_circle_rounded,
-                        mode: ViewMode.googleModal,
-                      ),
-                      _buildSwitchItem(
-                        title: '4. Error Form',
-                        icon: Icons.error_outline_rounded,
-                        mode: ViewMode.registerError,
-                      ),
-                      _buildSwitchItem(
-                        title: '5. Forgot Pass',
-                        icon: Icons.lock_reset_rounded,
-                        mode: ViewMode.forgotPassword,
-                      ),
-                      _buildSwitchItem(
-                        title: '7. Verifikasi',
-                        icon: Icons.mark_email_read_rounded,
-                        mode: ViewMode.verifyEmail,
                       ),
                       _buildSwitchItem(
                         title: 'Semua Screen',
@@ -151,63 +154,55 @@ class _PreviewShellState extends State<PreviewShell> {
   }
 
   Widget _buildCurrentView() {
+    final menuController = context.watch<NutriMealMenuController>();
+
     switch (_currentMode) {
+      case ViewMode.beranda:
+        return BerandaScreen(
+          onNavigateToGallery: () {
+            setState(() {
+              _currentMode = ViewMode.galeriMenu;
+            });
+          },
+        );
+      case ViewMode.galeriMenu:
+        return const GaleriMenuScreen();
+      case ViewMode.detailMenu:
+        return MenuDetailScreen(item: menuController.selectedMenuItem);
+      case ViewMode.navigationShell:
+        return const MainNavigationShell();
       case ViewMode.login:
         return const LoginScreen();
       case ViewMode.register:
         return const RegisterScreen();
-      case ViewMode.googleModal:
-        return Stack(
-          children: [
-            const LoginScreen(),
-            Container(
-              color: Colors.black.withValues(alpha: 0.55),
-            ),
-            const Align(
-              alignment: Alignment.bottomCenter,
-              child: GoogleAccountSheet(),
-            ),
-          ],
-        );
-      case ViewMode.registerError:
-        return const RegisterScreen(initialShowErrors: true);
-      case ViewMode.forgotPassword:
-        return const ForgotPasswordScreen();
-      case ViewMode.verifyEmail:
-        return const VerifyEmailScreen();
       case ViewMode.allScreens:
         return _buildAllScreensGallery();
     }
   }
 
   Widget _buildAllScreensGallery() {
+    final menuController = context.watch<NutriMealMenuController>();
+
     final screens = [
-      {'title': '1. Login Screen', 'widget': const LoginScreen()},
-      {'title': '2. Register Screen', 'widget': const RegisterScreen()},
       {
-        'title': '3. Google Account Sheet',
-        'widget': Stack(
-          children: [
-            const LoginScreen(),
-            Container(color: Colors.black.withValues(alpha: 0.55)),
-            const Align(
-              alignment: Alignment.bottomCenter,
-              child: GoogleAccountSheet(),
-            ),
-          ],
-        ),
+        'title': '1. Beranda (Home)',
+        'widget': const BerandaScreen(),
       },
       {
-        'title': '4. Register Validation Errors',
-        'widget': const RegisterScreen(initialShowErrors: true),
+        'title': '2. Galeri Menu',
+        'widget': const GaleriMenuScreen(),
       },
       {
-        'title': '5. Forgot Password',
-        'widget': const ForgotPasswordScreen(),
+        'title': '3. Detail Menu (Grilled Chicken)',
+        'widget': MenuDetailScreen(item: menuController.allMenuItems[0]),
       },
       {
-        'title': '7. Periksa Email (Verify OTP)',
-        'widget': const VerifyEmailScreen(),
+        'title': '4. Login (Siap Masuk)',
+        'widget': const LoginScreen(),
+      },
+      {
+        'title': '5. Register (Siap Daftar)',
+        'widget': const RegisterScreen(),
       },
     ];
 

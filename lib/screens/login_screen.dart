@@ -24,6 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-populate dummy credentials so user can directly proceed to Menu/Home
+    _emailController.text = 'nathan@student.ub.ac.id';
+    _passwordController.text = 'password123';
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -50,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 
@@ -67,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
+      Navigator.pushReplacementNamed(context, '/home');
     });
   }
 
@@ -239,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                        // Bottom spacing for comfortable scroll/padding
+                        // Bottom spacing
                         SizedBox(
                           height: MediaQuery.of(context).padding.bottom + 20,
                         ),
