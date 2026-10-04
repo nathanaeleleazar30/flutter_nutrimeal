@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
+import '../widgets/google_account_sheet.dart';
+import 'forgot_password_screen.dart';
 import 'login_screen.dart';
-import 'splash_screen.dart';
+import 'register_screen.dart';
+import 'verify_email_screen.dart';
 
 enum ViewMode {
-  splash,
   login,
-  sideBySide,
+  register,
+  googleModal,
+  registerError,
+  forgotPassword,
+  verifyEmail,
+  allScreens,
 }
 
 class PreviewShell extends StatefulWidget {
@@ -22,7 +29,7 @@ class _PreviewShellState extends State<PreviewShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFC8CBD0),
+      backgroundColor: const Color(0xFF1E293B),
       body: Stack(
         children: [
           // Content based on selected mode
@@ -30,44 +37,67 @@ class _PreviewShellState extends State<PreviewShell> {
             child: _buildCurrentView(),
           ),
 
-          // Top / Bottom Floating Mode Switcher
+          // Floating Mode Switcher at bottom
           Positioned(
-            bottom: 24,
-            left: 0,
-            right: 0,
+            bottom: 20,
+            left: 16,
+            right: 16,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.85),
+                  color: Colors.black.withValues(alpha: 0.90),
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildSwitchItem(
-                      title: 'Splash',
-                      icon: Icons.flash_on_rounded,
-                      mode: ViewMode.splash,
-                    ),
-                    _buildSwitchItem(
-                      title: 'Login',
-                      icon: Icons.login_rounded,
-                      mode: ViewMode.login,
-                    ),
-                    _buildSwitchItem(
-                      title: 'Side-by-Side',
-                      icon: Icons.view_column_rounded,
-                      mode: ViewMode.sideBySide,
-                    ),
-                  ],
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildSwitchItem(
+                        title: '1. Login',
+                        icon: Icons.login_rounded,
+                        mode: ViewMode.login,
+                      ),
+                      _buildSwitchItem(
+                        title: '2. Register',
+                        icon: Icons.person_add_rounded,
+                        mode: ViewMode.register,
+                      ),
+                      _buildSwitchItem(
+                        title: '3. Google Pop-up',
+                        icon: Icons.account_circle_rounded,
+                        mode: ViewMode.googleModal,
+                      ),
+                      _buildSwitchItem(
+                        title: '4. Error Form',
+                        icon: Icons.error_outline_rounded,
+                        mode: ViewMode.registerError,
+                      ),
+                      _buildSwitchItem(
+                        title: '5. Forgot Pass',
+                        icon: Icons.lock_reset_rounded,
+                        mode: ViewMode.forgotPassword,
+                      ),
+                      _buildSwitchItem(
+                        title: '7. Verifikasi',
+                        icon: Icons.mark_email_read_rounded,
+                        mode: ViewMode.verifyEmail,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Semua Screen',
+                        icon: Icons.grid_view_rounded,
+                        mode: ViewMode.allScreens,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -91,25 +121,26 @@ class _PreviewShellState extends State<PreviewShell> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryGreen : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 16,
+              size: 15,
               color: isSelected ? Colors.white : Colors.white70,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 5),
             Text(
               title,
               style: TextStyle(
                 color: isSelected ? Colors.white : Colors.white70,
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -121,82 +152,98 @@ class _PreviewShellState extends State<PreviewShell> {
 
   Widget _buildCurrentView() {
     switch (_currentMode) {
-      case ViewMode.splash:
-        return const SplashScreen(autoNavigate: false);
       case ViewMode.login:
         return const LoginScreen();
-      case ViewMode.sideBySide:
-        return _buildSideBySideView();
+      case ViewMode.register:
+        return const RegisterScreen();
+      case ViewMode.googleModal:
+        return Stack(
+          children: [
+            const LoginScreen(),
+            Container(
+              color: Colors.black.withValues(alpha: 0.55),
+            ),
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: GoogleAccountSheet(),
+            ),
+          ],
+        );
+      case ViewMode.registerError:
+        return const RegisterScreen(initialShowErrors: true);
+      case ViewMode.forgotPassword:
+        return const ForgotPasswordScreen();
+      case ViewMode.verifyEmail:
+        return const VerifyEmailScreen();
+      case ViewMode.allScreens:
+        return _buildAllScreensGallery();
     }
   }
 
-  Widget _buildSideBySideView() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double screenWidth = constraints.maxWidth;
-        final double screenHeight = constraints.maxHeight;
+  Widget _buildAllScreensGallery() {
+    final screens = [
+      {'title': '1. Login Screen', 'widget': const LoginScreen()},
+      {'title': '2. Register Screen', 'widget': const RegisterScreen()},
+      {
+        'title': '3. Google Account Sheet',
+        'widget': Stack(
+          children: [
+            const LoginScreen(),
+            Container(color: Colors.black.withValues(alpha: 0.55)),
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: GoogleAccountSheet(),
+            ),
+          ],
+        ),
+      },
+      {
+        'title': '4. Register Validation Errors',
+        'widget': const RegisterScreen(initialShowErrors: true),
+      },
+      {
+        'title': '5. Forgot Password',
+        'widget': const ForgotPasswordScreen(),
+      },
+      {
+        'title': '7. Periksa Email (Verify OTP)',
+        'widget': const VerifyEmailScreen(),
+      },
+    ];
 
-        // Calculate card dimensions to fit nicely side by side
-        double phoneWidth = 360;
-        double phoneHeight = 780;
-
-        // If screen is smaller or larger, scale proportionally
-        if (screenWidth < 780) {
-          // Horizontal scrollable
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: screens.map((item) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildPhoneMockup(
-                  width: phoneWidth,
-                  height: phoneHeight,
-                  child: const SplashScreen(autoNavigate: false),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    item['title'] as String,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 32),
                 _buildPhoneMockup(
-                  width: phoneWidth,
-                  height: phoneHeight,
-                  child: const LoginScreen(),
+                  width: 360,
+                  height: 740,
+                  child: item['widget'] as Widget,
                 ),
+                const SizedBox(height: 70),
               ],
             ),
           );
-        }
-
-        final double availableHeight = screenHeight - 120;
-        if (availableHeight < phoneHeight) {
-          phoneHeight = availableHeight.clamp(500, 780);
-          phoneWidth = phoneHeight * (9.0 / 19.5);
-        }
-
-        return Center(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildPhoneMockup(
-                    width: phoneWidth,
-                    height: phoneHeight,
-                    child: const SplashScreen(autoNavigate: false),
-                  ),
-                  const SizedBox(width: 40),
-                  _buildPhoneMockup(
-                    width: phoneWidth,
-                    height: phoneHeight,
-                    child: const LoginScreen(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+        }).toList(),
+      ),
     );
   }
 
@@ -213,14 +260,9 @@ class _PreviewShellState extends State<PreviewShell> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
+            color: Colors.black.withValues(alpha: 0.28),
             blurRadius: 28,
             offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
           ),
         ],
       ),

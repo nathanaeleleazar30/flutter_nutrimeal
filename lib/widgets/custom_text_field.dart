@@ -12,6 +12,8 @@ class CustomTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final bool enablePasswordToggle;
+  final String? errorText;
+  final Widget? prefixWidget;
 
   const CustomTextField({
     super.key,
@@ -24,6 +26,8 @@ class CustomTextField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.enablePasswordToggle = false,
+    this.errorText,
+    this.prefixWidget,
   });
 
   @override
@@ -41,6 +45,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -48,47 +54,75 @@ class _CustomTextFieldState extends State<CustomTextField> {
           widget.label,
           style: AppTextStyles.inputLabel,
         ),
-        const SizedBox(height: 8),
-        Container(
+        const SizedBox(height: 7),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           height: 52,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: AppColors.inputBackground,
+            color: hasError
+                ? AppColors.errorBackground
+                : AppColors.inputBackground,
             borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TextField(
-            controller: widget.controller,
-            keyboardType: widget.keyboardType,
-            obscureText: _obscured,
-            textInputAction: widget.textInputAction,
-            onChanged: widget.onChanged,
-            onSubmitted: widget.onSubmitted,
-            style: AppTextStyles.inputText,
-            cursorColor: AppColors.primaryGreen,
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              border: InputBorder.none,
-              hintText: widget.hintText,
-              hintStyle: AppTextStyles.inputHint,
-              suffixIcon: widget.enablePasswordToggle && widget.obscureText
-                  ? IconButton(
-                      icon: Icon(
-                        _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppColors.textMuted,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscured = !_obscured;
-                        });
-                      },
-                    )
-                  : null,
+            border: Border.all(
+              color: hasError ? AppColors.errorBorder : Colors.transparent,
+              width: 1.4,
             ),
           ),
+          child: Row(
+            children: [
+              if (widget.prefixWidget != null) widget.prefixWidget!,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    controller: widget.controller,
+                    keyboardType: widget.keyboardType,
+                    obscureText: _obscured,
+                    textInputAction: widget.textInputAction,
+                    onChanged: widget.onChanged,
+                    onSubmitted: widget.onSubmitted,
+                    style: AppTextStyles.inputText,
+                    cursorColor: AppColors.primaryGreen,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                      border: InputBorder.none,
+                      hintText: widget.hintText,
+                      hintStyle: AppTextStyles.inputHint,
+                      suffixIcon: widget.enablePasswordToggle && widget.obscureText
+                          ? IconButton(
+                              icon: Icon(
+                                _obscured
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.textMuted,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscured = !_obscured;
+                                });
+                              },
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+        if (hasError) ...[
+          const SizedBox(height: 5),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              widget.errorText!,
+              style: AppTextStyles.errorText,
+            ),
+          ),
+        ],
       ],
     );
   }

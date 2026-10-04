@@ -1,37 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend_nutrimeal/controllers/auth_controller.dart';
 import 'package:frontend_nutrimeal/screens/login_screen.dart';
-import 'package:frontend_nutrimeal/widgets/nutri_meal_logo.dart';
+import 'package:frontend_nutrimeal/screens/register_screen.dart';
+import 'package:frontend_nutrimeal/screens/forgot_password_screen.dart';
+import 'package:frontend_nutrimeal/screens/verify_email_screen.dart';
 import 'package:frontend_nutrimeal/widgets/custom_button.dart';
 import 'package:frontend_nutrimeal/widgets/google_sign_in_button.dart';
-import 'package:frontend_nutrimeal/main.dart';
 
 void main() {
-  testWidgets('Renders SplashScreen with NutriMealLogo', (WidgetTester tester) async {
+  testWidgets('Renders LoginScreen with all form fields and exact screenshot titles', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const NutriMealApp(),
+      ChangeNotifierProvider(
+        create: (_) => AuthController(),
+        child: const MaterialApp(home: LoginScreen()),
+      ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(NutriMealLogo), findsWidgets);
-    expect(find.text('Nutri'), findsWidgets);
-    expect(find.text('Meal'), findsWidgets);
-  });
-
-  testWidgets('Renders LoginScreen with all form fields and buttons', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const TestAppWrapper(child: LoginScreen()),
-    );
-    await tester.pumpAndSettle();
-
-    // Verify Title
-    expect(find.text('Kemewahan Rasa Dalam\nSetiap Asupan Nutrisi'), findsOneWidget);
+    // Verify Title from Screenshot
+    expect(find.text('Nikmati Lezatnya Hidangan,\nSehatnya Nutrisi'), findsOneWidget);
 
     // Verify Fields
     expect(find.text('EMAIL'), findsOneWidget);
     expect(find.text('PASSWORD'), findsOneWidget);
-    expect(find.text('Masukan email'), findsOneWidget);
-    expect(find.text('****'), findsOneWidget);
+    expect(find.text('Masukkan Email'), findsOneWidget);
 
     // Verify Links & Buttons
     expect(find.textContaining('Daftar disini'), findsOneWidget);
@@ -41,17 +35,42 @@ void main() {
     expect(find.text('Atau masuk dengan'), findsOneWidget);
     expect(find.byType(GoogleSignInButton), findsOneWidget);
   });
-}
 
-class TestAppWrapper extends StatelessWidget {
-  final Widget child;
-
-  const TestAppWrapper({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: child,
+  testWidgets('Renders RegisterScreen with fields and logo', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => AuthController(),
+        child: const MaterialApp(home: RegisterScreen()),
+      ),
     );
-  }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mulai Perjalanan Sehatmu\nBersama NutriMeal'), findsOneWidget);
+    expect(find.text('NAMA LENGKAP'), findsOneWidget);
+    expect(find.text('NOMOR WHATSAPP'), findsOneWidget);
+    expect(find.text('KONFIRMASI PASSWORD'), findsOneWidget);
+    expect(find.text('Daftar'), findsOneWidget);
+  });
+
+  testWidgets('Renders ForgotPasswordScreen', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => AuthController(),
+        child: const MaterialApp(home: ForgotPasswordScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Forgot Password?'), findsOneWidget);
+    expect(find.text('KIRIM'), findsOneWidget);
+  });
+
+  testWidgets('Renders VerifyEmailScreen with 4 OTP boxes and confirmation button', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: VerifyEmailScreen(email: 'test@student.ub.ac.id')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Periksa Email Anda'), findsOneWidget);
+    expect(find.text('test@student.ub.ac.id'), findsOneWidget);
+    expect(find.text('KONFIRMASI'), findsOneWidget);
+  });
 }

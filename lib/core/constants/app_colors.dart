@@ -23,4 +23,14 @@ class AppColors {
   static const Color inputBackground = Color(0xFFF3F4F6);
   static const Color inputBorder = Color(0xFFE5E7EB);
   static const Color cardShadow = Color(0x15000000);
+
+  // Validation & Error Colors
+  static const Color errorRed = Color(0xFFEF4444);
+  static const Color errorBorder = Color(0xFFF87171);
+  static const Color errorBackground = Color(0xFFFEF2F2);
+
+  // Utilities
+  static const Color circleButtonBg = Color(0xFFD1D5DB);
+  static const Color otpBoxBg = Color(0xFFF3F4F6);
+  static const Color otpBoxBorder = Color(0xFFE5E7EB);
 }
