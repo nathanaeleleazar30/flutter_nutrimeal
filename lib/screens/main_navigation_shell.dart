@@ -3,8 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../controllers/menu_controller.dart';
 import '../core/constants/app_colors.dart';
+import 'admin_chat_screen.dart';
 import 'beranda_screen.dart';
 import 'galeri_menu_screen.dart';
+import 'jadwal_screen.dart';
+import 'nutribot_chat_screen.dart';
 
 class MainNavigationShell extends StatefulWidget {
   final int initialIndex;
@@ -41,9 +44,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         onNavigateToGallery: () => _onTabTapped(1),
       ),
       const GaleriMenuScreen(),
-      _buildPlaceholderTab('NutriBot AI Assistant', Icons.smart_toy_rounded),
-      _buildPlaceholderTab('Pesanan Anda', Icons.receipt_long_rounded),
-      _buildPlaceholderTab('Jadwal Katering', Icons.calendar_month_rounded),
+      const NutriBotChatScreen(isTab: true),
+      const AdminChatScreen(isTab: true),
+      const JadwalScreen(),
     ];
 
     return Scaffold(
@@ -184,41 +187,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderTab(String title, IconData icon) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 48, color: AppColors.primaryGreen),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Fitur ini sedang aktif',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ],
       ),
     );
   }

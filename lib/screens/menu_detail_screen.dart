@@ -36,7 +36,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
   void _handleAddToCart() {
     final menuController = context.read<NutriMealMenuController>();
-    menuController.incrementCart(_quantity);
+    menuController.addToCart(widget.item, quantity: _quantity);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -46,6 +46,13 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
+        ),
+        action: SnackBarAction(
+          label: 'Lihat',
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.of(context).pushNamed('/cart');
+          },
         ),
         backgroundColor: AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
@@ -105,50 +112,53 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                         ),
 
                         // Cart Button
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pushNamed('/cart'),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 18,
+                                  color: AppColors.textDark,
+                                ),
                               ),
-                              alignment: Alignment.center,
-                              child: const Icon(
-                                Icons.shopping_bag_outlined,
-                                size: 18,
-                                color: AppColors.textDark,
-                              ),
-                            ),
-                            if (cartCount > 0)
-                              Positioned(
-                                top: -2,
-                                right: -2,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primaryGreen,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 16,
-                                    minHeight: 16,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    '$cartCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.0,
+                              if (cartCount > 0)
+                                Positioned(
+                                  top: -2,
+                                  right: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.primaryGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '$cartCount',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.0,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),

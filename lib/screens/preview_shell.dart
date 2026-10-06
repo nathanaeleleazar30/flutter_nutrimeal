@@ -2,20 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/menu_controller.dart';
 import '../core/constants/app_colors.dart';
+import 'address_screen.dart';
+import 'admin_chat_screen.dart';
+import 'bantuan_faq_screen.dart';
 import 'beranda_screen.dart';
+import 'checkout_screen.dart';
 import 'galeri_menu_screen.dart';
+import 'jadwal_screen.dart';
+import 'keranjang_screen.dart';
+import 'langganan_katalog_screen.dart';
+import 'langganan_saya_screen.dart';
 import 'login_screen.dart';
 import 'main_navigation_shell.dart';
 import 'menu_detail_screen.dart';
-import 'register_screen.dart';
+import 'notifikasi_screen.dart';
+import 'nutribot_chat_screen.dart';
+import 'profile_detail_screen.dart';
+import 'profile_screen.dart';
 
 enum ViewMode {
+  jadwal,
+  chatAi,
+  chatAdmin,
+  profil,
+  profilDetail,
+  notifikasi,
+  bantuanFaq,
+  langgananSaya,
+  langgananKatalog,
+  keranjang,
+  checkout,
+  alamat,
   beranda,
   galeriMenu,
   detailMenu,
   navigationShell,
   login,
-  register,
   allScreens,
 }
 
@@ -27,7 +49,7 @@ class PreviewShell extends StatefulWidget {
 }
 
 class _PreviewShellState extends State<PreviewShell> {
-  ViewMode _currentMode = ViewMode.beranda;
+  ViewMode _currentMode = ViewMode.jadwal;
 
   @override
   Widget build(BuildContext context) {
@@ -65,34 +87,79 @@ class _PreviewShellState extends State<PreviewShell> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildSwitchItem(
-                        title: '1. Beranda',
+                        title: 'Jadwal',
+                        icon: Icons.calendar_today_rounded,
+                        mode: ViewMode.jadwal,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Chat AI (NutriBot)',
+                        icon: Icons.smart_toy_rounded,
+                        mode: ViewMode.chatAi,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Chat Admin',
+                        icon: Icons.support_agent_rounded,
+                        mode: ViewMode.chatAdmin,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Profil',
+                        icon: Icons.person_rounded,
+                        mode: ViewMode.profil,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Detail Profil',
+                        icon: Icons.badge_rounded,
+                        mode: ViewMode.profilDetail,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Notifikasi',
+                        icon: Icons.notifications_rounded,
+                        mode: ViewMode.notifikasi,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Bantuan & FAQ',
+                        icon: Icons.help_outline_rounded,
+                        mode: ViewMode.bantuanFaq,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Langganan Saya',
+                        icon: Icons.card_membership_rounded,
+                        mode: ViewMode.langgananSaya,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Katalog Langganan',
+                        icon: Icons.local_offer_rounded,
+                        mode: ViewMode.langgananKatalog,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Keranjang',
+                        icon: Icons.shopping_bag_rounded,
+                        mode: ViewMode.keranjang,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Checkout',
+                        icon: Icons.payment_rounded,
+                        mode: ViewMode.checkout,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Alamat',
+                        icon: Icons.location_on_rounded,
+                        mode: ViewMode.alamat,
+                      ),
+                      _buildSwitchItem(
+                        title: 'Beranda',
                         icon: Icons.home_rounded,
                         mode: ViewMode.beranda,
                       ),
                       _buildSwitchItem(
-                        title: '2. Galeri Menu',
+                        title: 'Galeri Menu',
                         icon: Icons.restaurant_menu_rounded,
                         mode: ViewMode.galeriMenu,
                       ),
                       _buildSwitchItem(
-                        title: '3. Detail Menu',
-                        icon: Icons.dinner_dining_rounded,
-                        mode: ViewMode.detailMenu,
-                      ),
-                      _buildSwitchItem(
-                        title: 'App + BottomNav',
+                        title: 'App Shell',
                         icon: Icons.smartphone_rounded,
                         mode: ViewMode.navigationShell,
-                      ),
-                      _buildSwitchItem(
-                        title: 'Login (Dummy)',
-                        icon: Icons.login_rounded,
-                        mode: ViewMode.login,
-                      ),
-                      _buildSwitchItem(
-                        title: 'Register (Dummy)',
-                        icon: Icons.person_add_rounded,
-                        mode: ViewMode.register,
                       ),
                       _buildSwitchItem(
                         title: 'Semua Screen',
@@ -157,6 +224,30 @@ class _PreviewShellState extends State<PreviewShell> {
     final menuController = context.watch<NutriMealMenuController>();
 
     switch (_currentMode) {
+      case ViewMode.jadwal:
+        return const JadwalScreen();
+      case ViewMode.chatAi:
+        return const NutriBotChatScreen();
+      case ViewMode.chatAdmin:
+        return const AdminChatScreen();
+      case ViewMode.profil:
+        return const ProfileScreen();
+      case ViewMode.profilDetail:
+        return const ProfileDetailScreen();
+      case ViewMode.notifikasi:
+        return const NotifikasiScreen();
+      case ViewMode.bantuanFaq:
+        return const BantuanFaqScreen();
+      case ViewMode.langgananSaya:
+        return const LanggananSayaScreen();
+      case ViewMode.langgananKatalog:
+        return const LanggananKatalogScreen();
+      case ViewMode.keranjang:
+        return const KeranjangScreen();
+      case ViewMode.checkout:
+        return const CheckoutScreen();
+      case ViewMode.alamat:
+        return const AddressScreen();
       case ViewMode.beranda:
         return BerandaScreen(
           onNavigateToGallery: () {
@@ -173,8 +264,6 @@ class _PreviewShellState extends State<PreviewShell> {
         return const MainNavigationShell();
       case ViewMode.login:
         return const LoginScreen();
-      case ViewMode.register:
-        return const RegisterScreen();
       case ViewMode.allScreens:
         return _buildAllScreensGallery();
     }
@@ -185,24 +274,60 @@ class _PreviewShellState extends State<PreviewShell> {
 
     final screens = [
       {
-        'title': '1. Beranda (Home)',
+        'title': '1. Jadwal Katering (Frame 35)',
+        'widget': const JadwalScreen(),
+      },
+      {
+        'title': '2. NutriBot AI Chat (Frame 33)',
+        'widget': const NutriBotChatScreen(),
+      },
+      {
+        'title': '3. Admin NutriCare Chat (Frame Pesan)',
+        'widget': const AdminChatScreen(),
+      },
+      {
+        'title': '4. Profil Saya (Frame 36)',
+        'widget': const ProfileScreen(),
+      },
+      {
+        'title': '5. Detail Data Profil (Frame 29)',
+        'widget': const ProfileDetailScreen(),
+      },
+      {
+        'title': '6. Pusat Bantuan & FAQ (NutriBot 24/7)',
+        'widget': const BantuanFaqScreen(),
+      },
+      {
+        'title': '7. Notifikasi (Update & Promo)',
+        'widget': const NotifikasiScreen(),
+      },
+      {
+        'title': '8. Langganan Saya (Paket Aktif)',
+        'widget': const LanggananSayaScreen(showBottomNav: false),
+      },
+      {
+        'title': '9. Katalog Langganan (Pilih Paket)',
+        'widget': const LanggananKatalogScreen(showBottomNav: false),
+      },
+      {
+        'title': '10. Keranjang Saya (Cart UI)',
+        'widget': const KeranjangScreen(),
+      },
+      {
+        'title': '11. Checkout & Konfirmasi Pesanan',
+        'widget': const CheckoutScreen(),
+      },
+      {
+        'title': '12. Beranda (Home)',
         'widget': const BerandaScreen(),
       },
       {
-        'title': '2. Galeri Menu',
+        'title': '13. Galeri Menu',
         'widget': const GaleriMenuScreen(),
       },
       {
-        'title': '3. Detail Menu (Grilled Chicken)',
+        'title': '14. Detail Menu (Grilled Chicken)',
         'widget': MenuDetailScreen(item: menuController.allMenuItems[0]),
-      },
-      {
-        'title': '4. Login (Siap Masuk)',
-        'widget': const LoginScreen(),
-      },
-      {
-        'title': '5. Register (Siap Daftar)',
-        'widget': const RegisterScreen(),
       },
     ];
 

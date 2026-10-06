@@ -7,11 +7,13 @@ import 'nutri_meal_logo.dart';
 class MainTopBar extends StatelessWidget {
   final VoidCallback? onCartTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onNotificationTap;
 
   const MainTopBar({
     super.key,
     this.onCartTap,
     this.onProfileTap,
+    this.onNotificationTap,
   });
 
   @override
@@ -32,33 +34,53 @@ class MainTopBar extends StatelessWidget {
           // Action Icons Row
           Row(
             children: [
-              // Eco / Leaf Button
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
+              // Notification Bell Button with Badge
+              GestureDetector(
+                onTap: onNotificationTap ?? () => Navigator.of(context).pushNamed('/notifikasi'),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.notifications_none_rounded,
+                        color: AppColors.textDark,
+                        size: 19,
+                      ),
+                    ),
+                    Positioned(
+                      top: 1,
+                      right: 1,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.eco_rounded,
-                  color: AppColors.primaryGreen,
-                  size: 19,
                 ),
               ),
               const SizedBox(width: 8),
 
               // Cart Button with Badge
               GestureDetector(
-                onTap: onCartTap,
+                onTap: onCartTap ?? () => Navigator.of(context).pushNamed('/cart'),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -116,7 +138,7 @@ class MainTopBar extends StatelessWidget {
 
               // Profile Avatar
               GestureDetector(
-                onTap: onProfileTap,
+                onTap: onProfileTap ?? () => Navigator.of(context).pushNamed('/profile'),
                 child: Container(
                   width: 38,
                   height: 38,
