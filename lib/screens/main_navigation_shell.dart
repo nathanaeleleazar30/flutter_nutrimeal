@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../controllers/menu_controller.dart';
-import '../core/constants/app_colors.dart';
 import 'admin_chat_screen.dart';
 import 'beranda_screen.dart';
 import 'galeri_menu_screen.dart';
@@ -79,7 +78,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 _buildNavItem(
                   index: 1,
-                  icon: Icons.restaurant_menu_rounded,
+                  icon: Icons.tune_rounded,
                   label: 'Menu',
                 ),
                 // Center NutriBot Floating Button
@@ -91,7 +90,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 _buildNavItem(
                   index: 4,
-                  icon: Icons.calendar_today_rounded,
+                  icon: Icons.calendar_month_outlined,
                   label: 'Jadwal',
                 ),
               ],
@@ -119,7 +118,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           Icon(
             icon,
             size: 22,
-            color: isSelected ? AppColors.primaryGreen : const Color(0xFF94A3B8),
+            color: isSelected ? const Color(0xFF16A34A) : const Color(0xFF94A3B8),
           ),
           const SizedBox(height: 3),
           Text(
@@ -127,7 +126,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-              color: isSelected ? AppColors.primaryGreen : const Color(0xFF94A3B8),
+              color: isSelected ? const Color(0xFF16A34A) : const Color(0xFF94A3B8),
             ),
           ),
           if (isSelected)
@@ -136,7 +135,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               width: 4,
               height: 4,
               decoration: const BoxDecoration(
-                color: AppColors.primaryGreen,
+                color: Color(0xFF16A34A),
                 shape: BoxShape.circle,
               ),
             ),
@@ -156,14 +155,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen,
+                color: const Color(0xFF22C55E),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryGreen.withValues(alpha: 0.38),
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.38),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -181,8 +180,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               'NutriBot',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? AppColors.primaryGreen : const Color(0xFF94A3B8),
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                color: const Color(0xFF16A34A),
               ),
             ),
           ],

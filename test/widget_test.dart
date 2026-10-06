@@ -157,12 +157,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('LOKASI PENGANTARAN'), findsOneWidget);
-    expect(find.text('Lowokwaru, Malang'), findsOneWidget);
     expect(find.text('NutriBot AI'), findsOneWidget);
+    expect(find.text('Tanya rekomendasi menu & hitung kalori'), findsOneWidget);
+    expect(find.text('Ikan'), findsOneWidget);
+    expect(find.text('Daging'), findsOneWidget);
+    expect(find.text('Seafood'), findsOneWidget);
+    expect(find.text('Roti'), findsOneWidget);
     expect(find.text('Jadwal Katering'), findsOneWidget);
-    expect(find.text('Menu Populer Hari Ini'), findsOneWidget);
+    expect(find.text('Semua'), findsOneWidget);
     expect(find.text('Chicken Katsu Bowl'), findsOneWidget);
+    expect(find.text('480 kkal'), findsOneWidget);
+    expect(find.text('Menu Populer Hari Ini'), findsOneWidget);
+    expect(find.text('Lihat Semua'), findsOneWidget);
+    expect(find.text('Chicken Salad'), findsOneWidget);
+    expect(find.text('Beef Veggie'), findsOneWidget);
+    expect(find.text('Ayam Bowl'), findsOneWidget);
+    expect(find.text('Chicken Wrap'), findsOneWidget);
   });
 
   testWidgets('Renders GaleriMenuScreen and MenuDetailScreen', (WidgetTester tester) async {
@@ -218,8 +228,8 @@ void main() {
 
     // Verify Address section
     expect(find.text('ALAMAT PENGANTARAN'), findsOneWidget);
-    expect(find.textContaining('NgabOwi'), findsOneWidget);
-    expect(find.text('+62 812-3456-7890'), findsOneWidget);
+    expect(find.textContaining('Andi Pratama'), findsOneWidget);
+    expect(find.textContaining('812-3456-7890'), findsOneWidget);
     expect(find.text('Ubah'), findsOneWidget);
 
     // Verify Items from Screenshot
@@ -287,12 +297,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Ubah Alamat Pengiriman'), findsOneWidget);
-    expect(find.text('Tempel & Isi Otomatis'), findsOneWidget);
-    expect(find.text('Alamat Pengiriman'), findsOneWidget);
-    expect(find.text('Nama Penerima'), findsOneWidget);
-    expect(find.text('Nomor Telepon'), findsOneWidget);
-    expect(find.text('Simpan Alamat'), findsOneWidget);
+    expect(find.text('Pilih Alamat Pengiriman'), findsOneWidget);
+    expect(find.text('NutriMeal'), findsOneWidget);
+    expect(find.text('ALAMAT TERSIMPAN (3)'), findsOneWidget);
+    expect(find.text('Tambah Alamat Baru'), findsOneWidget);
+    expect(find.text('Gunakan Alamat Ini'), findsOneWidget);
   });
 
   testWidgets('Renders JadwalScreen with calendar, lunch & dinner, and nutrition stats', (WidgetTester tester) async {
@@ -457,6 +466,85 @@ void main() {
     expect(find.text('Kenapa Berlangganan?'), findsOneWidget);
     expect(find.text('Mulai dari'), findsOneWidget);
     expect(find.text('Mulai Langganan'), findsOneWidget);
+  });
+
+  testWidgets('Renders AddressScreen (Pilih Alamat Pengiriman) matching Image 1', (WidgetTester tester) async {
+    final menuController = NutriMealMenuController();
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: menuController,
+        child: const MaterialApp(home: AddressScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pilih Alamat Pengiriman'), findsOneWidget);
+    expect(find.text('NutriMeal'), findsOneWidget);
+    expect(find.text('ALAMAT TERSIMPAN (3)'), findsOneWidget);
+    expect(find.text('Pilih salah satu'), findsOneWidget);
+    expect(find.text('Andi Pratama'), findsWidgets);
+    expect(find.text('Hammad Feriand'), findsOneWidget);
+    expect(find.text('Ubah'), findsWidgets);
+    expect(find.text('Utama'), findsOneWidget);
+    expect(find.text('Kantor'), findsOneWidget);
+    expect(find.text('Rumah'), findsOneWidget);
+    expect(find.text('Tempat Kerja'), findsOneWidget);
+    expect(find.text('Semua pesanan paket sehat NutriMeal dikirim tepat waktu dengan thermal box steril.'), findsOneWidget);
+    expect(find.text('Tambah Alamat Baru'), findsOneWidget);
+    expect(find.text('Gunakan Alamat Ini'), findsOneWidget);
+  });
+
+  testWidgets('Renders AddressFormScreen in Edit Mode matching Image 2', (WidgetTester tester) async {
+    final menuController = NutriMealMenuController();
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: menuController,
+        child: MaterialApp(
+          home: AddressFormScreen(
+            mode: AddressFormMode.edit,
+            address: menuController.savedAddresses.first,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ubah Alamat Pengiriman'), findsOneWidget);
+    expect(find.text('Tempel & Isi Otomatis'), findsOneWidget);
+    expect(find.text('Alamat Pengiriman'), findsOneWidget);
+    expect(find.text('Standar Kurir NutriMeal'), findsOneWidget);
+    expect(find.text('Titik Lokasi Presisi'), findsOneWidget);
+    expect(find.text('Ubah Pin'), findsOneWidget);
+    expect(find.text('Atur sebagai Alamat Utama'), findsOneWidget);
+    expect(find.text('Hapus Alamat'), findsOneWidget);
+    expect(find.text('Simpan Alamat'), findsOneWidget);
+  });
+
+  testWidgets('Renders AddressFormScreen in Add Mode matching Image 3', (WidgetTester tester) async {
+    final menuController = NutriMealMenuController();
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: menuController,
+        child: const MaterialApp(
+          home: AddressFormScreen(
+            mode: AddressFormMode.add,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tambahkan Alamat Pengiriman'), findsOneWidget);
+    expect(find.text('Tempel dan Isi Otomatis ✨'), findsOneWidget);
+    expect(find.text('Data Penerima'), findsOneWidget);
+    expect(find.text('Katering NutriMeal'), findsOneWidget);
+    expect(find.text('Titik Pengantaran Kurir'), findsOneWidget);
+    expect(find.text('Ubah Pin 📍'), findsOneWidget);
+    expect(find.text('Akurasi katering terverifikasi (~5m)'), findsOneWidget);
+    expect(find.text('Simpan Alamat'), findsOneWidget);
   });
 }
 

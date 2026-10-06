@@ -59,6 +59,7 @@ class CartItem {
 }
 
 class DeliveryAddress {
+  final String id;
   final String label;
   final String recipientName;
   final String phoneNumber;
@@ -69,6 +70,7 @@ class DeliveryAddress {
   final bool isDefault;
 
   const DeliveryAddress({
+    this.id = '',
     required this.label,
     required this.recipientName,
     required this.phoneNumber,
@@ -80,6 +82,7 @@ class DeliveryAddress {
   });
 
   DeliveryAddress copyWith({
+    String? id,
     String? label,
     String? recipientName,
     String? phoneNumber,
@@ -90,6 +93,7 @@ class DeliveryAddress {
     bool? isDefault,
   }) {
     return DeliveryAddress(
+      id: id ?? this.id,
       label: label ?? this.label,
       recipientName: recipientName ?? this.recipientName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -321,7 +325,7 @@ class NutriMealMenuController extends ChangeNotifier {
       name: 'Ayam Bowl',
       category: 'Ayam',
       calories: 520,
-      price: 28000,
+      price: 20000,
       imageUrl:
           'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=800&auto=format&fit=crop',
       description:
@@ -361,11 +365,10 @@ class NutriMealMenuController extends ChangeNotifier {
   List<MenuItem> get allMenuItems => _menuItems;
 
   List<MenuItem> get popularMenuItems => [
-        _menuItems[0], // Grilled Chicken
-        _menuItems[1], // Cheesy Chicken
-        _menuItems[2], // Chicken Kare
-        _menuItems[4], // Chicken Salad
-        _menuItems[5], // Beef Veggie
+        _menuItems.firstWhere((i) => i.id == 'item-3', orElse: () => _menuItems[0]), // Chicken Salad
+        _menuItems.firstWhere((i) => i.id == 'item-4', orElse: () => _menuItems[1]), // Beef Veggie
+        _menuItems.firstWhere((i) => i.id == 'item-5', orElse: () => _menuItems[2]), // Ayam Bowl
+        _menuItems.firstWhere((i) => i.id == 'item-6', orElse: () => _menuItems[3]), // Chicken Wrap
       ];
 
   List<MenuItem> get filteredMenuItems {
@@ -503,23 +506,101 @@ class NutriMealMenuController extends ChangeNotifier {
     return total > 0 ? total : 0;
   }
 
-  // Delivery Address State (Matching screenshot Rumah (Utama) • NgabOwi)
-  DeliveryAddress _deliveryAddress = const DeliveryAddress(
-    label: 'Rumah (Utama)',
-    recipientName: 'NgabOwi',
-    phoneNumber: '+62 812-3456-7890',
-    area: 'Kebayoran Baru, Jakarta Selatan',
-    fullAddress:
-        'Jl. Sehat Bugar Sejahtera No. 45, Kebayoran Baru, Jakarta Selatan, 12180',
-    deliveryNote: 'Titip di pos security / hubungi via WhatsApp',
-    addressType: 'Rumah',
-    isDefault: true,
-  );
+  // Delivery Address State & Saved Addresses (Matching screenshot)
+  final List<DeliveryAddress> _savedAddresses = [
+    const DeliveryAddress(
+      id: 'addr_1',
+      label: 'Kantor',
+      recipientName: 'Andi Pratama',
+      phoneNumber: '(+62) 812-3456-7890',
+      area: 'Sawojajar, Kota Malang, Jawa Timur 65139',
+      fullAddress:
+          'Jl. Danau Toba No. 24, Sawojajar, Kota Malang, Jawa Timur 65139',
+      deliveryNote:
+          'Catatan pengantaran: Titipkan ke satpam lobi kantor jika siang hari',
+      addressType: 'Kantor',
+      isDefault: true,
+    ),
+    const DeliveryAddress(
+      id: 'addr_2',
+      label: 'Rumah',
+      recipientName: 'Andi Pratama',
+      phoneNumber: '(+62) 812-3456-7890',
+      area: 'Lowokwaru, Kota Malang, Jawa Timur 65141',
+      fullAddress:
+          'Kompleks Permata Hijau Blok C-12, Lowokwaru, Kota Malang, Jawa Timur 65141',
+      deliveryNote: '',
+      addressType: 'Rumah',
+      isDefault: false,
+    ),
+    const DeliveryAddress(
+      id: 'addr_3',
+      label: 'Tempat Kerja',
+      recipientName: 'Hammad Feriand',
+      phoneNumber: '(+62) 877-0000-9180',
+      area: 'Lowokwaru, Kota Malang, Jawa Timur 65144',
+      fullAddress:
+          'Gedung Cyber Tower Lt. 4, Ruang IT, Lowokwaru, Kota Malang, Jawa Timur 65144',
+      deliveryNote: '',
+      addressType: 'Tempat Kerja',
+      isDefault: false,
+    ),
+  ];
+
+  late DeliveryAddress _deliveryAddress = _savedAddresses[0];
+
+  List<DeliveryAddress> get savedAddresses => List.unmodifiable(_savedAddresses);
 
   DeliveryAddress get deliveryAddress => _deliveryAddress;
 
+  void selectDeliveryAddress(DeliveryAddress address) {
+    _deliveryAddress = address;
+    notifyListeners();
+  }
+
   void updateDeliveryAddress(DeliveryAddress address) {
     _deliveryAddress = address;
+    final index = _savedAddresses.indexWhere((a) => a.id == address.id);
+    if (index != -1) {
+      _savedAddresses[index] = address;
+    }
+    notifyListeners();
+  }
+
+  void addSavedAddress(DeliveryAddress address) {
+    if (address.isDefault) {
+      for (int i = 0; i < _savedAddresses.length; i++) {
+        _savedAddresses[i] = _savedAddresses[i].copyWith(isDefault: false);
+      }
+      _deliveryAddress = address;
+    }
+    _savedAddresses.add(address);
+    notifyListeners();
+  }
+
+  void updateSavedAddress(DeliveryAddress address) {
+    final index = _savedAddresses.indexWhere((a) => a.id == address.id);
+    if (index != -1) {
+      if (address.isDefault) {
+        for (int i = 0; i < _savedAddresses.length; i++) {
+          if (i != index) {
+            _savedAddresses[i] = _savedAddresses[i].copyWith(isDefault: false);
+          }
+        }
+        _deliveryAddress = address;
+      } else if (_deliveryAddress.id == address.id) {
+        _deliveryAddress = address;
+      }
+      _savedAddresses[index] = address;
+      notifyListeners();
+    }
+  }
+
+  void removeSavedAddress(String id) {
+    _savedAddresses.removeWhere((a) => a.id == id);
+    if (_deliveryAddress.id == id && _savedAddresses.isNotEmpty) {
+      _deliveryAddress = _savedAddresses.first;
+    }
     notifyListeners();
   }
 
