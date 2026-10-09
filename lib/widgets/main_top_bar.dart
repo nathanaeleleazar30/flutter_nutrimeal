@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/menu_controller.dart';
 import '../core/constants/app_colors.dart';
 import 'nutri_meal_logo.dart';
+import 'user_avatar.dart';
 
 class MainTopBar extends StatelessWidget {
   final VoidCallback? onCartTap;
@@ -184,40 +185,9 @@ class MainTopBar extends StatelessWidget {
               ),
               const SizedBox(width: 8),
 
-              // Profile Avatar (Matching woman with glasses in screenshot)
-              GestureDetector(
+              UserAvatar(
+                size: 38,
                 onTap: onProfileTap ?? () => Navigator.of(context).pushNamed('/profile'),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF334155),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF334155), width: 1.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Image.network(
-                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Center(
-                      child: Text(
-                        'N',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ),
             ],
           ),

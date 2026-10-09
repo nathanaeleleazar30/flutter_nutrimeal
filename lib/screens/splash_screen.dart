@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../widgets/food_doodle_background.dart';
 import '../widgets/nutri_meal_logo.dart';
-import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   final bool autoNavigate;
@@ -25,15 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (widget.autoNavigate) {
       _timer = Timer(const Duration(milliseconds: 2500), () {
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-              transitionDuration: const Duration(milliseconds: 600),
-            ),
-          );
+          Navigator.of(context).pushReplacementNamed('/login');
         }
       });
     }
@@ -47,15 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _goToLogin() {
     _timer?.cancel();
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
+    Navigator.of(context).pushReplacementNamed('/login');
   }
 
   @override

@@ -277,13 +277,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               clipBehavior: Clip.antiAlias,
-              child: Image.network(
-                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+              child: Image.asset(
+                'assets/images/profile_avatar.jpg',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: const Color(0xFFDCFCE7),
-                  child: const Icon(Icons.person,
-                      color: AppColors.primaryGreen, size: 40),
+                errorBuilder: (context, error, stackTrace) => Image.network(
+                  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: const Color(0xFFDCFCE7),
+                    child: const Icon(Icons.person,
+                        color: AppColors.primaryGreen, size: 40),
+                  ),
                 ),
               ),
             ),

@@ -145,7 +145,53 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: widget.isTab
-            ? null
+            ? Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(11),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Text(
+                          'N',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF16A34A),
+                          ),
+                        ),
+                        Positioned(
+                          top: 5,
+                          right: 4,
+                          child: Container(
+                            width: 5.5,
+                            height: 5.5,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF22C55E),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
             : IconButton(
                 icon: Container(
                   width: 36,
@@ -160,9 +206,15 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                     color: AppColors.textDark,
                   ),
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+                  }
+                },
               ),
-        titleSpacing: widget.isTab ? 16 : 0,
+        titleSpacing: widget.isTab ? 4 : 0,
         title: Row(
           children: [
             Stack(
@@ -213,11 +265,14 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   ),
                   Row(
                     children: [
-                      Text(
-                        'Customer Care & Ahli Gizi • ',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
+                      Flexible(
+                        child: Text(
+                          'Customer Care & Ahli Gizi • ',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(

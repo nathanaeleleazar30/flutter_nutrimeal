@@ -446,18 +446,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Langganan Saya'), findsOneWidget);
-    expect(find.text('Paket Sehat 30 Hari'), findsOneWidget);
-    expect(find.text('BIAYA LANGGANAN'), findsOneWidget);
-    expect(find.text('Rp750.000'), findsOneWidget);
-    expect(find.text('12 hari terlewati (40%)'), findsOneWidget);
-    expect(find.text('PENGIRIMAN BERIKUTNYA'), findsOneWidget);
+    expect(find.text('Pesanan'), findsOneWidget);
+    expect(find.text('Aktif Berlangganan'), findsOneWidget);
+    expect(find.text('Paket Bulanan Lengkap'), findsOneWidget);
+    expect(find.text('18 dari 60 Box Terkirim'), findsOneWidget);
+    expect(find.text('30% Selesai'), findsOneWidget);
+    expect(find.text('Jadwal Hari Ini'), findsOneWidget);
     expect(find.text('Nasi Ayam Teriyaki'), findsWidgets);
-    expect(find.text('Akan Dikirim'), findsOneWidget);
-    expect(find.text('MENU MENDATANG'), findsOneWidget);
-    expect(find.text('BENEFIT LANGGANAN AKTIF'), findsOneWidget);
-    expect(find.text('Perpanjang Lebih Awal'), findsOneWidget);
-    expect(find.text('Diskon 10%'), findsOneWidget);
+    expect(find.text('Chicken Katsu Salad'), findsWidgets);
+    expect(find.text('Alamat Pengantaran'), findsOneWidget);
+    expect(find.text('Perpanjang Otomatis'), findsOneWidget);
+    expect(find.text('Jadwal & Menu Bulanan'), findsOneWidget);
   });
 
   testWidgets('Renders LanggananKatalogScreen with tier selection and sticky subscribe bar', (WidgetTester tester) async {
@@ -473,7 +472,7 @@ void main() {
     expect(find.text('Paket Bulanan Lengkap'), findsOneWidget);
     expect(find.text('PALING POPULER'), findsOneWidget);
     expect(find.text('Paket Hemat Siang'), findsOneWidget);
-    expect(find.text('Kenapa Berlangganan?'), findsOneWidget);
+    expect(find.text('Contoh Menu Mingguan'), findsOneWidget);
     expect(find.text('Mulai dari'), findsOneWidget);
     expect(find.text('Mulai Langganan'), findsOneWidget);
   });

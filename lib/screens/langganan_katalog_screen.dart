@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
 import 'checkout_screen.dart';
-import 'langganan_saya_screen.dart';
 
 class LanggananKatalogScreen extends StatefulWidget {
   final bool showBottomNav;
@@ -17,7 +16,7 @@ class LanggananKatalogScreen extends StatefulWidget {
 }
 
 class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
-  int _selectedTierIndex = 1; // Default to Paket Bulanan Lengkap (Paling Populer)
+  int _selectedTierIndex = 1; // Default: Paket Bulanan Lengkap (Paling Populer)
 
   void _onSubscribeTap() {
     final titles = ['Paket Mingguan Trial', 'Paket Bulanan Lengkap', 'Paket Hemat Siang'];
@@ -74,7 +73,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: AppColors.primaryGreen,
+                color: const Color(0xFF0F5132),
               ),
             ),
             const SizedBox(height: 12),
@@ -133,13 +132,10 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history_rounded, color: AppColors.textDark, size: 22),
-            tooltip: 'Langganan Saya',
+            icon: const Icon(Icons.help_outline_rounded, color: AppColors.textDark, size: 22),
+            tooltip: 'Bantuan',
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LanggananSayaScreen()),
-              );
+              Navigator.pushNamed(context, '/bantuan');
             },
           ),
         ],
@@ -149,15 +145,15 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Hero Banner
+                    // 1. Hero Banner
                     _buildHeroBanner(),
                     const SizedBox(height: 22),
 
-                    // Pilih Paket Langganan
+                    // 2. Pilih Paket Langganan Header
                     _buildSectionTitle(
                       title: 'Pilih Paket Langganan',
                       subtitle: 'Pilihan hemat & fleksibel sesuai gaya hidup Anda',
@@ -176,17 +172,9 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                     _buildTierLunchCard(),
                     const SizedBox(height: 24),
 
-                    // Kenapa Berlangganan?
-                    _buildWhySubscribeSection(),
-                    const SizedBox(height: 24),
-
-                    // Contoh Menu Mingguan
+                    // 3. Contoh Menu Mingguan
                     _buildWeeklyMenuSampleSection(),
-                    const SizedBox(height: 24),
-
-                    // Cara Kerja Langganan
-                    _buildHowItWorksSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -259,7 +247,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                 Text(
                   'Lebih Praktis dengan Langganan',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
+                    fontSize: 16.5,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                     height: 1.25,
@@ -278,47 +266,75 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          // Bento Plate Icon / Graphic
+          // Bento Plate Graphic Matching Image 1
           Container(
-            width: 76,
-            height: 76,
+            width: 78,
+            height: 78,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.all(6),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.all(7),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFFF97316), borderRadius: BorderRadius.circular(4))),
-                            Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFF22C55E), borderRadius: BorderRadius.circular(4))),
-                          ],
+                        Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF08A),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFCA8A04),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFFEAB308), borderRadius: BorderRadius.circular(4))),
-                            Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(4))),
-                          ],
+                        Container(
+                          width: 22,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD97706),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    Container(
+                      width: double.infinity,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF0F5132), shape: BoxShape.circle)),
+                          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle)),
+                          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF4ADE80), shape: BoxShape.circle)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -334,7 +350,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
         Text(
           title,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 14.5,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
             color: AppColors.textDark,
           ),
@@ -357,12 +373,12 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
     return GestureDetector(
       onTap: () => setState(() => _selectedTierIndex = 0),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
+            color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFE2E8F0),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -382,13 +398,13 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                 Text(
                   'Paket Mingguan',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: const Color(0xFFDCFCE7),
                     borderRadius: BorderRadius.circular(6),
@@ -421,16 +437,22 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total Harga',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 10, color: const Color(0xFF94A3B8)),
+                      'TOTAL HARGA',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF94A3B8),
+                        letterSpacing: 0.4,
+                      ),
                     ),
+                    const SizedBox(height: 2),
                     RichText(
                       text: TextSpan(
                         children: [
                           TextSpan(
                             text: 'Rp175.000 ',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: FontWeight.w900,
                               color: AppColors.textDark,
                             ),
@@ -445,9 +467,14 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 1),
                     Text(
                       'Rp12.500/makan',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.primaryGreen, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        color: const Color(0xFF0F5132),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -456,16 +483,20 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                   child: OutlinedButton(
                     onPressed: () => setState(() => _selectedTierIndex = 0),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: isSelected ? AppColors.primaryGreen : const Color(0xFFCBD5E1)),
+                      side: BorderSide(
+                        color: const Color(0xFF0F5132),
+                        width: 1.2,
+                      ),
                       backgroundColor: isSelected ? const Color(0xFFDCFCE7) : Colors.transparent,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     child: Text(
-                      isSelected ? 'Terpilih' : 'Pilih Paket',
+                      'Pilih Paket',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
-                        color: isSelected ? const Color(0xFF166534) : AppColors.textDark,
+                        color: const Color(0xFF0F5132),
                       ),
                     ),
                   ),
@@ -492,7 +523,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected ? const Color(0xFF0F5132) : const Color(0xFF22C55E),
+                color: const Color(0xFF0F5132),
                 width: 2,
               ),
               boxShadow: [
@@ -506,20 +537,20 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Paket Bulanan Lengkap',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14.5,
+                        fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEE2E2),
                         borderRadius: BorderRadius.circular(6),
@@ -544,30 +575,40 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    const Icon(Icons.check_rounded, color: AppColors.primaryGreen, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Gratis Ongkir Sepuasnya',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF334155),
-                        fontWeight: FontWeight.w600,
+                // Pill feature checklist
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_rounded, color: Color(0xFF0F5132), size: 15),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Gratis Ongkir Sepuasnya',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          color: const Color(0xFF334155),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.check_rounded, color: AppColors.primaryGreen, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Bisa Jeda / Reschedule',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF334155),
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(width: 10),
+                      Container(width: 1, height: 12, color: const Color(0xFFCBD5E1)),
+                      const SizedBox(width: 10),
+                      const Icon(Icons.check_rounded, color: Color(0xFF0F5132), size: 15),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Bisa Jeda / Reschedule',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          color: const Color(0xFF334155),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -591,8 +632,8 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                             Text(
                               '-25%',
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
                                 color: const Color(0xFFDC2626),
                               ),
                             ),
@@ -604,7 +645,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                               TextSpan(
                                 text: 'Rp750.000 ',
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w900,
                                   color: const Color(0xFF0F5132),
                                 ),
@@ -626,9 +667,10 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                       child: ElevatedButton(
                         onPressed: () => setState(() => _selectedTierIndex = 1),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F5132),
+                          backgroundColor: isSelected ? const Color(0xFF0F5132) : const Color(0xFF166534),
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
                         ),
                         child: Text(
                           isSelected ? 'Terpilih' : 'Pilih Paket',
@@ -645,19 +687,27 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
               ],
             ),
           ),
+          // Badge Star on top right
           Positioned(
-            top: -10,
-            right: 18,
+            top: -11,
+            right: 16,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F5132),
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star_rounded, color: Color(0xFFFDE047), size: 13),
+                  const Icon(Icons.star_rounded, color: Colors.white, size: 13),
                   const SizedBox(width: 4),
                   Text(
                     'PALING POPULER',
@@ -683,12 +733,12 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
     return GestureDetector(
       onTap: () => setState(() => _selectedTierIndex = 2),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
+            color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFE2E8F0),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -708,15 +758,15 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                 Text(
                   'Paket Hemat Siang',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0E7FF),
+                    color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -724,7 +774,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF4338CA),
+                      color: const Color(0xFF475569),
                     ),
                   ),
                 ),
@@ -747,16 +797,22 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total Harga',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 10, color: const Color(0xFF94A3B8)),
+                      'TOTAL HARGA',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF94A3B8),
+                        letterSpacing: 0.4,
+                      ),
                     ),
+                    const SizedBox(height: 2),
                     RichText(
                       text: TextSpan(
                         children: [
                           TextSpan(
                             text: 'Rp400.000 ',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: FontWeight.w900,
                               color: AppColors.textDark,
                             ),
@@ -771,9 +827,14 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 1),
                     Text(
                       'Rp13.300/makan siang',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.primaryGreen, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        color: const Color(0xFF0F5132),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -782,16 +843,20 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                   child: OutlinedButton(
                     onPressed: () => setState(() => _selectedTierIndex = 2),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: isSelected ? AppColors.primaryGreen : const Color(0xFFCBD5E1)),
+                      side: const BorderSide(
+                        color: Color(0xFF0F5132),
+                        width: 1.2,
+                      ),
                       backgroundColor: isSelected ? const Color(0xFFDCFCE7) : Colors.transparent,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     child: Text(
-                      isSelected ? 'Terpilih' : 'Pilih Paket',
+                      'Pilih Paket',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
-                        color: isSelected ? const Color(0xFF166534) : AppColors.textDark,
+                        color: const Color(0xFF0F5132),
                       ),
                     ),
                   ),
@@ -804,128 +869,27 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
     );
   }
 
-  Widget _buildWhySubscribeSection() {
-    final reasons = [
-      {
-        'icon': Icons.account_balance_wallet_outlined,
-        'title': 'Lebih Hemat',
-        'desc': 'Harga lebih terjangkau dibanding beli satuan.',
-      },
-      {
-        'icon': Icons.menu_book_rounded,
-        'title': 'Menu Variatif',
-        'desc': 'Menu lezat berganti setiap hari tanpa bosan.',
-      },
-      {
-        'icon': Icons.access_time_rounded,
-        'title': 'Tepat Waktu',
-        'desc': 'Kurir terdedikasi antar makanan selalu hangat.',
-      },
-      {
-        'icon': Icons.calendar_month_rounded,
-        'title': 'Fleksibel',
-        'desc': 'Jeda atau ganti alamat kirim kapan saja via app.',
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Kenapa Berlangganan?',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
-          ),
-        ),
-        const SizedBox(height: 12),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.5,
-          ),
-          itemCount: reasons.length,
-          itemBuilder: (context, index) {
-            final r = reasons[index];
-            return Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(r['icon'] as IconData, color: const Color(0xFF166534), size: 18),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    r['title'] as String,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    r['desc'] as String,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 9.5,
-                      color: const Color(0xFF64748B),
-                      height: 1.25,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
   Widget _buildWeeklyMenuSampleSection() {
     final sampleMenus = [
       {
         'day': 'Senin',
         'badge': 'TINGGI PROTEIN',
+        'badgeColor': const Color(0xFF0F5132),
         'name': 'Nasi Ayam Teriyaki',
-        'desc': 'Ayam fillet, wortel, brokoli & wijen',
-        'calories': '450 kcal',
-        'protein': '30g Protein',
-        'image': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=240&auto=format&fit=crop',
+        'desc': 'Ayam fillet, wortel, brokoli &...',
+        'calories': '450 kkal',
+        'protein': '38g Protein',
+        'image': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=300&auto=format&fit=crop',
       },
       {
         'day': 'Selasa',
         'badge': 'RENDAH KARBO',
+        'badgeColor': const Color(0xFF2563EB),
         'name': 'Chicken Katsu Salad',
-        'desc': 'Katsu panggang tanpa minyak & selada',
-        'calories': '420 kcal',
+        'desc': 'Katsu panggang tanpa minyak',
+        'calories': '420 kkal',
         'protein': '34g Protein',
-        'image': 'https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=240&auto=format&fit=crop',
+        'image': 'https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=300&auto=format&fit=crop',
       },
     ];
 
@@ -935,49 +899,45 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Contoh Menu Mingguan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                Text(
-                  'Dirancang gizi seimbang oleh Tim Nutisionis',
-                  style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF64748B)),
-                ),
-              ],
+            Text(
+              'Contoh Menu Mingguan',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
             ),
             InkWell(
               onTap: () => Navigator.pushNamed(context, '/menu'),
               child: Text(
                 'Lihat Semua',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.primaryGreen,
+                  color: const Color(0xFF0F5132),
                 ),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'Dirancang gizi seimbang oleh Tim Nutisionis',
+          style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B)),
         ),
         const SizedBox(height: 12),
         Row(
           children: sampleMenus.map((m) {
             return Expanded(
               child: Container(
-                margin: const EdgeInsets.only(right: 8),
+                margin: EdgeInsets.only(right: m['day'] == 'Senin' ? 10 : 0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 6,
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -991,19 +951,23 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           child: Image.network(
                             m['image'] as String,
-                            height: 90,
+                            height: 104,
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(height: 90, color: const Color(0xFFDCFCE7)),
+                            errorBuilder: (_, _, _) => Container(
+                              height: 104,
+                              color: const Color(0xFFDCFCE7),
+                              child: const Icon(Icons.restaurant_rounded, color: Color(0xFF0F5132)),
+                            ),
                           ),
                         ),
                         Positioned(
                           top: 8,
                           left: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.65),
+                              color: Colors.black.withValues(alpha: 0.7),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1026,17 +990,17 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                           Text(
                             m['badge'] as String,
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 8.5,
+                              fontSize: 9,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF0F5132),
-                              letterSpacing: 0.3,
+                              color: m['badgeColor'] as Color,
+                              letterSpacing: 0.4,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             m['name'] as String,
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textDark,
                             ),
@@ -1047,126 +1011,39 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                           Text(
                             m['desc'] as String,
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9.5,
+                              fontSize: 10,
                               color: const Color(0xFF64748B),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${m['calories']} • ${m['protein']}',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF166534),
-                            ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                m['calories'] as String,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                              Text(
+                                m['protein'] as String,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF0F5132),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHowItWorksSection() {
-    final steps = [
-      {
-        'num': '1',
-        'title': 'Pilih Paket & Target Nutrisi',
-        'desc': 'Tentukan paket mingguan/bulanan sesuai pola makan atau diet Anda.',
-      },
-      {
-        'num': '2',
-        'title': 'Atur Jadwal & Alamat',
-        'desc': 'Tentukan jam kirim (siang/malam) ke kantor atau rumah secara terpisah.',
-      },
-      {
-        'num': '3',
-        'title': 'Nikmati Makanan Segar Tiap Hari',
-        'desc': 'Santap sajian hangat bergizi, pantau konsumsi harian di fitur Jadwal.',
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Cara Kerja Langganan',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Column(
-          children: steps.map((s) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFDCFCE7),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      s['num'] as String,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF166534),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          s['title'] as String,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          s['desc'] as String,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            color: const Color(0xFF64748B),
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             );
           }).toList(),
@@ -1199,12 +1076,26 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                 'Mulai dari',
                 style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF94A3B8)),
               ),
-              Text(
-                'Rp25.000/hari',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textDark,
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Rp25.000',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '/hari',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1257,7 +1148,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.home_outlined, 'Beranda', onTap: () => Navigator.pushReplacementNamed(context, '/home')),
-              _buildNavItem(Icons.restaurant_menu_rounded, 'Menu', onTap: () => Navigator.pushReplacementNamed(context, '/menu')),
+              _buildNavItem(Icons.tune_rounded, 'Menu', onTap: () => Navigator.pushReplacementNamed(context, '/menu')),
               _buildCenterNutribotItem(),
               _buildNavItem(Icons.chat_bubble_outline_rounded, 'Pesan', onTap: () => Navigator.pushNamed(context, '/chat-admin')),
               _buildNavItem(Icons.calendar_today_rounded, 'Jadwal', onTap: () => Navigator.pushNamed(context, '/jadwal')),
