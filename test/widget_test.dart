@@ -365,12 +365,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nadia Salsabila'), findsOneWidget);
-    expect(find.text('12'), findsOneWidget);
-    expect(find.text('HARI BERUNTUN'), findsOneWidget);
-    expect(find.text('Elite'), findsOneWidget);
-    expect(find.text('MEMBER'), findsOneWidget);
+    expect(find.text('nadia.salsabila@email.com'), findsOneWidget);
     expect(find.text('Informasi Pribadi'), findsOneWidget);
+    expect(find.text('Alamat Pengiriman'), findsOneWidget);
+    expect(find.text('Metode Pembayaran'), findsOneWidget);
+    expect(find.text('Langganan Saya'), findsOneWidget);
+    expect(find.text('AKTIF'), findsOneWidget);
+    expect(find.text('Notifikasi'), findsOneWidget);
+    expect(find.text('Bantuan'), findsOneWidget);
     expect(find.text('Keluar'), findsOneWidget);
+    expect(find.text('Versi Aplikasi 2.1.0'), findsOneWidget);
   });
 
   testWidgets('Renders ProfileDetailScreen correctly', (WidgetTester tester) async {
@@ -380,10 +384,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Profil'), findsOneWidget);
+    expect(find.text('Nadia Salsabila'), findsNWidgets(2));
+    expect(find.text('NUTRIMEAL ELITE MEMBER'), findsOneWidget);
     expect(find.text('Kelengkapan Data Nutrisi'), findsOneWidget);
-    expect(find.text('92% Lengkap'), findsOneWidget);
-    expect(find.text('168 cm • 54 kg'), findsOneWidget);
-    expect(find.text('BMI 19.1 (Ideal)'), findsOneWidget);
+    expect(find.text('85% Lengkap'), findsOneWidget);
+    expect(find.text('165 cm • 54 kg'), findsOneWidget);
+    expect(find.text('BMI 19.8 (Ideal)'), findsOneWidget);
+    expect(find.text('1.850 kkal'), findsOneWidget);
+    expect(find.text('Bebas Gluten'), findsOneWidget);
+    expect(find.text('Tanpa Kacang Tanah'), findsOneWidget);
+    expect(find.text('Rumah (Senopati)'), findsOneWidget);
     expect(find.text('Simpan Perubahan'), findsOneWidget);
   });
 

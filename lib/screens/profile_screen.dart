@@ -4,15 +4,18 @@ import '../core/constants/app_colors.dart';
 import '../widgets/main_top_bar.dart';
 import 'address_screen.dart';
 import 'bantuan_faq_screen.dart';
-import 'langganan_katalog_screen.dart';
 import 'langganan_saya_screen.dart';
-import 'notifikasi_screen.dart';
 import 'profile_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onCartTap;
+  final bool showBottomNav;
 
-  const ProfileScreen({super.key, this.onCartTap});
+  const ProfileScreen({
+    super.key,
+    this.onCartTap,
+    this.showBottomNav = false,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -29,31 +32,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Konfirmasi Keluar',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.textDark),
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+          ),
         ),
         content: Text(
           'Apakah Anda yakin ingin keluar dari akun NutriMeal?',
-          style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.textSecondary),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Batal',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/login', (route) => false);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Keluar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Keluar',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -67,137 +83,159 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar
+            // Top Bar (Matching MainTopBar with brand logo & action buttons)
             MainTopBar(
               onCartTap: widget.onCartTap,
               onProfileTap: () {},
             ),
 
-            // Profile Body
+            // Profile Body Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   children: [
-                    // Avatar & Name Card
+                    const SizedBox(height: 10),
+
+                    // 1. Avatar & Profile Header (Image 2)
                     _buildUserHeader(),
+                    const SizedBox(height: 18),
+
+                    // 2. White Card Container for Account Menus
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // SECTION: AKUN
+                          _buildSectionLabel('AKUN'),
+                          const SizedBox(height: 8),
+                          _buildMenuItemRow(
+                            icon: Icons.person_outline_rounded,
+                            iconColor: const Color(0xFF64748B),
+                            iconBg: const Color(0xFFF1F5F9),
+                            title: 'Informasi Pribadi',
+                            subtitle: 'Ubah nama, email, no. telp',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const ProfileDetailScreen()),
+                              );
+                            },
+                          ),
+                          const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                          _buildMenuItemRow(
+                            icon: Icons.location_on_outlined,
+                            iconColor: const Color(0xFF64748B),
+                            iconBg: const Color(0xFFF1F5F9),
+                            title: 'Alamat Pengiriman',
+                            subtitle: 'Atur alamat kantor & rumah',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const AddressScreen()),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // SECTION: TRANSAKSI
+                          _buildSectionLabel('TRANSAKSI'),
+                          const SizedBox(height: 8),
+                          _buildMenuItemRow(
+                            icon: Icons.credit_card_outlined,
+                            iconColor: const Color(0xFF64748B),
+                            iconBg: const Color(0xFFF1F5F9),
+                            title: 'Metode Pembayaran',
+                            subtitle: 'Kartu, e-wallet terhubung',
+                            onTap: () {},
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Highlighted Langganan Saya Card (Image 2)
+                          _buildHighlightedSubscriptionCard(),
+                          const SizedBox(height: 16),
+
+                          // SECTION: LAINNYA
+                          _buildSectionLabel('LAINNYA'),
+                          const SizedBox(height: 8),
+                          _buildNotificationSwitchRow(),
+                          const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                          _buildMenuItemRow(
+                            icon: Icons.help_outline_rounded,
+                            iconColor: const Color(0xFF64748B),
+                            iconBg: const Color(0xFFF1F5F9),
+                            title: 'Bantuan',
+                            subtitle: 'FAQ & hubungi CS',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const BantuanFaqScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
-                    // Metrics Row (12 Hari Beruntun & Elite Member)
-                    _buildMetricsRow(),
-                    const SizedBox(height: 20),
-
-                    // Section: AKUN
-                    _buildSectionHeader('AKUN'),
-                    _buildMenuItem(
-                      icon: Icons.person_outline_rounded,
-                      title: 'Informasi Pribadi',
-                      subtitle: 'Ubah nama, email, no. telp',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ProfileDetailScreen()),
-                        );
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.location_on_outlined,
-                      title: 'Alamat Pengiriman',
-                      subtitle: 'Atur alamat kantor & rumah',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const AddressScreen()),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Section: TRANSAKSI
-                    _buildSectionHeader('TRANSAKSI'),
-                    _buildMenuItem(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: 'Metode Pembayaran',
-                      subtitle: 'Kartu, e-wallet terhubung',
-                      onTap: () {},
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.card_membership_rounded,
-                      title: 'Langganan Saya',
-                      subtitle: 'Paket Sehat 30 Hari',
-                      badge: 'AKTIF',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LanggananSayaScreen()),
-                        );
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.local_offer_outlined,
-                      title: 'Katalog Langganan',
-                      subtitle: 'Pilih paket hemat & diskon 25%',
-                      badge: 'PROMO',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LanggananKatalogScreen()),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Section: LAINNYA
-                    _buildSectionHeader('LAINNYA'),
-                    _buildNotificationItem(),
-                    _buildMenuItem(
-                      icon: Icons.help_outline_rounded,
-                      title: 'Bantuan & FAQ',
-                      subtitle: 'Pusat bantuan & NutriBot AI',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const BantuanFaqScreen()),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Logout Button (soft red pill)
+                    // 3. Logout Button (Soft Grey/Red Container with Red Icon & Text)
                     SizedBox(
                       width: double.infinity,
                       height: 48,
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton(
                         onPressed: _handleLogout,
-                        icon: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 18),
-                        label: Text(
-                          'Keluar',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFEF4444),
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFEF2F2),
-                          side: const BorderSide(color: Color(0xFFFECACA)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.logout_rounded,
+                                color: Color(0xFFDC2626), size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Keluar',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFDC2626),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
 
-                    // App Version Text
+                    // 4. App Version Text
                     Text(
                       'Versi Aplikasi 2.1.0',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: AppColors.textMuted,
+                        fontSize: 11.5,
+                        color: const Color(0xFF94A3B8),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -212,13 +250,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       children: [
         Stack(
+          alignment: Alignment.center,
           children: [
+            // Soft mint green aura glow
             Container(
-              width: 82,
-              height: 82,
+              width: 104,
+              height: 104,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primaryGreen, width: 2.5),
+                color: const Color(0xFFDCFCE7).withValues(alpha: 0.6),
+              ),
+            ),
+            // Avatar Image
+            Container(
+              width: 86,
+              height: 86,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.08),
@@ -229,30 +278,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               clipBehavior: Clip.antiAlias,
               child: Image.network(
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: const Color(0xFFDCFCE7),
-                  child: const Icon(Icons.person, color: AppColors.primaryGreen, size: 38),
+                  child: const Icon(Icons.person,
+                      color: AppColors.primaryGreen, size: 40),
                 ),
               ),
             ),
+            // Green Edit Pencil Button
             Positioned(
-              bottom: 0,
-              right: 0,
+              bottom: 4,
+              right: 8,
               child: Container(
-                width: 24,
-                height: 24,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryGreen,
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF16A34A),
                   shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
-                child: const Icon(Icons.edit_rounded, color: Colors.white, size: 13),
+                child: const Icon(Icons.edit_rounded,
+                    color: Colors.white, size: 13),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+
+        // Name with Green Verified Icon
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -264,261 +319,178 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: AppColors.textDark,
               ),
             ),
-            const SizedBox(width: 5),
-            const Icon(Icons.verified_rounded, color: AppColors.primaryGreen, size: 18),
+            const SizedBox(width: 6),
+            const Icon(Icons.check_circle_rounded,
+                color: Color(0xFF16A34A), size: 18),
           ],
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
+
+        // Email Subtitle
         Text(
-          'nadia.salsabila@gmail.com',
+          'nadia.salsabila@email.com',
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            color: AppColors.textMuted,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF64748B),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMetricsRow() {
-    return Row(
-      children: [
-        // Streak Card
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFF7ED),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text('🔥', style: TextStyle(fontSize: 18)),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '12',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    Text(
-                      'HARI BERUNTUN',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF94A3B8),
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-
-        // Elite Member Card (Dark Green)
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0F5132), Color(0xFF166534)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0F5132).withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.star_rounded, color: Color(0xFFFDE047), size: 20),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Elite',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      'MEMBER',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFBBF7D0),
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: const Color(0xFF94A3B8),
-          letterSpacing: 0.6,
-        ),
+  Widget _buildSectionLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        color: const Color(0xFF94A3B8),
+        letterSpacing: 0.6,
       ),
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildMenuItemRow({
     required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
     required String title,
     required String subtitle,
-    String? badge,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(10),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 19),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
                   ),
-                  child: Icon(icon, color: const Color(0xFF475569), size: 20),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: Color(0xFF94A3B8), size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHighlightedSubscriptionCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LanggananSayaScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0FDF4),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFF166534),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.verified_rounded,
+                  color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            title,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          if (badge != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                badge,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.primaryGreen,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
                       Text(
-                        subtitle,
-                        style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppColors.textMuted),
+                        'Langganan Saya',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF166534),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'AKTIF',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFCBD5E1)),
-              ],
+                  const SizedBox(height: 3),
+                  Text(
+                    'Paket Sehat 30 Hari',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF16A34A),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            const Icon(Icons.chevron_right_rounded,
+                color: Color(0xFF166534), size: 20),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildNotificationItem() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+  Widget _buildNotificationSwitchRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Container(
@@ -526,44 +498,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 38,
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.notifications_none_rounded, color: Color(0xFF475569), size: 20),
+            child: const Icon(Icons.notifications_none_rounded,
+                color: Color(0xFF64748B), size: 19),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const NotifikasiScreen()),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Notifikasi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textDark,
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Notifikasi',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
                   ),
-                  Text(
-                    'Promo & update pesanan',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Promo & update pesanan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF64748B),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Switch(
             value: _notificationsEnabled,
-            activeTrackColor: AppColors.primaryGreen,
             activeThumbColor: Colors.white,
+            activeTrackColor: const Color(0xFF16A34A),
+            inactiveThumbColor: Colors.white,
+            inactiveTrackColor: const Color(0xFFE2E8F0),
             onChanged: (val) {
-              setState(() => _notificationsEnabled = val);
+              setState(() {
+                _notificationsEnabled = val;
+              });
             },
           ),
         ],
