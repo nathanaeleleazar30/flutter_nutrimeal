@@ -52,6 +52,14 @@ class AppTextStyles {
     color: AppColors.textMuted,
   );
 
+  // Error Text
+  static TextStyle errorText = GoogleFonts.plusJakartaSans(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: AppColors.errorRed,
+    height: 1.25,
+  );
+
   // Button Text
   static TextStyle buttonText = GoogleFonts.plusJakartaSans(
     fontSize: 15,
@@ -83,5 +91,44 @@ class AppTextStyles {
     fontSize: 11.5,
     fontWeight: FontWeight.w500,
     color: AppColors.textMuted,
+  );
+
+  // Subtitle for Forgot Password and Verify Screens
+  static TextStyle screenSubtitle = GoogleFonts.plusJakartaSans(
+    fontSize: 12.5,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textSecondary,
+    height: 1.45,
+  );
+
+  // Modal Text Styles
+  static TextStyle modalTitle = GoogleFonts.plusJakartaSans(
+    fontSize: 17,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textDark,
+  );
+
+  static TextStyle modalSubtitle = GoogleFonts.plusJakartaSans(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textSecondary,
+  );
+
+  static TextStyle accountName = GoogleFonts.plusJakartaSans(
+    fontSize: 13.5,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textDark,
+  );
+
+  static TextStyle accountEmail = GoogleFonts.plusJakartaSans(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textMuted,
+  );
+
+  static TextStyle otpDigit = GoogleFonts.plusJakartaSans(
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+    color: AppColors.textDark,
   );
 }
