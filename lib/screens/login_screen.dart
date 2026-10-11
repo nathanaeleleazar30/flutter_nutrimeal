@@ -6,7 +6,6 @@ import '../core/constants/app_text_styles.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/food_doodle_background.dart';
-import '../widgets/google_account_sheet.dart';
 import '../widgets/google_sign_in_button.dart';
 import '../widgets/nutri_meal_logo.dart';
 import 'forgot_password_screen.dart';
@@ -26,9 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-populate dummy credentials so user can directly proceed to Menu/Home
-    _emailController.text = 'nathan@student.ub.ac.id';
-    _passwordController.text = 'password123';
+    // Tidak ada dummy credentials — user harus isi sendiri
   }
 
   @override
@@ -59,12 +56,31 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
       Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      // Error sudah ditampilkan via authController.generalError / field errors
+      final err = authController.generalError;
+      if (err != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
     }
   }
 
-  void _handleGoogleLogin() {
-    GoogleAccountSheet.show(context, onAccountSelected: () {
-      final user = context.read<AuthController>().selectedGoogleAccount;
+  void _handleGoogleLogin() async {
+    final authController = context.read<AuthController>();
+
+    // Gunakan Google Sign-In resmi dari HP (native SDK)
+    final success = await authController.signInWithRealGoogle();
+    if (!mounted) return;
+
+    if (success) {
+      final user = authController.selectedGoogleAccount;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -77,7 +93,19 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
       Navigator.pushReplacementNamed(context, '/home');
-    });
+    } else {
+      final err = authController.generalError;
+      if (err != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
   }
 
   void _handleRegister() {
