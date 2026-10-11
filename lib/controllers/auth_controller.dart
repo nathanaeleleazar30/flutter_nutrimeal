@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -6,10 +7,22 @@ import '../core/constants/api_config.dart';
 
 class AuthController extends ChangeNotifier {
   // Google Sign-In instance untuk autentikasi akun Google resmi
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: ApiConfig.webClientId,
-    scopes: const ['email', 'profile'],
-  );
+  late final GoogleSignIn _googleSignIn;
+
+  AuthController() {
+    String? clientId;
+    try {
+      if (Platform.isAndroid) {
+        clientId = ApiConfig.androidClientId;
+      }
+    } catch (_) {}
+
+    _googleSignIn = GoogleSignIn(
+      serverClientId: ApiConfig.webClientId,
+      clientId: clientId,
+      scopes: const ['email', 'profile'],
+    );
+  }
 
   // Loading & Session State
   bool _isLoading = false;
@@ -262,14 +275,14 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Coba daftar via Google Auth endpoint (customer registration)
+      // Daftar customer via endpoint customer-register (simpan password ke DB)
       final resData = await _postToBackend(
-        ApiConfig.candidateGoogleAuthUrls,
+        ApiConfig.candidateRegisterUrls,
         {
-          'email': email.trim(),
           'name': nama.trim(),
+          'email': email.trim(),
           'phone': whatsapp.trim(),
-          // Tanpa idToken = register manual customer (mobile)
+          'password': password,
         },
       );
 
