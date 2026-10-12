@@ -7,7 +7,6 @@ import '../core/constants/app_text_styles.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/food_doodle_background.dart';
-import '../widgets/google_account_sheet.dart';
 import '../widgets/google_sign_in_button.dart';
 import '../widgets/nutri_meal_logo.dart';
 
@@ -37,20 +36,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (widget.initialShowErrors) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<AuthController>().setValidationErrorsManual(
-          emailErr:
-              'email tidak boleh kosong dan harus menggunakan @student.ub.ac.id',
-          passwordErr:
-              'Password minimal 8 karakter mengandung angka',
+          emailErr: 'Email tidak boleh kosong',
+          passwordErr: 'Password minimal 8 karakter mengandung angka',
         );
       });
-    } else {
-      // Default dummy data so user can directly proceed to Menu/Home
-      _namaController.text = 'Nathanael Eleazar';
-      _emailController.text = 'nathan@student.ub.ac.id';
-      _whatsappController.text = '81234567890';
-      _passwordController.text = 'password123';
-      _konfirmasiPasswordController.text = 'password123';
     }
+    // Tidak ada dummy data — user harus isi sendiri
   }
 
   @override
@@ -88,12 +79,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
       Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      final err = authController.generalError;
+      if (err != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
     }
   }
 
-  void _handleGoogleRegister() {
-    GoogleAccountSheet.show(context, onAccountSelected: () {
-      final user = context.read<AuthController>().selectedGoogleAccount;
+  void _handleGoogleRegister() async {
+    final authController = context.read<AuthController>();
+
+    // Gunakan Google Sign-In resmi dari HP (native SDK)
+    final success = await authController.signInWithRealGoogle();
+    if (!mounted) return;
+
+    if (success) {
+      final user = authController.selectedGoogleAccount;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -106,7 +115,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
       Navigator.pushReplacementNamed(context, '/home');
-    });
+    } else {
+      final err = authController.generalError;
+      if (err != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
   }
 
   @override
