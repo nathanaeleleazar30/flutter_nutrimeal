@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '192.168.208.123';
+  static const String hostLanIp = '192.168.1.191';
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
@@ -36,26 +36,23 @@ class ApiConfig {
 
   /// Daftar URL alternatif backend untuk Customer Register (mobile)
   static List<String> get candidateRegisterUrls => [
-    customerRegisterUrl,
+    'http://localhost:5000/api/auth/customer-register',
     'http://$hostLanIp:5000/api/auth/customer-register',
     'http://10.0.2.2:5000/api/auth/customer-register',
-    'http://localhost:5000/api/auth/customer-register',
   ];
 
   /// Daftar URL alternatif backend untuk Google Auth
-  /// (Mengatasi perbedaan Emulator vs HP Fisik Wi-Fi vs Desktop)
+  /// (Mengatasi perbedaan Emulator vs HP Fisik USB / Wi-Fi)
   static List<String> get candidateGoogleAuthUrls => [
-    googleAuthUrl,
+    'http://localhost:5000/api/auth/google',
     'http://$hostLanIp:5000/api/auth/google',
     'http://10.0.2.2:5000/api/auth/google',
-    'http://localhost:5000/api/auth/google',
   ];
 
   /// Daftar URL alternatif backend untuk Login (email+password)
   static List<String> get candidateLoginUrls => [
-    loginUrl,
+    'http://localhost:5000/api/auth/login',
     'http://$hostLanIp:5000/api/auth/login',
     'http://10.0.2.2:5000/api/auth/login',
-    'http://localhost:5000/api/auth/login',
   ];
 }

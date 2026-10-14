@@ -208,8 +208,8 @@ class AuthController extends ChangeNotifier {
           if (response.statusCode == 200 && data['success'] == true) {
             successData = data;
             break;
-          } else if (response.statusCode == 401 || response.statusCode == 400) {
-            // Kredensial salah — jangan coba URL lain
+          } else {
+            // Backend berhasil dihubungi namun menolak kredensial atau error
             _generalError = data['message'] ?? 'Email atau password salah.';
             _isLoading = false;
             notifyListeners();
@@ -429,17 +429,14 @@ class AuthController extends ChangeNotifier {
 
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-        if (response.statusCode < 500) {
-          // Return data (bisa success atau error dari backend)
-          if (kDebugMode) {
-            if (data['success'] == true) {
-              print('[NutriMeal Auth] ✅ Berhasil terhubung ke: $url');
-            } else {
-              print('[NutriMeal Auth] ⚠️ Backend error di $url: ${data['message']}');
-            }
+        if (kDebugMode) {
+          if (data['success'] == true) {
+            print('[NutriMeal Auth] ✅ Berhasil terhubung ke: $url');
+          } else {
+            print('[NutriMeal Auth] ⚠️ Backend response (${response.statusCode}) di $url: ${data['message']}');
           }
-          return data;
         }
+        return data;
       } on Exception catch (e) {
         if (kDebugMode) print('[NutriMeal Auth] ⚠️ Tidak dapat dijangkau $urlStr: $e');
         continue;
