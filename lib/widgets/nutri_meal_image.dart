@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/constants/api_config.dart';
 import '../core/constants/app_colors.dart';
 
 class NutriMealImage extends StatelessWidget {
@@ -21,8 +22,10 @@ class NutriMealImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveUrl = ApiConfig.resolveImageUrl(imageUrl);
+
     Widget imageWidget = Image.network(
-      imageUrl,
+      effectiveUrl,
       width: width,
       height: height,
       fit: fit,
