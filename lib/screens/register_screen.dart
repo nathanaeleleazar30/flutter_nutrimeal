@@ -56,9 +56,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleDaftar() async {
     final authController = context.read<AuthController>();
+    final registeredEmail = _emailController.text.trim();
     final success = await authController.register(
       nama: _namaController.text,
-      email: _emailController.text,
+      email: registeredEmail,
       whatsapp: _whatsappController.text,
       password: _passwordController.text,
       konfirmasiPassword: _konfirmasiPasswordController.text,
@@ -70,15 +71,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Pendaftaran berhasil! Selamat datang di NutriMeal.',
+            'Pendaftaran berhasil! Silakan masuk menggunakan akun baru Anda.',
             style: AppTextStyles.inputText.copyWith(color: Colors.white),
           ),
           backgroundColor: AppColors.primaryGreen,
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
-      Navigator.pushReplacementNamed(context, '/home');
+      // Kembali ke halaman awal (login)
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context, registeredEmail);
+      } else {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     } else {
       final err = authController.generalError;
       if (err != null) {

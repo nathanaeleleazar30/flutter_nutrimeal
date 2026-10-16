@@ -300,16 +300,16 @@ class AuthController extends ChangeNotifier {
         return false;
       }
 
-      // Sukses
-      final customerData = resData['data'];
-      _authToken = customerData?['token'];
-      _customerId = customerData?['customer']?['id'];
-      _currentUserName = customerData?['customer']?['name'] ?? nama;
-      _currentUserEmail = customerData?['customer']?['email'] ?? email;
-      _isLoggedIn = true;
-      _backendMessage = 'Pendaftaran tersimpan ke Database';
+            // Sukses menyimpan ke database
+      // Jangan langsung login otomatis, agar user login manual terlebih dahulu
+      _authToken = null;
+      _customerId = null;
+      _currentUserName = null;
+      _currentUserEmail = null;
+      _isLoggedIn = false;
+      _backendMessage = 'Pendaftaran berhasil. Silakan masuk dengan akun Anda.';
 
-      if (kDebugMode) print('[NutriMeal Auth] ✅ Register berhasil: $_currentUserEmail');
+      if (kDebugMode) print('[NutriMeal Auth] 🚀 Register berhasil tersimpan di DB: ${email.trim()}');
     } catch (e) {
       _generalError = 'Terjadi kesalahan: $e';
       _isLoading = false;
