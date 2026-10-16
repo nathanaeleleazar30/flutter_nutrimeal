@@ -5,6 +5,7 @@ import '../widgets/main_top_bar.dart';
 import 'address_screen.dart';
 import 'bantuan_faq_screen.dart';
 import 'langganan_saya_screen.dart';
+import 'payment_method_screen.dart';
 import 'profile_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -83,9 +84,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar (Matching MainTopBar with brand logo & action buttons)
+            // Top Bar with brand logo, notification bell, & cart badge
             MainTopBar(
-              onCartTap: widget.onCartTap,
+              onCartTap: widget.onCartTap ?? () => Navigator.pushNamed(context, '/cart'),
               onProfileTap: () {},
             ),
 
@@ -97,7 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     const SizedBox(height: 10),
 
-                    // 1. Avatar & Profile Header (Image 2)
+                    // 1. Avatar & Profile Header (Matching Image 3)
                     _buildUserHeader(),
                     const SizedBox(height: 18),
 
@@ -122,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _buildSectionLabel('AKUN'),
                           const SizedBox(height: 8),
                           _buildMenuItemRow(
-                            icon: Icons.person_outline_rounded,
+                            icon: Icons.person_rounded,
                             iconColor: const Color(0xFF64748B),
                             iconBg: const Color(0xFFF1F5F9),
                             title: 'Informasi Pribadi',
@@ -137,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const Divider(height: 20, color: Color(0xFFF1F5F9)),
                           _buildMenuItemRow(
-                            icon: Icons.location_on_outlined,
+                            icon: Icons.location_on_rounded,
                             iconColor: const Color(0xFF64748B),
                             iconBg: const Color(0xFFF1F5F9),
                             title: 'Alamat Pengiriman',
@@ -156,16 +157,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _buildSectionLabel('TRANSAKSI'),
                           const SizedBox(height: 8),
                           _buildMenuItemRow(
-                            icon: Icons.credit_card_outlined,
+                            icon: Icons.account_balance_wallet_rounded,
                             iconColor: const Color(0xFF64748B),
                             iconBg: const Color(0xFFF1F5F9),
                             title: 'Metode Pembayaran',
                             subtitle: 'Kartu, e-wallet terhubung',
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const PaymentMethodScreen()),
+                              );
+                            },
                           ),
                           const SizedBox(height: 10),
 
-                          // Highlighted Langganan Saya Card (Image 2)
+                          // Highlighted Langganan Saya Card (Image 3)
                           _buildHighlightedSubscriptionCard(),
                           const SizedBox(height: 16),
 
@@ -193,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // 3. Logout Button (Soft Grey/Red Container with Red Icon & Text)
+                    // 3. Logout Button (Light Grey Pill Container with Red Icon & Text)
                     SizedBox(
                       width: double.infinity,
                       height: 48,
@@ -235,7 +242,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -295,16 +302,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Positioned(
               bottom: 4,
               right: 8,
-              child: Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF16A34A),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const ProfileDetailScreen()),
+                  );
+                },
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF16A34A),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.edit_rounded,
+                      color: Colors.white, size: 13),
                 ),
-                child: const Icon(Icons.edit_rounded,
-                    color: Colors.white, size: 13),
               ),
             ),
           ],
@@ -324,19 +340,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFF16A34A), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFF16A34A),
+              size: 18,
+            ),
           ],
         ),
         const SizedBox(height: 3),
 
-        // Email Subtitle
+        // Subtitle Email
         Text(
           'nadia.salsabila@email.com',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12.5,
-            fontWeight: FontWeight.w500,
             color: const Color(0xFF64748B),
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -349,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       style: GoogleFonts.plusJakartaSans(
         fontSize: 11,
         fontWeight: FontWeight.w800,
-        color: const Color(0xFF94A3B8),
+        color: const Color(0xFF64748B),
         letterSpacing: 0.6,
       ),
     );
@@ -375,9 +394,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               height: 38,
               decoration: BoxDecoration(
                 color: iconBg,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: iconColor, size: 19),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -392,12 +411,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: AppColors.textDark,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     subtitle,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
-                      fontWeight: FontWeight.w500,
                       color: const Color(0xFF64748B),
                     ),
                   ),
@@ -421,10 +439,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: const Color(0xFFF0FDF4),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFDCFCE7), width: 1.2),
         ),
         child: Row(
           children: [
@@ -432,8 +451,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF166534),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFF0F8A50),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.verified_rounded,
                   color: Colors.white, size: 20),
@@ -453,18 +472,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: AppColors.textDark,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
+                            horizontal: 6, vertical: 1.5),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF166534),
-                          borderRadius: BorderRadius.circular(10),
+                          color: const Color(0xFF0F8A50),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           'AKTIF',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 9.5,
+                            fontSize: 9,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),
@@ -472,20 +491,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(
                     'Paket Sehat 30 Hari',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF16A34A),
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0F8A50),
                     ),
                   ),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                color: Color(0xFF166534), size: 20),
+                color: Color(0xFF0F8A50), size: 20),
           ],
         ),
       ),
@@ -502,10 +521,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 38,
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.notifications_none_rounded,
-                color: Color(0xFF64748B), size: 19),
+                color: Color(0xFF64748B), size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -520,29 +539,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppColors.textDark,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   'Promo & update pesanan',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
                     color: const Color(0xFF64748B),
                   ),
                 ),
               ],
             ),
           ),
-          Switch(
-            value: _notificationsEnabled,
-            activeThumbColor: Colors.white,
-            activeTrackColor: const Color(0xFF16A34A),
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: const Color(0xFFE2E8F0),
-            onChanged: (val) {
-              setState(() {
-                _notificationsEnabled = val;
-              });
-            },
+          Transform.scale(
+            scale: 0.85,
+            child: Switch(
+              value: _notificationsEnabled,
+              activeThumbColor: Colors.white,
+              activeTrackColor: const Color(0xFF0F8A50),
+              inactiveThumbColor: Colors.white,
+              inactiveTrackColor: const Color(0xFFCBD5E1),
+              onChanged: (val) {
+                setState(() => _notificationsEnabled = val);
+              },
+            ),
           ),
         ],
       ),

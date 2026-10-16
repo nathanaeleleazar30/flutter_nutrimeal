@@ -18,6 +18,9 @@ import 'screens/main_navigation_shell.dart';
 import 'screens/notifikasi_screen.dart';
 import 'screens/nutribot_chat_screen.dart';
 import 'screens/preview_shell.dart';
+import 'screens/payment_method_screen.dart';
+import 'screens/payment_status_screen.dart';
+import 'screens/voucher_promo_screen.dart';
 import 'screens/profile_detail_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/register_screen.dart';
@@ -71,11 +74,15 @@ class NutriMealApp extends StatelessWidget {
         '/verify-email': (context) => const VerifyEmailScreen(),
         '/home': (context) => const MainNavigationShell(),
         '/menu': (context) => const MainNavigationShell(initialIndex: 1),
+        '/pesan': (context) => const MainNavigationShell(initialIndex: 2),
         '/chat-ai': (context) => const NutriBotChatScreen(),
         '/chat-admin': (context) => const AdminChatScreen(),
         '/jadwal': (context) => const JadwalScreen(),
         '/cart': (context) => const KeranjangScreen(),
         '/checkout': (context) => const CheckoutScreen(),
+        '/payment-method': (context) => const PaymentMethodScreen(),
+        '/payment-status': (context) => const PaymentStatusScreen(),
+        '/voucher-promo': (context) => const VoucherPromoScreen(),
         '/address': (context) => const AddressScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/profile-detail': (context) => const ProfileDetailScreen(),

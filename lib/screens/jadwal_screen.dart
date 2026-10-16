@@ -37,11 +37,7 @@ class JadwalScreen extends StatefulWidget {
   final VoidCallback? onCartTap;
   final VoidCallback? onProfileTap;
 
-  const JadwalScreen({
-    super.key,
-    this.onCartTap,
-    this.onProfileTap,
-  });
+  const JadwalScreen({super.key, this.onCartTap, this.onProfileTap});
 
   @override
   State<JadwalScreen> createState() => _JadwalScreenState();
@@ -243,7 +239,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
           color: Color(0xFFDCFCE7),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.restaurant_menu_rounded, color: AppColors.primaryGreen, size: 18),
+        child: const Icon(
+          Icons.restaurant_menu_rounded,
+          color: AppColors.primaryGreen,
+          size: 18,
+        ),
       ),
       title: Text(
         name,
@@ -266,10 +266,19 @@ class _JadwalScreenState extends State<JadwalScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryGreen,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         ),
-        child: const Text('Pilih', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+        child: const Text(
+          'Pilih',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -309,12 +318,16 @@ class _JadwalScreenState extends State<JadwalScreen> {
                       duration: const Duration(milliseconds: 200),
                       width: 62,
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFF1F5F9),
+                        color: isSelected
+                            ? const Color(0xFF0F5132)
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFF0F5132).withValues(alpha: 0.3),
+                                  color: const Color(
+                                    0xFF0F5132,
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -329,7 +342,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white70 : const Color(0xFF64748B),
+                              color: isSelected
+                                  ? Colors.white70
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -338,7 +353,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: isSelected ? Colors.white : AppColors.textDark,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppColors.textDark,
                             ),
                           ),
                         ],
@@ -352,7 +369,10 @@ class _JadwalScreenState extends State<JadwalScreen> {
             // Meal Schedule Cards
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 children: [
                   ...currentSchedule.meals.map((meal) => _buildMealCard(meal)),
                   const SizedBox(height: 10),
@@ -401,7 +421,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   errorBuilder: (context, error, stackTrace) => Container(
                     color: const Color(0xFFDCFCE7),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.restaurant_rounded, size: 48, color: AppColors.primaryGreen),
+                    child: const Icon(
+                      Icons.restaurant_rounded,
+                      size: 48,
+                      color: AppColors.primaryGreen,
+                    ),
                   ),
                 ),
               ),
@@ -409,9 +433,14 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 top: 12,
                 left: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: isLunch ? const Color(0xFF059669) : const Color(0xFF4F46E5),
+                    color: isLunch
+                        ? const Color(0xFF059669)
+                        : const Color(0xFF4F46E5),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -424,7 +453,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isLunch ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+                        isLunch
+                            ? Icons.wb_sunny_rounded
+                            : Icons.nightlight_round,
                         color: Colors.white,
                         size: 13,
                       ),
@@ -466,9 +497,14 @@ class _JadwalScreenState extends State<JadwalScreen> {
                     final isCalorie = tag.contains('kkal');
                     return Container(
                       margin: const EdgeInsets.only(right: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: isCalorie ? const Color(0xFFF1F5F9) : const Color(0xFFDCFCE7),
+                        color: isCalorie
+                            ? const Color(0xFFF1F5F9)
+                            : const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -476,7 +512,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: isCalorie ? const Color(0xFF475569) : const Color(0xFF16A34A),
+                          color: isCalorie
+                              ? const Color(0xFF475569)
+                              : const Color(0xFF16A34A),
                         ),
                       ),
                     );
@@ -490,7 +528,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.access_time_rounded, size: 15, color: Color(0xFF64748B)),
+                        const Icon(
+                          Icons.access_time_rounded,
+                          size: 15,
+                          color: Color(0xFF64748B),
+                        ),
                         const SizedBox(width: 5),
                         Text(
                           meal.deliveryTime,
@@ -510,7 +552,10 @@ class _JadwalScreenState extends State<JadwalScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
                       ),
                       child: Text(
                         'Ubah',
@@ -582,7 +627,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   child: const LinearProgressIndicator(
                     value: 0.8,
                     backgroundColor: Color(0xFFA7F3D0),
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primaryGreen,
+                    ),
                     minHeight: 6,
                   ),
                 ),

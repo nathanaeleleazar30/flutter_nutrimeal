@@ -1,8 +1,5 @@
 import 'dart:convert';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../core/constants/api_config.dart';
 import 'package:http/http.dart' as http;
 import '../core/constants/api_config.dart';
 
@@ -691,39 +688,28 @@ class NutriMealMenuController extends ChangeNotifier {
   final List<DeliveryAddress> _savedAddresses = [
     const DeliveryAddress(
       id: 'addr_1',
-      label: 'Kantor',
-      recipientName: 'Andi Pratama',
-      phoneNumber: '(+62) 812-3456-7890',
-      area: 'Sawojajar, Kota Malang, Jawa Timur 65139',
+      label: 'Rumah (Senopati)',
+      recipientName: 'Nadia Salsabila',
+      phoneNumber: '+62 812-8890-1234',
+      area: 'Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190',
       fullAddress:
-          'Jl. Danau Toba No. 24, Sawojajar, Kota Malang, Jawa Timur 65139',
+          'Jl. Senopati No. 42, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190',
       deliveryNote:
-          'Catatan pengantaran: Titipkan ke satpam lobi kantor jika siang hari',
-      addressType: 'Kantor',
+          'Rumah pagar hitam samping Alfamart / Titipkan pos security',
+      addressType: 'Rumah',
       isDefault: true,
     ),
     const DeliveryAddress(
       id: 'addr_2',
-      label: 'Rumah',
-      recipientName: 'Andi Pratama',
-      phoneNumber: '(+62) 812-3456-7890',
-      area: 'Lowokwaru, Kota Malang, Jawa Timur 65141',
+      label: 'Kantor (Malang)',
+      recipientName: 'Nadia Salsabila',
+      phoneNumber: '+62 812-8890-1234',
+      area: 'Lowokwaru, Kota Malang',
       fullAddress:
-          'Kompleks Permata Hijau Blok C-12, Lowokwaru, Kota Malang, Jawa Timur 65141',
-      deliveryNote: '',
-      addressType: 'Rumah',
-      isDefault: false,
-    ),
-    const DeliveryAddress(
-      id: 'addr_3',
-      label: 'Tempat Kerja',
-      recipientName: 'Hammad Feriand',
-      phoneNumber: '(+62) 877-0000-9180',
-      area: 'Lowokwaru, Kota Malang, Jawa Timur 65144',
-      fullAddress:
-          'Gedung Cyber Tower Lt. 4, Ruang IT, Lowokwaru, Kota Malang, Jawa Timur 65144',
-      deliveryNote: '',
-      addressType: 'Tempat Kerja',
+          'Jl. Soekarno Hatta No. 42, Lowokwaru, Kota Malang (Sesi Siang & Malam)',
+      deliveryNote:
+          'Titipkan ke satpam lobi kantor jika siang hari',
+      addressType: 'Kantor',
       isDefault: false,
     ),
   ];
@@ -786,7 +772,7 @@ class NutriMealMenuController extends ChangeNotifier {
   }
 
   // Payment Options & Selected Payment
-  String _selectedPaymentId = 'gopay';
+  String _selectedPaymentId = 'qris';
   String get selectedPaymentId => _selectedPaymentId;
 
   final List<PaymentOption> paymentOptions = const [
