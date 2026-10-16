@@ -108,12 +108,16 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleRegister() {
+  void _handleRegister() async {
     context.read<AuthController>().clearErrors();
-    Navigator.push(
+    final registeredEmail = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (context) => const RegisterScreen()),
     );
+    if (registeredEmail != null && registeredEmail.isNotEmpty && mounted) {
+      _emailController.text = registeredEmail;
+      _passwordController.clear();
+    }
   }
 
   void _handleForgotPassword() {
