@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../core/constants/api_config.dart';
 
 class NutritionInfo {
   final int calories;
@@ -12,6 +15,15 @@ class NutritionInfo {
     required this.fat,
     required this.carbs,
   });
+
+  factory NutritionInfo.fromJson(Map<String, dynamic> json, int calories) {
+    return NutritionInfo(
+      calories: calories,
+      protein: json['protein']?.toString() ?? '30g',
+      fat: json['fat']?.toString() ?? '10g',
+      carbs: json['carbs']?.toString() ?? '40g',
+    );
+  }
 }
 
 class MenuItem {
@@ -42,6 +54,52 @@ class MenuItem {
     this.discountPercent,
     required this.nutrition,
   });
+
+  factory MenuItem.fromJson(Map<String, dynamic> json, {String? baseUrl}) {
+    List<String> parsedTags = [];
+    if (json['tags'] is List) {
+      parsedTags = (json['tags'] as List)
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    } else if (json['tags'] is String && (json['tags'] as String).trim().isNotEmpty) {
+      parsedTags = (json['tags'] as String)
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+
+    final rawImg = (json['image_url'] ?? json['imageUrl'])?.toString();
+    final resolvedImg = ApiConfig.resolveImageUrl(rawImg, activeBaseUrl: baseUrl);
+
+    final cal = int.tryParse(json['calories']?.toString() ?? '0') ?? 0;
+    final prc = int.tryParse(json['price']?.toString() ?? '0') ?? 0;
+    final rawDiscount = json['discount_percent'] ?? json['discountPercent'];
+    final disc = int.tryParse(rawDiscount?.toString() ?? '0') ?? 0;
+
+    return MenuItem(
+      id: json['id']?.toString() ?? 'item-${DateTime.now().millisecondsSinceEpoch}',
+      name: json['name']?.toString() ?? 'Menu Sehat',
+      category: json['category']?.toString() ?? 'Lainnya',
+      calories: cal,
+      price: prc,
+      discountPercent: disc > 0 ? disc : null,
+      imageUrl: resolvedImg,
+      description: json['description']?.toString() ?? 'Menu lezat bergizi seimbang dari NutriMeal.',
+      tags: parsedTags,
+      schedule: json['schedule']?.toString() ?? 'Setiap Hari',
+      deliveryTime: json['delivery_time']?.toString() ??
+          json['deliveryTime']?.toString() ??
+          '12:00 - 13:00 WIB',
+      nutrition: NutritionInfo(
+        calories: cal,
+        protein: json['protein']?.toString() ?? '30g',
+        fat: json['fat']?.toString() ?? '10g',
+        carbs: json['carbs']?.toString() ?? '45g',
+      ),
+    );
+  }
 }
 
 class CartItem {
@@ -135,6 +193,106 @@ class CateringDayItem {
 class NutriMealMenuController extends ChangeNotifier {
   NutriMealMenuController() {
     _initDefaultCart();
+    // Langsung fetch menu dari backend saat pertama kali controller dibuat
+    fetchMenusFromApi();
+  }
+
+  // -----------------------------------------------------------------------
+  // Fetch API State
+  // -----------------------------------------------------------------------
+  bool _isLoadingMenu = false;
+  bool get isLoadingMenu => _isLoadingMenu;
+
+  String? _menuError;
+  String? get menuError => _menuError;
+
+
+  /// Flag apakah data menu sudah pernah diambil dari API
+  bool _menuLoadedFromApi = false;
+  bool get menuLoadedFromApi => _menuLoadedFromApi;
+
+  /// Fetch daftar menu dari GET /api/meals
+  /// Mencoba setiap URL kandidat secara berurutan hingga salah satu berhasil.
+  Future<void> fetchMenusFromApi() async {
+    if (_isLoadingMenu) return;
+    _isLoadingMenu = true;
+    _menuError = null;
+    notifyListeners();
+
+    final candidates = ApiConfig.candidateMealsUrls;
+    Object? lastError;
+
+    for (final url in candidates) {
+      try {
+        debugPrint('[MenuController] Mencoba fetch menu dari: $url');
+        final response = await http
+            .get(Uri.parse(url))
+            .timeout(const Duration(seconds: 8));
+
+        if (response.statusCode == 200) {
+          final uri = Uri.parse(url);
+          final resolvedBase = '${uri.scheme}://${uri.host}:${uri.port}';
+
+          final decoded = jsonDecode(response.body);
+          List<dynamic> rawList;
+          if (decoded is List) {
+            rawList = decoded;
+          } else if (decoded is Map && decoded.containsKey('data')) {
+            rawList = decoded['data'] as List<dynamic>;
+          } else if (decoded is Map && decoded.containsKey('meals')) {
+            rawList = decoded['meals'] as List<dynamic>;
+          } else {
+            rawList = [];
+          }
+
+          if (rawList.isNotEmpty) {
+            final fetched = rawList
+                .map((e) => MenuItem.fromJson(
+                      e as Map<String, dynamic>,
+                      baseUrl: resolvedBase,
+                    ))
+                .toList();
+
+            // Ganti seluruh daftar menu dengan data dari server
+            _menuItems
+              ..clear()
+              ..addAll(fetched);
+
+            // Pastikan kategori tersedia di dropdown filter
+            final serverCategories = fetched
+                .map((m) => m.category)
+                .toSet()
+                .toList();
+            for (final cat in serverCategories) {
+              if (!_dynamicCategories.contains(cat)) {
+                _dynamicCategories.add(cat);
+              }
+            }
+
+            _menuLoadedFromApi = true;
+            _menuError = null;
+            debugPrint('[MenuController] Berhasil memuat ${fetched.length} menu dari $resolvedBase');
+          } else {
+            debugPrint('[MenuController] API mengembalikan list kosong dari $url, menggunakan data lokal.');
+          }
+          break; // Sukses, hentikan percobaan
+        } else {
+          lastError = 'HTTP ${response.statusCode}';
+          debugPrint('[MenuController] $url mengembalikan status ${response.statusCode}');
+        }
+      } catch (e) {
+        lastError = e;
+        debugPrint('[MenuController] Gagal terhubung ke $url: $e');
+      }
+    }
+
+    if (!_menuLoadedFromApi && lastError != null) {
+      _menuError = 'Gagal memuat menu dari server. Menampilkan data lokal.';
+      debugPrint('[MenuController] Semua URL kandidat gagal. Error terakhir: $lastError');
+    }
+
+    _isLoadingMenu = false;
+    notifyListeners();
   }
 
   // Navigation State
@@ -167,7 +325,8 @@ class NutriMealMenuController extends ChangeNotifier {
   String _selectedCategory = 'Semua';
   String get selectedCategory => _selectedCategory;
 
-  final List<String> categories = const [
+  /// Kategori dinamis — diisi dari data API, diawali dengan kategori default
+  final List<String> _dynamicCategories = [
     'Semua',
     'Ayam',
     'Ikan',
@@ -175,6 +334,8 @@ class NutriMealMenuController extends ChangeNotifier {
     'Seafood',
     'Roti',
   ];
+
+  List<String> get categories => List.unmodifiable(_dynamicCategories);
 
   void selectCategory(String category) {
     _selectedCategory = category;
@@ -191,6 +352,7 @@ class NutriMealMenuController extends ChangeNotifier {
   }
 
   // All Menu Items Dataset
+  // Tidak menggunakan const agar bisa diisi ulang dari API
   final List<MenuItem> _menuItems = [
     // item-1 (keep as first item for widget test compatibility: 'GRILLED CHICKEN')
     const MenuItem(
@@ -364,12 +526,21 @@ class NutriMealMenuController extends ChangeNotifier {
 
   List<MenuItem> get allMenuItems => _menuItems;
 
-  List<MenuItem> get popularMenuItems => [
-        _menuItems.firstWhere((i) => i.id == 'item-3', orElse: () => _menuItems[0]), // Chicken Salad
-        _menuItems.firstWhere((i) => i.id == 'item-4', orElse: () => _menuItems[1]), // Beef Veggie
-        _menuItems.firstWhere((i) => i.id == 'item-5', orElse: () => _menuItems[2]), // Ayam Bowl
-        _menuItems.firstWhere((i) => i.id == 'item-6', orElse: () => _menuItems[3]), // Chicken Wrap
-      ];
+  List<MenuItem> get popularMenuItems {
+    if (_menuItems.isEmpty) return [];
+    if (_menuLoadedFromApi) {
+      // Gunakan 4 item pertama dari API sebagai item populer
+      return _menuItems.take(4).toList();
+    }
+    // Fallback ke item hard-coded
+    MenuItem safeAt(int idx) => _menuItems[idx.clamp(0, _menuItems.length - 1)];
+    return [
+      _menuItems.firstWhere((i) => i.id == 'item-3', orElse: () => safeAt(0)),
+      _menuItems.firstWhere((i) => i.id == 'item-4', orElse: () => safeAt(1)),
+      _menuItems.firstWhere((i) => i.id == 'item-5', orElse: () => safeAt(2)),
+      _menuItems.firstWhere((i) => i.id == 'item-6', orElse: () => safeAt(3)),
+    ];
+  }
 
   List<MenuItem> get filteredMenuItems {
     return _menuItems.where((item) {
@@ -395,8 +566,15 @@ class NutriMealMenuController extends ChangeNotifier {
   final List<CartItem> _cartItems = [];
 
   void _initDefaultCart() {
-    final cheesy = _menuItems.firstWhere((i) => i.id == 'item-cheesy', orElse: () => _menuItems[0]);
-    final kare = _menuItems.firstWhere((i) => i.id == 'item-kare', orElse: () => _menuItems[1]);
+    if (_menuItems.isEmpty) return;
+    final cheesy = _menuItems.firstWhere(
+      (i) => i.id == 'item-cheesy',
+      orElse: () => _menuItems[0],
+    );
+    final kare = _menuItems.firstWhere(
+      (i) => i.id == 'item-kare',
+      orElse: () => _menuItems.length > 1 ? _menuItems[1] : _menuItems[0],
+    );
     _cartItems.add(CartItem(item: cheesy, quantity: 1));
     _cartItems.add(CartItem(item: kare, quantity: 1));
   }

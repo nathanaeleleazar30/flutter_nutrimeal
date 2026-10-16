@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '192.168.1.191';
+  static const String hostLanIp = '10.10.2.210';
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
@@ -55,4 +55,27 @@ class ApiConfig {
     'http://$hostLanIp:5000/api/auth/login',
     'http://10.0.2.2:5000/api/auth/login',
   ];
+
+  /// Daftar URL alternatif backend untuk Meals (Menu Makanan)
+  static List<String> get candidateMealsUrls => [
+    'http://localhost:5000/api/meals',
+    'http://$hostLanIp:5000/api/meals',
+    'http://10.0.2.2:5000/api/meals',
+  ];
+
+  /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
+  static String resolveImageUrl(String? rawUrl, {String? activeBaseUrl}) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) {
+      return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop';
+    }
+    final trimmed = rawUrl.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final base =
+        activeBaseUrl ??
+        (kIsWeb ? 'http://localhost:5000' : 'http://$hostLanIp:5000');
+    final cleanPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+    return '$base$cleanPath';
+  }
 }

@@ -8,13 +8,23 @@ import '../widgets/menu_card.dart';
 import '../widgets/nutri_meal_image.dart';
 import 'menu_detail_screen.dart';
 
-class BerandaScreen extends StatelessWidget {
+class BerandaScreen extends StatefulWidget {
   final VoidCallback? onNavigateToGallery;
 
   const BerandaScreen({
     super.key,
     this.onNavigateToGallery,
   });
+
+  @override
+  State<BerandaScreen> createState() => _BerandaScreenState();
+}
+
+class _BerandaScreenState extends State<BerandaScreen> {
+  Future<void> _handleRefresh() async {
+    final menuController = context.read<NutriMealMenuController>();
+    await menuController.fetchMenusFromApi();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +35,16 @@ class BerandaScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFE6F7ED),
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          color: const Color(0xFF15803D),
+          backgroundColor: Colors.white,
+          displacement: 60,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
             // ================================================================
             // 1. TOP MINT SECTION (Brand Top Bar, Search, Categories, NutriBot)
             // ================================================================
@@ -90,7 +107,7 @@ class BerandaScreen extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(right: 12),
                               child: GestureDetector(
-                                onTap: onNavigateToGallery,
+                                onTap: widget.onNavigateToGallery,
                                 child: const Icon(
                                   Icons.tune_rounded,
                                   color: Color(0xFF334155),
@@ -552,7 +569,7 @@ class BerandaScreen extends StatelessWidget {
                           ],
                         ),
                         GestureDetector(
-                          onTap: onNavigateToGallery,
+                          onTap: widget.onNavigateToGallery,
                           child: Text(
                             'Lihat Semua',
                             style: GoogleFonts.plusJakartaSans(
@@ -599,7 +616,8 @@ class BerandaScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -614,8 +632,8 @@ class BerandaScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         context.read<NutriMealMenuController>().selectCategory(title);
-        if (onNavigateToGallery != null) {
-          onNavigateToGallery!();
+        if (widget.onNavigateToGallery != null) {
+          widget.onNavigateToGallery!();
         }
       },
       child: Column(

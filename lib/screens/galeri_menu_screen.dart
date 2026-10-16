@@ -7,8 +7,17 @@ import '../widgets/main_top_bar.dart';
 import '../widgets/menu_card.dart';
 import 'menu_detail_screen.dart';
 
-class GaleriMenuScreen extends StatelessWidget {
+class GaleriMenuScreen extends StatefulWidget {
   const GaleriMenuScreen({super.key});
+
+  @override
+  State<GaleriMenuScreen> createState() => _GaleriMenuScreenState();
+}
+
+class _GaleriMenuScreenState extends State<GaleriMenuScreen> {
+  Future<void> _handleRefresh() async {
+    await context.read<NutriMealMenuController>().fetchMenusFromApi();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +28,16 @@ class GaleriMenuScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          color: const Color(0xFF15803D),
+          backgroundColor: Colors.white,
+          displacement: 60,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
             // Top Section with Mint Tint
             SliverToBoxAdapter(
               child: Container(
@@ -200,6 +216,7 @@ class GaleriMenuScreen extends StatelessWidget {
 
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
+          ),
         ),
       ),
     );
