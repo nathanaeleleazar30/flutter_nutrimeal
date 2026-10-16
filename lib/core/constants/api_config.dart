@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '10.10.2.210';
+  static const String hostLanIp = '10.10.2.254';
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
@@ -20,8 +20,8 @@ class ApiConfig {
 
     try {
       if (Platform.isAndroid) {
-        // Pada emulator Android, 10.0.2.2 adalah host PC
-        return 'http://10.0.2.2:5000';
+        // Untuk perangkat mobile (HP fisik via Wi-Fi), gunakan IP LAN host
+        return 'http://$hostLanIp:5000';
       }
     } catch (_) {}
 

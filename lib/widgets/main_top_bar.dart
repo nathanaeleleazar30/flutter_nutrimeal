@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../controllers/menu_controller.dart';
 import '../core/constants/app_colors.dart';
 import 'nutri_meal_logo.dart';
-import 'user_avatar.dart';
 
 class MainTopBar extends StatelessWidget {
   final VoidCallback? onCartTap;
@@ -27,16 +26,16 @@ class MainTopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // NutriMeal Brand Logo with N leaf square icon
+          // 1. NutriMeal Brand Logo
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -45,47 +44,28 @@ class MainTopBar extends StatelessWidget {
                     ),
                   ],
                 ),
-                alignment: Alignment.center,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      'N',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF16A34A),
-                      ),
-                    ),
-                    Positioned(
-                      top: 5,
-                      right: 4,
-                      child: Container(
-                        width: 5.5,
-                        height: 5.5,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF22C55E),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ],
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/images/app_logo.png',
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(width: 8),
               const NutriMealLogo(
-                fontSize: 20,
+                fontSize: 19,
                 hasShadow: false,
               ),
             ],
           ),
 
-          // Action Icons Row
+          // 2. Action Buttons (Notification Bell & Cart with Badges)
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Notification Bell Button with Green Dot Badge
               GestureDetector(
-                onTap: onNotificationTap ?? () => Navigator.of(context).pushNamed('/notifikasi'),
+                onTap: onNotificationTap ??
+                    () => Navigator.of(context).pushNamed('/notifikasi'),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -111,25 +91,27 @@ class MainTopBar extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      top: 2,
-                      right: 2,
+                      top: 6,
+                      right: 6,
                       child: Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF22C55E),
+                        width: 8.5,
+                        height: 8.5,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF22C55E),
                           shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
 
-              // Cart Button with Green Badge Count
+              // Cart Button with Green Badge Count (e.g., 2)
               GestureDetector(
-                onTap: onCartTap ?? () => Navigator.of(context).pushNamed('/cart'),
+                onTap:
+                    onCartTap ?? () => Navigator.of(context).pushNamed('/cart'),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -159,19 +141,20 @@ class MainTopBar extends StatelessWidget {
                         top: -3,
                         right: -3,
                         child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF16A34A),
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16A34A),
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           constraints: const BoxConstraints(
-                            minWidth: 17,
-                            minHeight: 17,
+                            minWidth: 18,
+                            minHeight: 18,
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             '$cartCount',
-                            style: const TextStyle(
+                            style: GoogleFonts.plusJakartaSans(
                               color: Colors.white,
                               fontSize: 9.5,
                               fontWeight: FontWeight.w800,
@@ -182,12 +165,6 @@ class MainTopBar extends StatelessWidget {
                       ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-
-              UserAvatar(
-                size: 38,
-                onTap: onProfileTap ?? () => Navigator.of(context).pushNamed('/profile'),
               ),
             ],
           ),

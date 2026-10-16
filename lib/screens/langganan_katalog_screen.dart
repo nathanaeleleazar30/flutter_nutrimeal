@@ -18,192 +18,166 @@ class LanggananKatalogScreen extends StatefulWidget {
 class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
   int _selectedTierIndex = 1; // Default: Paket Bulanan Lengkap (Paling Populer)
 
-  void _onSubscribeTap() {
-    final titles = ['Paket Mingguan Trial', 'Paket Bulanan Lengkap', 'Paket Hemat Siang'];
-    final prices = ['Rp175.000', 'Rp750.000', 'Rp400.000'];
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFDCFCE7),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.shopping_bag_rounded, color: AppColors.primaryGreen, size: 22),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Konfirmasi Langganan',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Anda memilih:',
-              style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              titles[_selectedTierIndex],
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Total: ${prices[_selectedTierIndex]}',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F5132),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Lanjutkan ke pembayaran untuk mengatur jadwal dan alamat pengiriman harian.',
-              style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF64748B)),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Batal',
-              style: GoogleFonts.plusJakartaSans(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CheckoutScreen()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F5132),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Lanjut Checkout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark, size: 22),
-          onPressed: () => Navigator.maybePop(context),
-        ),
-        title: Text(
-          'Langganan',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline_rounded, color: AppColors.textDark, size: 22),
-            tooltip: 'Bantuan',
-            onPressed: () {
-              Navigator.pushNamed(context, '/bantuan');
-            },
-          ),
-        ],
-      ),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
+            // Top App Bar with soft mint background matching Image 5
+            _buildHeader(context),
+
+            // Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 1. Hero Banner
                     _buildHeroBanner(),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
 
-                    // 2. Pilih Paket Langganan Header
-                    _buildSectionTitle(
-                      title: 'Pilih Paket Langganan',
-                      subtitle: 'Pilihan hemat & fleksibel sesuai gaya hidup Anda',
+                    // 2. Section: Pilih Paket Langganan
+                    Text(
+                      'Pilih Paket Langganan',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Pilihan hemat & fleksibel sesuai gaya hidup Anda',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                      ),
                     ),
                     const SizedBox(height: 14),
 
                     // Tier 1: Paket Mingguan
-                    _buildTierWeeklyCard(),
+                    _buildTierCard(
+                      index: 0,
+                      title: 'Paket Mingguan',
+                      badge: 'Trial',
+                      badgeColor: const Color(0xFFDCFCE7),
+                      badgeTextColor: const Color(0xFF166534),
+                      subtitle: '7 Hari • 14x makan (Siang & Malam)',
+                      price: 'Rp175.000',
+                      period: '/ 7 hr',
+                      perMeal: 'Rp12.500/makan',
+                      isSelected: _selectedTierIndex == 0,
+                    ),
                     const SizedBox(height: 14),
 
                     // Tier 2: Paket Bulanan Lengkap (Paling Populer)
-                    _buildTierMonthlyCard(),
+                    _buildPopularTierCard(),
                     const SizedBox(height: 14),
 
                     // Tier 3: Paket Hemat Siang
-                    _buildTierLunchCard(),
+                    _buildTierCard(
+                      index: 2,
+                      title: 'Paket Hemat Siang',
+                      badge: 'Khusus Kantor',
+                      badgeColor: const Color(0xFFF1F5F9),
+                      badgeTextColor: const Color(0xFF475569),
+                      subtitle: '30 Hari • 30x makan (1x makan siang/hari)',
+                      price: 'Rp400.000',
+                      period: '/ bln',
+                      perMeal: 'Rp13.300/makan siang',
+                      isSelected: _selectedTierIndex == 2,
+                    ),
                     const SizedBox(height: 24),
 
-                    // 3. Contoh Menu Mingguan
-                    _buildWeeklyMenuSampleSection(),
+                    // 3. Section: Contoh Menu Mingguan
+                    _buildWeeklyMenuSection(),
                     const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
 
-            // Sticky Bottom Action Bar
-            _buildStickyBottomBar(),
+            // Bottom Sticky Bar (Image 5 bottom)
+            _buildBottomBar(context),
           ],
         ),
       ),
-      bottomNavigationBar: widget.showBottomNav ? _buildBottomNav() : null,
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 16,
+        right: 16,
+        bottom: 12,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFC3E7C4),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 15,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              'Langganan',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+          const SizedBox(width: 36),
+        ],
+      ),
     );
   }
 
   Widget _buildHeroBanner() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F5132), Color(0xFF166534)],
+          colors: [Color(0xFF0F5132), Color(0xFF064E3B)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F5132).withValues(alpha: 0.25),
-            blurRadius: 12,
+            color: const Color(0xFF0F5132).withValues(alpha: 0.2),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -215,9 +189,9 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -226,28 +200,21 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                       Container(
                         width: 5,
                         height: 5,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4ADE80),
-                          shape: BoxShape.circle,
-                        ),
+                        decoration: const BoxDecoration(color: Color(0xFF4ADE80), shape: BoxShape.circle),
                       ),
                       const SizedBox(width: 5),
                       Text(
                         'Katering Sehat Harian',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFFBBF7D0),
-                        ),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Text(
-                  'Lebih Praktis dengan Langganan',
+                  'Lebih Praktis dengan\nLangganan',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16.5,
+                    fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                     height: 1.25,
@@ -257,8 +224,8 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                 Text(
                   'Nikmati makanan sehat setiap hari tanpa perlu pesan berulang.',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.5,
-                    color: const Color(0xFFD1FAE5),
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.85),
                     height: 1.35,
                   ),
                 ),
@@ -266,76 +233,35 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          // Bento Plate Graphic Matching Image 1
+          // Bento graphic illustration container
           Container(
-            width: 78,
-            height: 78,
+            width: 86,
+            height: 86,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(18),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Center(
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                padding: const EdgeInsets.all(7),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          width: 18,
-                          height: 18,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF08A),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 5,
-                              height: 5,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFCA8A04),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 22,
-                          height: 18,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD97706),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: double.infinity,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF0F5132), shape: BoxShape.circle)),
-                          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle)),
-                          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF4ADE80), shape: BoxShape.circle)),
-                        ],
-                      ),
-                    ),
+                    Container(width: 32, height: 32, decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(6))),
+                    const SizedBox(width: 6),
+                    Expanded(child: Container(height: 32, decoration: BoxDecoration(color: const Color(0xFFFED7AA), borderRadius: BorderRadius.circular(6)))),
                   ],
                 ),
-              ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(width: 18, height: 18, decoration: const BoxDecoration(color: Color(0xFF16A34A), shape: BoxShape.circle)),
+                    const SizedBox(width: 6),
+                    Container(width: 18, height: 18, decoration: const BoxDecoration(color: Color(0xFF34D399), shape: BoxShape.circle)),
+                    const SizedBox(width: 6),
+                    Container(width: 18, height: 18, decoration: const BoxDecoration(color: Color(0xFF6EE7B7), shape: BoxShape.circle)),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -343,277 +269,215 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
     );
   }
 
-  Widget _buildSectionTitle({required String title, required String subtitle}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
+  Widget _buildTierCard({
+    required int index,
+    required String title,
+    required String badge,
+    required Color badgeColor,
+    required Color badgeTextColor,
+    required String subtitle,
+    required String price,
+    required String period,
+    required String perMeal,
+    required bool isSelected,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          subtitle,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 11.5,
-            color: const Color(0xFF64748B),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTierWeeklyCard() {
-    final isSelected = _selectedTierIndex == 0;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTierIndex = 0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFE2E8F0),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Paket Mingguan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(6),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(color: badgeColor, borderRadius: BorderRadius.circular(6)),
+                child: Text(
+                  badge,
+                  style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: badgeTextColor),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'TOTAL HARGA',
+            style: GoogleFonts.plusJakartaSans(fontSize: 9.5, fontWeight: FontWeight.w700, color: const Color(0xFF94A3B8)),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: price,
+                          style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.textDark),
+                        ),
+                        TextSpan(
+                          text: ' $period',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF64748B)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    perMeal,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF0F8A50)),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 36,
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() => _selectedTierIndex = index);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFF0F8A50)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   child: Text(
-                    'Trial',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF166534),
-                    ),
+                    'Pilih Paket',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF0F8A50)),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '7 Hari • 14x makan (Siang & Malam)',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11.5,
-                color: const Color(0xFF64748B),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TOTAL HARGA',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF94A3B8),
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Rp175.000 ',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '/ 7 hr',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              color: const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      'Rp12.500/makan',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        color: const Color(0xFF0F5132),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 36,
-                  child: OutlinedButton(
-                    onPressed: () => setState(() => _selectedTierIndex = 0),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: const Color(0xFF0F5132),
-                        width: 1.2,
-                      ),
-                      backgroundColor: isSelected ? const Color(0xFFDCFCE7) : Colors.transparent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                    child: Text(
-                      'Pilih Paket',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F5132),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTierMonthlyCard() {
-    final isSelected = _selectedTierIndex == 1;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTierIndex = 1),
-      child: Stack(
-        clipBehavior: Clip.none,
+  Widget _buildPopularTierCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF0F8A50), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F8A50).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF0F5132),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0F5132).withValues(alpha: 0.08),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
+          // Top Header: ★ PALING POPULER
+          Align(
+            alignment: Alignment.topRight,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: const BoxDecoration(
+                color: Color(0xFF0F5132),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(12),
                 ),
-              ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.star_rounded, color: Colors.white, size: 12),
+                  const SizedBox(width: 4),
+                  Text(
+                    'PALING POPULER',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white),
+                  ),
+                ],
+              ),
             ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 4),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Paket Bulanan Lengkap',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
-                      ),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.textDark),
                     ),
+                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFFFFE4E6), borderRadius: BorderRadius.circular(6)),
                       child: Text(
                         'Hemat 25%',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFFDC2626),
-                        ),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 9.5, fontWeight: FontWeight.w800, color: const Color(0xFFE11D48)),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   '30 Hari • 60x makan (Siang & Malam)',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.5,
-                    color: const Color(0xFF64748B),
-                  ),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B)),
                 ),
                 const SizedBox(height: 10),
-                // Pill feature checklist
+
+                // Benefits box
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_rounded, color: Color(0xFF0F5132), size: 15),
+                      const Icon(Icons.check_rounded, color: Color(0xFF0F8A50), size: 13),
                       const SizedBox(width: 4),
-                      Text(
-                        'Gratis Ongkir Sepuasnya',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          color: const Color(0xFF334155),
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Text('Gratis Ongkir Sepuasnya', style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF0F8A50), fontWeight: FontWeight.w700)),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6),
+                        child: Text('|', style: TextStyle(color: Color(0xFFCBD5E1))),
                       ),
-                      const SizedBox(width: 10),
-                      Container(width: 1, height: 12, color: const Color(0xFFCBD5E1)),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.check_rounded, color: Color(0xFF0F5132), size: 15),
+                      const Icon(Icons.check_rounded, color: Color(0xFF0F8A50), size: 13),
                       const SizedBox(width: 4),
-                      Text(
-                        'Bisa Jeda / Reschedule',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          color: const Color(0xFF334155),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text('Bisa Jeda / Reschedule', style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF0F8A50), fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
+
+                // Price Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,20 +486,13 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                           children: [
                             Text(
                               'Rp1.000.000',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                color: const Color(0xFF94A3B8),
-                                decoration: TextDecoration.lineThrough,
-                              ),
+                              style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8), decoration: TextDecoration.lineThrough),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '-25%',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFFDC2626),
-                              ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                              decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(4)),
+                              child: Text('-25%', style: GoogleFonts.plusJakartaSans(fontSize: 9, fontWeight: FontWeight.w800, color: const Color(0xFF166534))),
                             ),
                           ],
                         ),
@@ -643,19 +500,12 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: 'Rp750.000 ',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF0F5132),
-                                ),
+                                text: 'Rp750.000',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 16.5, fontWeight: FontWeight.w900, color: const Color(0xFF0F8A50)),
                               ),
                               TextSpan(
-                                text: '/ bln',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 11,
-                                  color: const Color(0xFF64748B),
-                                ),
+                                text: ' / bln',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B)),
                               ),
                             ],
                           ),
@@ -665,61 +515,23 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                     SizedBox(
                       height: 38,
                       child: ElevatedButton(
-                        onPressed: () => setState(() => _selectedTierIndex = 1),
+                        onPressed: () {
+                          setState(() => _selectedTierIndex = 1);
+                        },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isSelected ? const Color(0xFF0F5132) : const Color(0xFF166534),
+                          backgroundColor: const Color(0xFF0F8A50),
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(horizontal: 18),
                         ),
                         child: Text(
-                          isSelected ? 'Terpilih' : 'Pilih Paket',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                          'Pilih Paket',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
                       ),
                     ),
                   ],
                 ),
               ],
-            ),
-          ),
-          // Badge Star on top right
-          Positioned(
-            top: -11,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F5132),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.star_rounded, color: Colors.white, size: 13),
-                  const SizedBox(width: 4),
-                  Text(
-                    'PALING POPULER',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -727,172 +539,7 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
     );
   }
 
-  Widget _buildTierLunchCard() {
-    final isSelected = _selectedTierIndex == 2;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTierIndex = 2),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFE2E8F0),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Paket Hemat Siang',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Khusus Kantor',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF475569),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '30 Hari • 30x makan (1x makan siang/hari)',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11.5,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TOTAL HARGA',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF94A3B8),
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Rp400.000 ',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '/ bln',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              color: const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      'Rp13.300/makan siang',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        color: const Color(0xFF0F5132),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 36,
-                  child: OutlinedButton(
-                    onPressed: () => setState(() => _selectedTierIndex = 2),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color(0xFF0F5132),
-                        width: 1.2,
-                      ),
-                      backgroundColor: isSelected ? const Color(0xFFDCFCE7) : Colors.transparent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                    child: Text(
-                      'Pilih Paket',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F5132),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeeklyMenuSampleSection() {
-    final sampleMenus = [
-      {
-        'day': 'Senin',
-        'badge': 'TINGGI PROTEIN',
-        'badgeColor': const Color(0xFF0F5132),
-        'name': 'Nasi Ayam Teriyaki',
-        'desc': 'Ayam fillet, wortel, brokoli &...',
-        'calories': '450 kkal',
-        'protein': '38g Protein',
-        'image': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=300&auto=format&fit=crop',
-      },
-      {
-        'day': 'Selasa',
-        'badge': 'RENDAH KARBO',
-        'badgeColor': const Color(0xFF2563EB),
-        'name': 'Chicken Katsu Salad',
-        'desc': 'Katsu panggang tanpa minyak',
-        'calories': '420 kkal',
-        'protein': '34g Protein',
-        'image': 'https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=300&auto=format&fit=crop',
-      },
-    ];
-
+  Widget _buildWeeklyMenuSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -901,21 +548,13 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
           children: [
             Text(
               'Contoh Menu Mingguan',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
-              ),
+              style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
             ),
-            InkWell(
+            GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/menu'),
               child: Text(
                 'Lihat Semua',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F5132),
-                ),
+                style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF0F8A50)),
               ),
             ),
           ],
@@ -923,143 +562,144 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
         const SizedBox(height: 2),
         Text(
           'Dirancang gizi seimbang oleh Tim Nutisionis',
-          style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B)),
+          style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B)),
         ),
         const SizedBox(height: 12),
+
+        // 2 Sample Menu Cards
         Row(
-          children: sampleMenus.map((m) {
-            return Expanded(
-              child: Container(
-                margin: EdgeInsets.only(right: m['day'] == 'Senin' ? 10 : 0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                          child: Image.network(
-                            m['image'] as String,
-                            height: 104,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              height: 104,
-                              color: const Color(0xFFDCFCE7),
-                              child: const Icon(Icons.restaurant_rounded, color: Color(0xFF0F5132)),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              m['day'] as String,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            m['badge'] as String,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: m['badgeColor'] as Color,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            m['name'] as String,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textDark,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            m['desc'] as String,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10,
-                              color: const Color(0xFF64748B),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                m['calories'] as String,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                              Text(
-                                m['protein'] as String,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF0F5132),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          children: [
+            Expanded(
+              child: _buildMenuThumbnailCard(
+                dayBadge: 'Senin',
+                tag: 'TINGGI PROTEIN',
+                tagColor: const Color(0xFF0F8A50),
+                title: 'Nasi Ayam Teriyaki',
+                subtitle: 'Ayam fillet, wortel, brokoli &...',
+                calories: '450 kkal',
+                protein: '38g Protein',
+                imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop',
               ),
-            );
-          }).toList(),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildMenuThumbnailCard(
+                dayBadge: 'Selasa',
+                tag: 'RENDAH KARBO',
+                tagColor: const Color(0xFF2563EB),
+                title: 'Chicken Katsu Salad',
+                subtitle: 'Katsu panggang tanpa minyak',
+                calories: '420 kkal',
+                protein: '34g Protein',
+                imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=400&auto=format&fit=crop',
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildStickyBottomBar() {
+  Widget _buildMenuThumbnailCard({
+    required String dayBadge,
+    required String tag,
+    required Color tagColor,
+    required String title,
+    required String subtitle,
+    required String calories,
+    required String protein,
+    required String imageUrl,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              Image.network(
+                imageUrl,
+                height: 96,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(height: 96, color: const Color(0xFFDCFCE7)),
+              ),
+              Positioned(
+                top: 6,
+                left: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    dayBadge,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tag,
+                  style: GoogleFonts.plusJakartaSans(fontSize: 8.5, fontWeight: FontWeight.w800, color: tagColor),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(fontSize: 10, color: const Color(0xFF64748B)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(calories, style: GoogleFonts.plusJakartaSans(fontSize: 9.5, color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                    Text(protein, style: GoogleFonts.plusJakartaSans(fontSize: 9.5, color: const Color(0xFF0F8A50), fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),
@@ -1074,151 +714,52 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
             children: [
               Text(
                 'Mulai dari',
-                style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B)),
               ),
               RichText(
                 text: TextSpan(
                   children: [
                     TextSpan(
                       text: 'Rp25.000',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textDark,
-                      ),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.textDark),
                     ),
                     TextSpan(
                       text: '/hari',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF64748B),
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B)),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          ElevatedButton(
-            onPressed: _onSubscribeTap,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F5132),
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Mulai Langganan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.home_outlined, 'Beranda', onTap: () => Navigator.pushReplacementNamed(context, '/home')),
-              _buildNavItem(Icons.tune_rounded, 'Menu', onTap: () => Navigator.pushReplacementNamed(context, '/menu')),
-              _buildCenterNutribotItem(),
-              _buildNavItem(Icons.chat_bubble_outline_rounded, 'Pesan', onTap: () => Navigator.pushNamed(context, '/chat-admin')),
-              _buildNavItem(Icons.calendar_today_rounded, 'Jadwal', onTap: () => Navigator.pushNamed(context, '/jadwal')),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, {required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 21, color: const Color(0xFF94A3B8)),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF94A3B8),
+          SizedBox(
+            height: 46,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CheckoutScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F8A50),
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCenterNutribotItem() {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/chat-ai'),
-      child: Transform.translate(
-        offset: const Offset(0, -8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.primaryGreen,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryGreen.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+              child: Row(
+                children: [
+                  Text(
+                    'Mulai Langganan',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w800, color: Colors.white),
                   ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
                 ],
               ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 24),
             ),
-            const SizedBox(height: 2),
-            Text(
-              'NutriBot',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primaryGreen,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../controllers/menu_controller.dart';
 import '../core/constants/app_colors.dart';
 import 'address_screen.dart';
 import 'bantuan_faq_screen.dart';
@@ -12,276 +14,136 @@ class ProfileDetailScreen extends StatefulWidget {
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
+  String _name = 'Nadia Salsabila';
+  String _email = 'nadia.salsabila@email.com';
+  String _phone = '+62 812-8890-1234';
   bool _twoFactorAuth = true;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
+  // Physical & Nutrition Data
+  double _heightCm = 163.0;
+  double _weightKg = 52.0;
+  int _age = 24;
+  double _nutritionPercent = 0.85;
+  List<String> _selectedAllergies = ['Kacang'];
+  String _dietGoal = 'Defisit Kalori';
+
+  double get _bmi => _weightKg / ((_heightCm / 100) * (_heightCm / 100));
+
+  String get _bmiCategory {
+    if (_bmi < 18.5) return 'Kurang (Underweight)';
+    if (_bmi < 24.9) return 'Ideal & Normal (Healthy)';
+    if (_bmi < 29.9) return 'Kelebihan (Overweight)';
+    return 'Obesitas';
+  }
+
+  void _showEditNameDialog() {
+    final controller = TextEditingController(text: _name);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: Row(
-          children: [
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                alignment: Alignment.center,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      'N',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF16A34A),
-                      ),
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Container(
-                        width: 5,
-                        height: 5,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF22C55E),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Profil',
+          'Ubah Nama Lengkap',
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 16.5,
             fontWeight: FontWeight.w800,
+            fontSize: 16,
             color: AppColors.textDark,
           ),
         ),
-        actions: [
-          // Bell Icon with Dot
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/notifikasi'),
-            child: Stack(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.notifications_none_rounded,
-                      color: Color(0xFF475569), size: 20),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF22C55E),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            hintText: 'Masukkan nama lengkap',
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFF0F8A50), width: 1.5),
             ),
           ),
-          const SizedBox(width: 8),
-          // User Avatar in AppBar
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF334155), width: 1.5),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                'assets/images/profile_avatar.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Image.network(
-                  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: const Color(0xFFDCFCE7),
-                    child: const Icon(Icons.person,
-                        color: AppColors.primaryGreen, size: 20),
-                  ),
-                ),
-              ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B)),
             ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                setState(() => _name = controller.text.trim());
+                Navigator.pop(ctx);
+                _showSuccessToast('Nama profil berhasil diperbarui!');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F8A50),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
+  }
+
+  void _showAvatarPickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Profile Top Card (Mint Aura + 85% Nutrition Completion)
-              _buildTopProfileCard(),
-              const SizedBox(height: 14),
-
-              // 2. Card 1: Data Fisik & Nutrisi (Image 1)
-              _buildPhysicalNutritionCard(),
-              const SizedBox(height: 14),
-
-              // 3. Card 2: Kontak & Akun (Image 1)
-              _buildContactAccountCard(),
-              const SizedBox(height: 14),
-
-              // 4. Card 3: Keamanan Akun (Image 1)
-              _buildSecurityCard(),
-              const SizedBox(height: 20),
-
-              // 5. Button: Simpan Perubahan (Dark Green Button)
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Perubahan profil berhasil disimpan!',
-                          style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w600),
-                        ),
-                        backgroundColor: const Color(0xFF166534),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF166534),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.check_rounded,
-                          color: Colors.white, size: 18),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Simpan Perubahan',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+              Text(
+                'Ubah Foto Profil',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
                 ),
               ),
-              const SizedBox(height: 10),
-
-              // 6. Button: Pusat Bantuan & FAQ >
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BantuanFaqScreen()),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.menu_book_rounded,
-                          size: 16, color: Color(0xFF475569)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Pusat Bantuan & FAQ',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.chevron_right_rounded,
-                          size: 16, color: Color(0xFF94A3B8)),
-                    ],
-                  ),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(color: Color(0xFFDCFCE7), shape: BoxShape.circle),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF16A34A), size: 20),
                 ),
+                title: Text('Ambil Foto dari Kamera', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showSuccessToast('Foto profil baru berhasil diunggah!');
+                },
               ),
-              const SizedBox(height: 16),
-
-              // 7. Footer: Keluar dari Akun · Hapus Akun
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context)
-                        .pushNamedAndRemoveUntil('/login', (route) => false),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.logout_rounded,
-                            size: 14, color: Color(0xFFDC2626)),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Keluar dari Akun',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFDC2626),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: Text('•', style: TextStyle(color: Color(0xFF94A3B8))),
-                  ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Text(
-                      'Hapus Akun',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                  ),
-                ],
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(color: Color(0xFFE0F2FE), shape: BoxShape.circle),
+                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF0284C7), size: 20),
+                ),
+                title: Text('Pilih dari Galeri', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showSuccessToast('Foto profil dari galeri berhasil dipilih!');
+                },
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -289,38 +151,630 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  /// 1. Top Card with Avatar, Elite Member Badge, and 85% Nutrition Progress
-  Widget _buildTopProfileCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFE8F8EE),
-            Colors.white,
-          ],
+  void _showNutritionDataSheet() {
+    double tempHeight = _heightCm;
+    double tempWeight = _weightKg;
+    int tempAge = _age;
+    List<String> tempAllergies = List.from(_selectedAllergies);
+    String tempDietGoal = _dietGoal;
+
+    final allAllergies = ['Kacang', 'Seafood', 'Gluten', 'Susu Sapi', 'Telur', 'Rendah Gula', 'Tidak Ada Alergi'];
+    final allGoals = ['Defisit Kalori', 'Maintenance', 'Tinggi Protein', 'Rendah Karbo'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final bmiVal = tempWeight / ((tempHeight / 100) * (tempHeight / 100));
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 18,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Modal
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(color: Color(0xFFDCFCE7), shape: BoxShape.circle),
+                                child: const Icon(Icons.fitness_center_rounded, color: Color(0xFF16A34A), size: 18),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Data Fisik & Nutrisi',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 20),
+                            onPressed: () => Navigator.pop(ctx),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 18),
+
+                      // Measurements (Height & Weight)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Tinggi Badan', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B))),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('${tempHeight.toInt()} cm', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800)),
+                                      Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: () => setSheetState(() => tempHeight = (tempHeight - 1).clamp(120, 220)),
+                                            child: const Icon(Icons.remove_circle_outline, size: 20, color: Color(0xFF64748B)),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          InkWell(
+                                            onTap: () => setSheetState(() => tempHeight = (tempHeight + 1).clamp(120, 220)),
+                                            child: const Icon(Icons.add_circle_outline, size: 20, color: Color(0xFF0F8A50)),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Berat Badan', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B))),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('${tempWeight.toStringAsFixed(1)} kg', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800)),
+                                      Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: () => setSheetState(() => tempWeight = (tempWeight - 0.5).clamp(30, 180)),
+                                            child: const Icon(Icons.remove_circle_outline, size: 20, color: Color(0xFF64748B)),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          InkWell(
+                                            onTap: () => setSheetState(() => tempWeight = (tempWeight + 0.5).clamp(30, 180)),
+                                            child: const Icon(Icons.add_circle_outline, size: 20, color: Color(0xFF0F8A50)),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // BMI Live Preview Card
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFECFDF5),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFA7F3D0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.health_and_safety_rounded, color: Color(0xFF047857), size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'BMI: ${bmiVal.toStringAsFixed(1)} (${bmiVal < 18.5 ? "Underweight" : bmiVal < 25 ? "Ideal & Normal" : "Overweight"}) • Usia $tempAge th',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF065F46),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Riwayat Alergi
+                      Text(
+                        'Riwayat Alergi / Pantangan Makan',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: allAllergies.map((allergy) {
+                          final isSelected = tempAllergies.contains(allergy);
+                          return FilterChip(
+                            label: Text(allergy),
+                            selected: isSelected,
+                            selectedColor: const Color(0xFFDCFCE7),
+                            checkmarkColor: const Color(0xFF0F8A50),
+                            labelStyle: GoogleFonts.plusJakartaSans(
+                              fontSize: 11.5,
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFF475569),
+                            ),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFFE2E8F0)),
+                            ),
+                            onSelected: (val) {
+                              setSheetState(() {
+                                if (allergy == 'Tidak Ada Alergi') {
+                                  tempAllergies = ['Tidak Ada Alergi'];
+                                } else {
+                                  tempAllergies.remove('Tidak Ada Alergi');
+                                  if (val) {
+                                    tempAllergies.add(allergy);
+                                  } else {
+                                    tempAllergies.remove(allergy);
+                                  }
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Target Pola Makan
+                      Text(
+                        'Target Katering Harian',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: allGoals.map((goal) {
+                          final isSelected = tempDietGoal == goal;
+                          return ChoiceChip(
+                            label: Text(goal),
+                            selected: isSelected,
+                            selectedColor: const Color(0xFF0F8A50),
+                            labelStyle: GoogleFonts.plusJakartaSans(
+                              fontSize: 11.5,
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              color: isSelected ? Colors.white : const Color(0xFF475569),
+                            ),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFFE2E8F0)),
+                            ),
+                            onSelected: (val) {
+                              if (val) setSheetState(() => tempDietGoal = goal);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Submit button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _heightCm = tempHeight;
+                              _weightKg = tempWeight;
+                              _age = tempAge;
+                              _selectedAllergies = tempAllergies;
+                              _dietGoal = tempDietGoal;
+                              _nutritionPercent = tempAllergies.isNotEmpty ? 1.0 : 0.85;
+                            });
+                            Navigator.pop(ctx);
+                            _showSuccessToast('Data nutrisi & profil fisik berhasil disimpan!');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F8A50),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            'Simpan Data Nutrisi',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w800, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditEmailDialog() {
+    final controller = TextEditingController(text: _email);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Ubah Alamat Email',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: AppColors.textDark,
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.emailAddress,
+          style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B), size: 18),
+            hintText: 'nama@email.com',
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFF0F8A50), width: 1.5),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty && controller.text.contains('@')) {
+                setState(() => _email = controller.text.trim());
+                Navigator.pop(ctx);
+                _showSuccessToast('Alamat email berhasil diperbarui!');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F8A50),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
-      child: Column(
+    );
+  }
+
+  void _showEditPhoneDialog() {
+    final controller = TextEditingController(text: _phone);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Ubah Nomor WhatsApp (Katering)',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: AppColors.textDark,
+          ),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.phone,
+          style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF64748B), size: 18),
+            hintText: '+62 8xx-xxxx-xxxx',
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFF0F8A50), width: 1.5),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                setState(() => _phone = controller.text.trim());
+                Navigator.pop(ctx);
+                _showSuccessToast('Nomor WhatsApp katering berhasil diperbarui!');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F8A50),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog() {
+    bool obscureOld = true;
+    bool obscureNew = true;
+    final oldPassController = TextEditingController();
+    final newPassController = TextEditingController();
+    final confirmPassController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text(
+                'Ubah Kata Sandi',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.textDark),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: oldPassController,
+                      obscureText: obscureOld,
+                      decoration: InputDecoration(
+                        labelText: 'Kata Sandi Saat Ini',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureOld ? Icons.visibility_off : Icons.visibility, size: 18),
+                          onPressed: () => setDialogState(() => obscureOld = !obscureOld),
+                        ),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: newPassController,
+                      obscureText: obscureNew,
+                      decoration: InputDecoration(
+                        labelText: 'Kata Sandi Baru',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, size: 18),
+                          onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                        ),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmPassController,
+                      obscureText: obscureNew,
+                      decoration: const InputDecoration(
+                        labelText: 'Konfirmasi Sandi Baru',
+                        isDense: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (newPassController.text.trim().length < 6) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kata sandi baru minimal 6 karakter!'), backgroundColor: Color(0xFFEF4444)),
+                      );
+                      return;
+                    }
+                    if (newPassController.text != confirmPassController.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Konfirmasi kata sandi tidak cocok!'), backgroundColor: Color(0xFFEF4444)),
+                      );
+                      return;
+                    }
+                    Navigator.pop(ctx);
+                    _showSuccessToast('Kata sandi berhasil diperbarui dengan aman!');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F8A50),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('Perbarui', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSuccessToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+        backgroundColor: const Color(0xFF0F8A50),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // Header with soft mint background matching Image 2
+            _buildHeader(context),
+
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Column(
+                  children: [
+                    // 1. Avatar & Name (Interactive edit)
+                    _buildAvatarSection(),
+                    const SizedBox(height: 16),
+
+                    // 2. Kelengkapan Data Nutrisi Card (Interactive bottom sheet)
+                    _buildNutritionProgressCard(),
+                    const SizedBox(height: 16),
+
+                    // 3. Kontak & Akun Section Card (Interactive fields)
+                    _buildContactSection(),
+                    const SizedBox(height: 16),
+
+                    // 4. Keamanan Akun Section Card (Interactive password & 2FA)
+                    _buildSecuritySection(),
+                    const SizedBox(height: 20),
+
+                    // 5. Action Buttons
+                    _buildActionButtons(context),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 16,
+        right: 16,
+        bottom: 12,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFC3E7C4),
+      ),
+      child: Row(
         children: [
-          // Avatar with green pencil edit icon
-          Stack(
-            alignment: Alignment.center,
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 15,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              'Informasi Pribadi',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+          const SizedBox(width: 36),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarSection() {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _showAvatarPickerSheet,
+          child: Stack(
             children: [
               Container(
-                width: 86,
-                height: 86,
+                width: 90,
+                height: 90,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
@@ -336,387 +790,124 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 child: Image.asset(
                   'assets/images/profile_avatar.jpg',
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Image.network(
-                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: const Color(0xFFDCFCE7),
-                      child: const Icon(Icons.person,
-                          color: AppColors.primaryGreen, size: 40),
-                    ),
+                  errorBuilder: (_, _, _) => Container(
+                    color: const Color(0xFFDCFCE7),
+                    child: const Icon(Icons.person, color: Color(0xFF16A34A), size: 44),
                   ),
                 ),
               ),
               Positioned(
                 bottom: 2,
-                right: 2,
+                right: 4,
                 child: Container(
                   width: 26,
                   height: 26,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF16A34A),
+                    color: const Color(0xFF0F8A50),
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: const Icon(Icons.edit_rounded,
-                      color: Colors.white, size: 13),
+                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 13),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // Name
-          Text(
-            'Nadia Salsabila',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // NUTRIMEAL ELITE MEMBER Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'NUTRIMEAL ELITE MEMBER',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF15803D),
-                letterSpacing: 0.3,
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: _showEditNameDialog,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _name,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
               ),
-            ),
+              const SizedBox(width: 6),
+              const Icon(Icons.edit_outlined, color: Color(0xFF0F8A50), size: 16),
+            ],
           ),
-          const SizedBox(height: 4),
+        ),
+      ],
+    );
+  }
 
-          // Member sejak Maret 2023
-          Text(
-            'Member sejak Maret 2023',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Kelengkapan Data Nutrisi (85% Lengkap)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildNutritionProgressCard() {
+    return GestureDetector(
+      onTap: _showNutritionDataSheet,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6).withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.verified_user_outlined,
-                            size: 15, color: Color(0xFF166534)),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Kelengkapan Data Nutrisi',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                      ],
-                    ),
+                    const Icon(Icons.verified_outlined, color: Color(0xFF0F8A50), size: 16),
+                    const SizedBox(width: 6),
                     Text(
-                      '85% Lengkap',
+                      'Kelengkapan Data Nutrisi',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF166534),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: const LinearProgressIndicator(
-                    value: 0.85,
-                    backgroundColor: Color(0xFFE2E8F0),
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFF166534)),
-                    minHeight: 6,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Lengkapi riwayat alergi untuk rekomendasi menu yang 100% presisi.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
-                    color: const Color(0xFF64748B),
-                    height: 1.35,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${(_nutritionPercent * 100).toInt()}% Lengkap',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F8A50),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF0F8A50), size: 18),
+                  ],
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 2. Card 1: Data Fisik & Nutrisi
-  Widget _buildPhysicalNutritionCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with Edit
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFDCFCE7),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.monitor_weight_outlined,
-                        color: Color(0xFF166534), size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Data Fisik & Nutrisi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: _nutritionPercent,
+                backgroundColor: const Color(0xFFE2E8F0),
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F8A50)),
+                minHeight: 5,
               ),
-              Text(
-                'Edit',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF16A34A),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // 2 Stat Boxes side by side
-          Row(
-            children: [
-              // Box 1: Tinggi & Berat (165 cm • 54 kg)
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tinggi & Berat:',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '165 cm • 54 kg',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF16A34A),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'BMI 19.8 (Ideal)',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF16A34A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-
-              // Box 2: Target Harian (1.850 kkal)
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Target Harian',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '1.850 kkal',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Weight Maintenance',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9.5,
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Detail Rows
-          _buildInfoRow('Nama Lengkap', 'Nadia Salsabila'),
-          const SizedBox(height: 10),
-          _buildInfoRow('Jenis Kelamin', 'Perempuan'),
-          const SizedBox(height: 10),
-          _buildInfoRow('Tanggal Lahir / Usia', '14 Ags 1996 (28 Thn)'),
-          const SizedBox(height: 12),
-
-          // Preferensi Diet & Alergi Chips
-          Text(
-            'Preferensi Diet & Alergi',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
             ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFA7F3D0)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.eco_rounded,
-                        color: Color(0xFF166534), size: 13),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Bebas Gluten',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF166534),
-                      ),
-                    ),
-                  ],
-                ),
+            const SizedBox(height: 8),
+            Text(
+              'Data Fisik: ${_heightCm.toInt()} cm • ${_weightKg.toInt()} kg (BMI: ${_bmiCategory.split(' ').first}) • Tap untuk lengkapi riwayat alergi.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                color: const Color(0xFF64748B),
+                height: 1.35,
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFA7F3D0)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.shield_outlined,
-                        color: Color(0xFF166534), size: 13),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Tanpa Kacang Tanah',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF166534),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// 3. Card 2: Kontak & Akun
-  Widget _buildContactAccountCard() {
+  Widget _buildContactSection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -724,29 +915,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Section Title
           Row(
             children: [
               Container(
                 width: 28,
                 height: 28,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFDCFCE7),
+                  color: Color(0xFF0F8A50),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.contact_phone_outlined,
-                    color: Color(0xFF166534), size: 16),
+                child: const Icon(Icons.account_box_rounded, color: Colors.white, size: 16),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Text(
                 'Kontak & Akun',
                 style: GoogleFonts.plusJakartaSans(
@@ -757,108 +947,131 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           // Alamat Email
-          Text(
-            'Alamat Email',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.mail_outline_rounded,
-                    color: Color(0xFF64748B), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'nadia.salsabila@email.com',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textDark,
-                    ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Alamat Email',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              GestureDetector(
+                onTap: _showEditEmailDialog,
+                child: Text(
+                  'Ubah',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F8A50),
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '✓ Terverifikasi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF166534),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: _showEditEmailDialog,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _email,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDCFCE7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_rounded, color: Color(0xFF166534), size: 12),
+                        const SizedBox(width: 3),
+                        Text(
+                          'Terverifikasi',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF166534),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
 
           // Nomor WhatsApp (Katering)
           Text(
             'Nomor WhatsApp (Katering)',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
+              fontSize: 11.5,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF64748B),
             ),
           ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.chat_bubble_outline_rounded,
-                    color: Color(0xFF64748B), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '+62 812-8890-1234',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textDark,
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: _showEditPhoneDialog,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _phone,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Text(
+                  Text(
                     'Ganti',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF16A34A),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F8A50),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
 
           // Alamat Pengiriman Utama
           Row(
@@ -867,77 +1080,102 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               Text(
                 'Alamat Pengiriman Utama',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF64748B),
                 ),
               ),
               GestureDetector(
                 onTap: () {
+                  final controller = context.read<NutriMealMenuController>();
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const AddressScreen()),
-                  );
+                    MaterialPageRoute(
+                      builder: (_) => AddressFormScreen(
+                        mode: AddressFormMode.edit,
+                        address: controller.deliveryAddress,
+                      ),
+                    ),
+                  ).then((_) => setState(() {}));
                 },
                 child: Text(
                   'Ubah Alamat',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF16A34A),
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F8A50),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.location_on_rounded,
-                    color: Color(0xFF16A34A), size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
+          const SizedBox(height: 6),
+          Consumer<NutriMealMenuController>(
+            builder: (context, controller, child) {
+              final addr = controller.deliveryAddress;
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddressFormScreen(
+                        mode: AddressFormMode.edit,
+                        address: addr,
+                      ),
+                    ),
+                  ).then((_) => setState(() {}));
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Rumah (Senopati)',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
+                      const Icon(Icons.location_on_outlined, color: Color(0xFF0F8A50), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              addr.label.isNotEmpty ? addr.label : 'Rumah (Senopati)',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              addr.fullAddress.isNotEmpty
+                                  ? addr.fullAddress
+                                  : 'Jl. Senopati No. 42, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11.5,
+                                color: const Color(0xFF64748B),
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Jl. Senopati No. 42, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          color: const Color(0xFF64748B),
-                          height: 1.35,
-                        ),
-                      ),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 18),
                     ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  /// 4. Card 3: Keamanan Akun
-  Widget _buildSecurityCard() {
+  Widget _buildSecuritySection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -945,29 +1183,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Section Title
           Row(
             children: [
               Container(
                 width: 28,
                 height: 28,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFDCFCE7),
+                  color: Color(0xFF0F8A50),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.security_rounded,
-                    color: Color(0xFF166534), size: 16),
+                child: const Icon(Icons.security_rounded, color: Colors.white, size: 16),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Text(
                 'Keamanan Akun',
                 style: GoogleFonts.plusJakartaSans(
@@ -978,113 +1215,105 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Kata Sandi
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.lock_outline_rounded,
-                    color: Color(0xFF64748B), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Kata Sandi',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
+          // Kata Sandi (Interactive modal)
+          GestureDetector(
+            onTap: _showChangePasswordDialog,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.lock_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Kata Sandi',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
                         ),
-                      ),
-                      Text(
-                        '••••••••••••',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          color: const Color(0xFF94A3B8),
-                          letterSpacing: 1.5,
+                        Text(
+                          '••••••••••••',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B), letterSpacing: 1.5),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Text(
-                    'Ubah Sandi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF475569),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Text(
+                      'Ubah Sandi',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F8A50),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 10),
 
-          // Autentikasi 2 Langkah
+          // Autentikasi 2 Langkah (Interactive toggle)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.verified_user_outlined,
-                    color: Color(0xFF166534), size: 16),
-                const SizedBox(width: 8),
+                const Icon(Icons.verified_user_outlined, color: Color(0xFF0F8A50), size: 18),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Autentikasi 2 Langkah',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
-                        ),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
                       ),
                       Text(
-                        'Aktif via SMS / WhatsApp',
+                        _twoFactorAuth ? 'Aktif via SMS / WhatsApp' : 'Nonaktif',
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF16A34A),
+                          fontSize: 11,
+                          color: _twoFactorAuth ? const Color(0xFF0F8A50) : const Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Switch(
-                  value: _twoFactorAuth,
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: const Color(0xFF16A34A),
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: const Color(0xFFE2E8F0),
-                  onChanged: (val) {
-                    setState(() {
-                      _twoFactorAuth = val;
-                    });
-                  },
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: _twoFactorAuth,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: const Color(0xFF0F8A50),
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: const Color(0xFFCBD5E1),
+                    onChanged: (val) {
+                      setState(() => _twoFactorAuth = val);
+                      _showSuccessToast(
+                        val ? 'Autentikasi 2 Langkah diaktifkan via SMS/WhatsApp' : 'Autentikasi 2 Langkah dinonaktifkan',
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -1094,25 +1323,164 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildActionButtons(BuildContext context) {
+    return Column(
       children: [
-        Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            color: const Color(0xFF64748B),
-            fontWeight: FontWeight.w500,
+        // Button 1: Simpan Perubahan
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Semua perubahan data pribadi berhasil disimpan!'),
+                  backgroundColor: Color(0xFF0F8A50),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F8A50),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  'Simpan Perubahan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textDark,
+        const SizedBox(height: 10),
+
+        // Button 2: Pusat Bantuan & FAQ >
+        SizedBox(
+          width: double.infinity,
+          height: 46,
+          child: OutlinedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BantuanFaqScreen()),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFE2E8F0)),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.help_outline_rounded, size: 16, color: Color(0xFF475569)),
+                const SizedBox(width: 6),
+                Text(
+                  'Pusat Bantuan & FAQ',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF475569)),
+              ],
+            ),
           ),
+        ),
+        const SizedBox(height: 16),
+
+        // Footer: Keluar dari Akun • Hapus Akun
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Keluar dari Akun?'),
+                    content: const Text('Apakah Anda yakin ingin keluar dari sesi aplikasi?'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
+                        child: const Text('Keluar', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Keluar dari Akun',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFEF4444),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Container(
+                width: 3.5,
+                height: 3.5,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFCBD5E1),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Hapus Akun'),
+                    content: const Text('Akun dan seluruh riwayat langganan Anda akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
+                        child: const Text('Hapus Akun', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: Text(
+                'Hapus Akun',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

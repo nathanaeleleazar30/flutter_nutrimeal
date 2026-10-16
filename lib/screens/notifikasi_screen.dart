@@ -27,7 +27,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       SnackBar(
         content: Text(
           'Semua notifikasi telah ditandai sebagai dibaca',
-          style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         backgroundColor: AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
@@ -50,13 +53,21 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 color: Color(0xFFDCFCE7),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle_rounded, color: AppColors.primaryGreen, size: 22),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.primaryGreen,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'Bukti Pembayaran',
-                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
               ),
             ),
           ],
@@ -73,7 +84,12 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             const Divider(height: 18),
             _buildReceiptRow('Tanggal', '24 Okt 2024, 08:32 WIB'),
             const Divider(height: 18),
-            _buildReceiptRow('Total Bayar', 'Rp 185.000', isBold: true, isPrice: true),
+            _buildReceiptRow(
+              'Total Bayar',
+              'Rp 185.000',
+              isBold: true,
+              isPrice: true,
+            ),
             const SizedBox(height: 14),
             Container(
               width: double.infinity,
@@ -84,7 +100,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.verified_rounded, color: AppColors.primaryGreen, size: 16),
+                  const Icon(
+                    Icons.verified_rounded,
+                    color: AppColors.primaryGreen,
+                    size: 16,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Status: LUNAS & TERVERIFIKASI',
@@ -115,7 +135,12 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     );
   }
 
-  Widget _buildReceiptRow(String label, String value, {bool isBold = false, bool isPrice = false}) {
+  Widget _buildReceiptRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    bool isPrice = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -147,7 +172,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark, size: 22),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textDark,
+            size: 22,
+          ),
           onPressed: () => Navigator.maybePop(context),
         ),
         title: Text(
@@ -298,7 +327,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFF1F5F9),
+            color: isSelected
+                ? const Color(0xFF0F5132)
+                : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(22),
             boxShadow: isSelected
                 ? [
@@ -332,9 +363,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               if (badgeText != null) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1.5,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF22C55E) : const Color(0xFFE2E8F0),
+                    color: isSelected
+                        ? const Color(0xFF22C55E)
+                        : const Color(0xFFE2E8F0),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
@@ -342,7 +378,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: isSelected ? Colors.white : const Color(0xFF334155),
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF334155),
                     ),
                   ),
                 ),
@@ -356,23 +394,30 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
 
   Widget _buildStatusBar() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        RichText(
-          text: TextSpan(
-            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary),
-            children: [
-              TextSpan(
-                text: '$_unreadCount belum dibaca ',
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F5132),
-                ),
+        Expanded(
+          child: RichText(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            text: TextSpan(
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                color: AppColors.textSecondary,
               ),
-              const TextSpan(text: 'dari 3 update terbaru'),
-            ],
+              children: [
+                TextSpan(
+                  text: '$_unreadCount belum dibaca ',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F5132),
+                  ),
+                ),
+                const TextSpan(text: 'dari 3 update'),
+              ],
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         InkWell(
           borderRadius: BorderRadius.circular(6),
           onTap: _markAllAsRead,
@@ -381,10 +426,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.done_all_rounded, color: AppColors.primaryGreen, size: 16),
+                const Icon(
+                  Icons.done_all_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 15,
+                ),
                 const SizedBox(width: 4),
                 Text(
-                  'Tandai semua dibaca',
+                  'Tandai dibaca',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
@@ -463,7 +512,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       color: Color(0xFFDCFCE7),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.two_wheeler_rounded, color: Color(0xFF166534), size: 22),
+                    child: const Icon(
+                      Icons.two_wheeler_rounded,
+                      color: Color(0xFF166534),
+                      size: 22,
+                    ),
                   ),
                   if (_unreadItem1)
                     Positioned(
@@ -535,7 +588,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.near_me_rounded, color: AppColors.primaryGreen, size: 15),
+                const Icon(
+                  Icons.near_me_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 15,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -595,7 +652,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       color: Color(0xFFDCFCE7),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.restaurant_rounded, color: Color(0xFF166534), size: 22),
+                    child: const Icon(
+                      Icons.restaurant_rounded,
+                      color: Color(0xFF166534),
+                      size: 22,
+                    ),
                   ),
                   if (_unreadItem2)
                     Positioned(
@@ -678,7 +739,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFDCFCE7),
                     borderRadius: BorderRadius.circular(6),
@@ -706,7 +770,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        final controller = context.read<NutriMealMenuController>();
+                        final controller = context
+                            .read<NutriMealMenuController>();
                         if (controller.allMenuItems.isNotEmpty) {
                           controller.addToCart(controller.allMenuItems[0]);
                         }
@@ -714,19 +779,29 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                           SnackBar(
                             content: Text(
                               'Salmon Teriyaki Bowl ditambahkan ke keranjang!',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             backgroundColor: AppColors.primaryGreen,
                             behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0F5132),
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: Text(
                         'Pesan Sekarang',
@@ -774,7 +849,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                   color: Color(0xFFDCFCE7),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_outline_rounded, color: AppColors.primaryGreen, size: 22),
+                child: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -833,7 +912,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 borderRadius: BorderRadius.circular(4),
                 onTap: _showProofDialog,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
                   child: Text(
                     'Lihat Bukti',
                     style: GoogleFonts.plusJakartaSans(

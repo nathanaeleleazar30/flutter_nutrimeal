@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
-import '../widgets/nutri_meal_logo.dart';
-import '../widgets/user_avatar.dart';
+import 'address_screen.dart';
 
 class LanggananSayaScreen extends StatefulWidget {
   final bool showBottomNav;
@@ -23,99 +22,135 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(62),
-        child: Container(
-          color: Colors.white,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              child: Row(
-                children: [
-                  const NutriMealLogo(fontSize: 16, hasShadow: false),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Pesanan',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Notification bell with unread dot
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none_rounded, color: AppColors.textDark, size: 24),
-                        tooltip: 'Notifikasi',
-                        onPressed: () => Navigator.pushNamed(context, '/notifikasi'),
-                      ),
-                      Positioned(
-                        top: 10,
-                        right: 12,
-                        child: Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF4444),
-                            shape: BoxShape.circle,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // Top App Bar with soft mint background matching Image 4
+            _buildHeader(context),
+
+            // Main Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. Active Package Card
+                    _buildActivePackageCard(),
+                    const SizedBox(height: 20),
+
+                    // 2. Jadwal Hari Ini Section
+                    _buildTodayScheduleSection(),
+                    const SizedBox(height: 20),
+
+                    // 3. Alamat Pengantaran Section
+                    _buildDeliveryAddressSection(context),
+                    const SizedBox(height: 20),
+
+                    // 4. Perpanjang Otomatis Section
+                    _buildAutoRenewSection(),
+                    const SizedBox(height: 20),
+
+                    // 5. Button: Jadwal & Menu Bulanan
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/jadwal');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F8A50),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        ),
+                        child: Text(
+                          'Jadwal & Menu Bulanan',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 4),
-                  // User Profile Avatar
-                  UserAvatar(
-                    size: 34,
-                    onTap: () => Navigator.pushNamed(context, '/profile'),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 16,
+        right: 16,
+        bottom: 12,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFC3E7C4),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 15,
+                color: AppColors.textDark,
+              ),
             ),
           ),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Active Subscription Card (Paket Bulanan Lengkap)
-              _buildActivePackageCard(),
-              const SizedBox(height: 22),
-
-              // 2. Jadwal Hari Ini
-              _buildTodayScheduleSection(),
-              const SizedBox(height: 20),
-
-              // 3. Alamat Pengantaran Card
-              _buildDeliveryAddressCard(),
-              const SizedBox(height: 18),
-
-              // 4. Perpanjang Otomatis Card
-              _buildAutoRenewCard(),
-              const SizedBox(height: 24),
-            ],
+          Expanded(
+            child: Text(
+              'Langganan Saya',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
           ),
-        ),
+          const SizedBox(width: 36),
+        ],
       ),
-      bottomNavigationBar: widget.showBottomNav ? _buildBottomNav() : null,
     );
   }
 
   Widget _buildActivePackageCard() {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -123,65 +158,63 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Badge "Aktif Berlangganan"
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(12),
+          // Badge: • Aktif Berlangganan
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCFCE7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF16A34A),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF16A34A),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Aktif Berlangganan',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF166534),
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 6),
+                Text(
+                  'Aktif Berlangganan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF166534),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 10),
+
           // Title
           Text(
             'Paket Bulanan Lengkap',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
               color: AppColors.textDark,
             ),
           ),
           const SizedBox(height: 4),
+
           // Subtitle
           RichText(
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: 'Paling Populer ',
+                  text: 'Paling Populer',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F5132),
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F8A50),
                   ),
                 ),
                 TextSpan(
-                  text: '• Durasi 30 Hari (60x Makan)',
+                  text: ' • Durasi 30 Hari (60x Makan)',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     color: const Color(0xFF64748B),
@@ -191,7 +224,8 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          // Progress numbers
+
+          // Progress Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -208,24 +242,26 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F5132),
+                  color: const Color(0xFF0F8A50),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          // Progress bar
+
+          // Progress Bar
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: const LinearProgressIndicator(
-              value: 0.3,
-              minHeight: 7,
+              value: 0.30,
               backgroundColor: Color(0xFFE2E8F0),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0F5132)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0F8A50)),
+              minHeight: 6,
             ),
           ),
-          const SizedBox(height: 10),
-          // Dates
+          const SizedBox(height: 12),
+
+          // Dates Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -259,12 +295,12 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           children: [
             Row(
               children: [
-                const Text('🍴', style: TextStyle(fontSize: 15)),
-                const SizedBox(width: 6),
+                const Icon(Icons.restaurant_rounded, color: Color(0xFF0F8A50), size: 18),
+                const SizedBox(width: 8),
                 Text(
                   'Jadwal Hari Ini',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
                   ),
@@ -275,8 +311,8 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
               'Hari ke-9 • 9 Nov',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F5132),
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F8A50),
               ),
             ),
           ],
@@ -285,57 +321,58 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
 
         // Meal 1: Makan Siang
         _buildMealCard(
-          mealType: 'Makan Siang',
+          category: 'Makan Siang',
           time: '11.30 WIB',
-          statusBadge: '🚚 Kurir OTW',
-          statusBg: const Color(0xFFDCFCE7),
-          statusColor: const Color(0xFF166534),
-          dishName: 'Nasi Ayam Teriyaki',
-          dishDesc: 'Sayur Brokoli Kukus & Wijen',
-          calories: '450 kkal',
-          protein: '38g Protein',
-          imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=240&auto=format&fit=crop',
+          statusBadge: 'Kurir OTW',
+          statusColor: const Color(0xFFDCFCE7),
+          statusTextColor: const Color(0xFF166534),
+          statusIcon: Icons.delivery_dining_rounded,
+          title: 'Nasi Ayam Teriyaki',
+          subtitle: 'Sayur Brokoli Kukus & Wijen',
+          tags: ['450 kkal', '38g Protein'],
+          imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop',
         ),
         const SizedBox(height: 12),
 
         // Meal 2: Makan Malam
         _buildMealCard(
-          mealType: 'Makan Malam',
+          category: 'Makan Malam',
           time: '17.30 WIB',
-          statusBadge: '♨️ Disiapkan Dapur',
-          statusBg: const Color(0xFFF1F5F9),
-          statusColor: const Color(0xFF64748B),
-          dishName: 'Chicken Katsu Salad',
-          dishDesc: 'Roasted Sesame Dressing',
-          calories: '420 kkal',
-          protein: '34g Protein',
-          imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=240&auto=format&fit=crop',
+          statusBadge: 'Disiapkan Dapur',
+          statusColor: const Color(0xFFF1F5F9),
+          statusTextColor: const Color(0xFF64748B),
+          statusIcon: Icons.soup_kitchen_rounded,
+          title: 'Chicken Katsu Salad',
+          subtitle: 'Roasted Sesame Dressing',
+          tags: ['420 kkal', '34g Protein'],
+          imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=400&auto=format&fit=crop',
         ),
       ],
     );
   }
 
   Widget _buildMealCard({
-    required String mealType,
+    required String category,
     required String time,
     required String statusBadge,
-    required Color statusBg,
     required Color statusColor,
-    required String dishName,
-    required String dishDesc,
-    required String calories,
-    required String protein,
+    required Color statusTextColor,
+    required IconData statusIcon,
+    required String title,
+    required String subtitle,
+    required List<String> tags,
     required String imageUrl,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -343,68 +380,78 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row with pill, time, and status
+          // Top Row: Category + Time | Status
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  mealType,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF334155),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      category,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                time,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  statusBadge,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: statusColor,
+                  const SizedBox(width: 6),
+                  Text(
+                    time,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    Icon(statusIcon, size: 12, color: statusTextColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusBadge,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: statusTextColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // Content row with Image & Dish details
+          // Content Row: Thumbnail + Info
           Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 child: Image.network(
                   imageUrl,
-                  width: 64,
-                  height: 64,
+                  width: 58,
+                  height: 58,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => Container(
-                    width: 64,
-                    height: 64,
+                    width: 58,
+                    height: 58,
                     color: const Color(0xFFDCFCE7),
-                    child: const Icon(Icons.restaurant_rounded, color: Color(0xFF0F5132)),
+                    child: const Icon(Icons.restaurant_rounded, color: Color(0xFF16A34A)),
                   ),
                 ),
               ),
@@ -414,16 +461,16 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      dishName,
+                      title,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14.5,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      dishDesc,
+                      subtitle,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: const Color(0xFF64748B),
@@ -431,11 +478,24 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                     ),
                     const SizedBox(height: 6),
                     Row(
-                      children: [
-                        _buildNutriChip(calories),
-                        const SizedBox(width: 6),
-                        _buildNutriChip(protein),
-                      ],
+                      children: tags.map((t) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            t,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF475569),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
@@ -447,303 +507,158 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
     );
   }
 
-  Widget _buildNutriChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF475569),
+  Widget _buildDeliveryAddressSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Alamat Pengantaran',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDeliveryAddressCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.location_on_outlined, color: Color(0xFF16A34A), size: 19),
-              const SizedBox(width: 6),
-              Text(
-                'Alamat Pengantaran',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => Navigator.pushNamed(context, '/address'),
-                child: Text(
-                  'Ganti',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F5132),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 25),
-            child: Text(
-              'Jl. Soekarno Hatta No. 42, Lowokwaru, Kota Malang (Sesi Siang & Malam)',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11.5,
-                color: const Color(0xFF475569),
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAutoRenewCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Perpanjang Otomatis',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF86EFAC),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Diskon +10%',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF064E3B),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Transform.scale(
-                scale: 0.85,
-                child: Switch(
-                  value: _isAutoRenew,
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: const Color(0xFF0F5132),
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: const Color(0xFFCBD5E1),
-                  onChanged: (val) => setState(() => _isAutoRenew = val),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Perpanjang di 1 Des 2026 secara otomatis tanpa ribet',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11.5,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/jadwal'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0F5132),
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              child: Text(
-                'Jadwal & Menu Bulanan',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildNavItem(
-                Icons.home_rounded,
-                'Beranda',
-                isActive: true,
-                onTap: () => Navigator.pushReplacementNamed(context, '/home'),
-              ),
-              _buildNavItem(
-                Icons.tune_rounded,
-                'Menu',
-                onTap: () => Navigator.pushReplacementNamed(context, '/menu'),
-              ),
-              _buildCenterNutribotItem(),
-              _buildNavItem(
-                Icons.chat_bubble_outline_rounded,
-                'Pesan',
-                onTap: () => Navigator.pushNamed(context, '/chat-admin'),
-              ),
-              _buildNavItem(
-                Icons.calendar_today_rounded,
-                'Jadwal',
-                onTap: () => Navigator.pushNamed(context, '/jadwal'),
+              const Icon(Icons.location_on_outlined, color: Color(0xFF0F8A50), size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Alamat Pengantaran',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AddressScreen()),
+                            );
+                          },
+                          child: Text(
+                            'Ganti',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF0F8A50),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Jl. Soekarno Hatta No. 42, Lowokwaru, Kota Malang (Sesi Siang & Malam)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        color: const Color(0xFF64748B),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildNavItem(
-    IconData icon,
-    String label, {
-    bool isActive = false,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 21,
-              color: isActive ? const Color(0xFF0F5132) : const Color(0xFF94A3B8),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                color: isActive ? const Color(0xFF0F5132) : const Color(0xFF94A3B8),
-              ),
-            ),
-            if (isActive) ...[
-              const SizedBox(height: 2),
-              Container(
-                width: 4,
-                height: 4,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0F5132),
-                  shape: BoxShape.circle,
+  Widget _buildAutoRenewSection() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Perpanjang\nOtomatis',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF5DF593),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'Diskon\n+10%',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF065F46),
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCenterNutribotItem() {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/chat-ai'),
-      child: Transform.translate(
-        offset: const Offset(0, -8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.primaryGreen,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryGreen.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+                const SizedBox(height: 4),
+                Text(
+                  'Perpanjang di 1 Des 2026 secara otomatis tanpa ribet',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
                   ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 24),
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              'NutriBot',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primaryGreen,
-              ),
+          ),
+          Transform.scale(
+            scale: 0.85,
+            child: Switch(
+              value: _isAutoRenew,
+              activeThumbColor: Colors.white,
+              activeTrackColor: const Color(0xFF0F8A50),
+              onChanged: (val) {
+                setState(() => _isAutoRenew = val);
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

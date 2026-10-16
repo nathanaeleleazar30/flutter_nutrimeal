@@ -148,12 +148,38 @@ class _LoginScreenState extends State<LoginScreen> {
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: topSectionHeight,
-                    child: const Center(
+                    child: Center(
                       child: Padding(
-                        padding: EdgeInsets.only(top: 18),
-                        child: NutriMealLogo(
-                          fontSize: 34,
-                          hasShadow: true,
+                        padding: const EdgeInsets.only(top: 18),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: Image.asset(
+                                'assets/images/app_logo.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const NutriMealLogo(
+                              fontSize: 32,
+                              hasShadow: true,
+                            ),
+                          ],
                         ),
                       ),
                     ),

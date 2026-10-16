@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../controllers/menu_controller.dart';
 import '../core/constants/app_colors.dart';
-import 'address_screen.dart';
+import 'payment_status_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -13,15 +14,6 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final TextEditingController _kitchenNoteController = TextEditingController();
-  bool _isProcessing = false;
-
-  @override
-  void dispose() {
-    _kitchenNoteController.dispose();
-    super.dispose();
-  }
-
   String _formatRupiah(int amount) {
     final str = amount.toString();
     final buffer = StringBuffer();
@@ -31,808 +23,586 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
       buffer.write(str[i]);
     }
-    return 'Rp ${buffer.toString()}';
-  }
-
-  void _handlePayOrder() {
-    final controller = context.read<NutriMealMenuController>();
-    if (controller.cartItems.isEmpty) return;
-
-    setState(() => _isProcessing = true);
-
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
-      _showSuccessDialog();
-    });
-  }
-
-  void _showSuccessDialog() {
-    final controller = context.read<NutriMealMenuController>();
-    final grandTotal = controller.grandTotal;
-    final paymentMethod = controller.selectedPaymentOption.name;
-    final orderId = 'NM-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Success Icon
-              Container(
-                width: 76,
-                height: 76,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFDCFCE7),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle_rounded,
-                  color: AppColors.primaryGreen,
-                  size: 52,
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Title
-              Text(
-                'Pesanan Berhasil Dibuat!',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Katering sehat Anda sedang dipersiapkan dan akan dikirim sesuai jadwal pilihan.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Order Details Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  children: [
-                    _buildReceiptRow('Nomor Pesanan', '#$orderId'),
-                    const SizedBox(height: 8),
-                    _buildReceiptRow('Metode Bayar', paymentMethod),
-                    const SizedBox(height: 8),
-                    _buildReceiptRow('Jadwal Tiba', '12:00 - 13:00 WIB'),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Divider(color: Color(0xFFE2E8F0), height: 1),
-                    ),
-                    _buildReceiptRow('Total Dibayar', _formatRupiah(grandTotal), isBold: true),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Button Kembali ke Beranda
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.clearCart();
-                    Navigator.pop(ctx); // Close dialog
-                    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: Text(
-                    'Selesai & Kembali ke Beranda',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildReceiptRow(String label, String value, {bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12.5,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
-            fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
-            color: isBold ? AppColors.primaryGreen : AppColors.textDark,
-          ),
-        ),
-      ],
-    );
+    return 'Rp$buffer';
   }
 
   @override
   Widget build(BuildContext context) {
-    final menuController = context.watch<NutriMealMenuController>();
-    final cartItems = menuController.cartItems;
-    final address = menuController.deliveryAddress;
-    final totalCalories = cartItems.fold(0, (sum, i) => sum + (i.item.calories * i.quantity));
+    final controller = context.watch<NutriMealMenuController>();
+    final amountText = controller.grandTotal > 0 ? _formatRupiah(controller.grandTotal) : 'Rp170.347';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: AppColors.textDark,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        centerTitle: true,
-        title: Text(
-          'Konfirmasi Pesanan',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      body: SafeArea(
+        top: false,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Alamat Pengiriman Card
-            _buildDeliveryAddressSection(address),
-            const SizedBox(height: 16),
+            // Top App Bar
+            _buildHeader(context),
 
-            // 2. Jadwal Pengiriman Card
-            _buildDeliveryScheduleSection(),
-            const SizedBox(height: 16),
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Card 1: Total Pembayaran & Batas Waktu
+                    _buildPaymentHeaderCard(amountText),
+                    const SizedBox(height: 16),
 
-            // 3. Ringkasan Menu & Kalori Card
-            _buildItemsSummarySection(cartItems, totalCalories),
-            const SizedBox(height: 16),
+                    // Card 2: QRIS Card
+                    _buildQrisCard(),
+                    const SizedBox(height: 20),
 
-            // 4. Catatan untuk Dapur/Kurir
-            _buildKitchenNotesSection(),
-            const SizedBox(height: 16),
+                    // Petunjuk Pembayaran QRIS
+                    _buildInstructionsSection(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
 
-            // 5. Metode Pembayaran Selector
-            _buildPaymentSelectionSection(menuController),
-            const SizedBox(height: 16),
-
-            // 6. Rincian Pembayaran
-            _buildPaymentBreakdown(menuController),
-            const SizedBox(height: 28),
+            // Sticky Bottom Action Buttons
+            _buildBottomButtons(context, amountText),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomPayBar(menuController),
     );
   }
 
-  Widget _buildDeliveryAddressSection(DeliveryAddress address) {
+  Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 16,
+        right: 16,
+        bottom: 12,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFDCFCE7),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.location_on_rounded, color: AppColors.primaryGreen, size: 15),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'ALAMAT PENGIRIMAN',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F766E),
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ],
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AddressScreen()),
-                  );
-                },
-                child: Text(
-                  'Ubah',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '${address.label} - ${address.recipientName}',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${address.phoneNumber} • ${address.fullAddress}',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              height: 1.4,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDeliveryScheduleSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: Color(0xFFC3E7C4),
       ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFBBF7D0)),
-            ),
-            child: const Icon(Icons.schedule_rounded, color: AppColors.primaryGreen, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Jadwal Pengiriman',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'Batch Siang',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primaryGreen,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Hari Ini, 12:00 - 13:00 WIB',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemsSummarySection(List<CartItem> cartItems, int totalCalories) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Pesanan Menu Sehat',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE0F2FE),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '$totalCalories kkal total',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0284C7),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...cartItems.map((item) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 44,
-                      height: 44,
-                      child: Image.network(
-                        item.item.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: const Color(0xFFDCFCE7),
-                          child: const Icon(Icons.lunch_dining_rounded, color: AppColors.primaryGreen, size: 20),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.item.name,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        Text(
-                          '${item.quantity}x @ ${_formatRupiah(item.item.price)}',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11.5,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    _formatRupiah(item.totalPrice),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKitchenNotesSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Catatan Khusus Katering',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _kitchenNoteController,
-            maxLines: 2,
-            style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.textDark),
-            decoration: InputDecoration(
-              hintText: 'Contoh: Kurangi garam, pisahkan saus dressing...',
-              hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textMuted),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 15,
+                color: AppColors.textDark,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentSelectionSection(NutriMealMenuController controller) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Metode Pembayaran',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...controller.paymentOptions.map((opt) {
-            final isSelected = controller.selectedPaymentId == opt.id;
-            return GestureDetector(
-              onTap: () => controller.selectPaymentMethod(opt.id),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(opt.icon, color: isSelected ? AppColors.primaryGreen : const Color(0xFF64748B), size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        opt.name,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                    ),
-                    if (opt.badge != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          opt.badge!,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primaryGreen,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    Icon(
-                      isSelected ? Icons.check_circle_rounded : Icons.radio_button_off_rounded,
-                      color: isSelected ? AppColors.primaryGreen : const Color(0xFFCBD5E1),
-                      size: 18,
-                    ),
-                  ],
-                ),
+          Expanded(
+            child: Text(
+              'Pembayaran',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
               ),
-            );
-          }),
+            ),
+          ),
+          const SizedBox(width: 36),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentBreakdown(NutriMealMenuController controller) {
+  Widget _buildPaymentHeaderCard(String amountText) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         children: [
-          _buildSummaryRow('Total Menu', _formatRupiah(controller.subtotal)),
-          const SizedBox(height: 8),
-          _buildSummaryRow('Est. Pajak (11%)', _formatRupiah(controller.tax)),
-          const SizedBox(height: 8),
-          _buildSummaryRow('Ongkos Kirim', _formatRupiah(controller.shippingFee)),
-          if (controller.voucherDiscount > 0) ...[
-            const SizedBox(height: 8),
-            _buildSummaryRow(
-              'Diskon Voucher',
-              '- ${_formatRupiah(controller.voucherDiscount)}',
-              valueColor: AppColors.primaryGreen,
-            ),
-          ],
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(color: Color(0xFFF1F5F9), height: 1),
-          ),
+          // Top Labels
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Total Pembayaran',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  fontSize: 12,
+                  color: const Color(0xFF64748B),
                 ),
               ),
               Text(
-                _formatRupiah(controller.grandTotal),
+                'Batas Waktu',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.primaryGreen,
+                  fontSize: 11.5,
+                  color: const Color(0xFF64748B),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+          const SizedBox(height: 4),
 
-  Widget _buildSummaryRow(String label, String value, {Color? valueColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(fontSize: 12.5, color: AppColors.textSecondary),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
-            color: valueColor ?? AppColors.textDark,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomPayBar(NutriMealMenuController controller) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+          // Total & Timer Pill
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              Row(
                 children: [
                   Text(
-                    'Total Tagihan',
+                    amountText,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11.5,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  Text(
-                    _formatRupiah(controller.grandTotal),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 17,
+                      fontSize: 20,
                       fontWeight: FontWeight.w900,
                       color: AppColors.textDark,
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: amountText.replaceAll('Rp', '').replaceAll('.', '')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Nominal disalin ke clipboard'),
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: const Icon(
+                      Icons.copy_rounded,
+                      size: 14,
+                      color: Color(0xFF16A34A),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _isProcessing ? null : _handlePayOrder,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, size: 12, color: Color(0xFF166534)),
+                    const SizedBox(width: 4),
+                    Text(
+                      '23 : 58 : 55',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF166534),
                       ),
                     ),
-                    child: _isProcessing
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.shield_outlined, size: 16, color: Colors.white),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  'Bayar Sekarang',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 10),
+
+          // Jatuh tempo
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Jatuh tempo',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              Text(
+                '12 Oktober 2026, 22:26 WIB',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQrisCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // QRIS Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'QRIS',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'QR Code Standar',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.black),
+                  ),
+                  Text(
+                    'Pembayaran Nasional',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.black),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // QR Code Graphic with NutriMeal Leaf in center
           Container(
-            width: 120,
-            height: 4,
+            width: 200,
+            height: 200,
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFCBD5E1),
-              borderRadius: BorderRadius.circular(2),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  size: const Size(184, 184),
+                  painter: _QrisPainter(),
+                ),
+                // Center Green Leaf
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F8A50),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // NMID
+          Text(
+            'NMID:  ID2025444802321',
+            style: GoogleFonts.sourceCodePro(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF64748B),
+              letterSpacing: 0.5,
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildInstructionsSection() {
+    final instructions = [
+      {
+        'title': 'Simpan atau screenshot Kode QR',
+        'body': 'Gunakan tombol "Simpan Kode QR" di bawah layar atau tangkap layar secara manual.',
+        'highlight': '"Simpan Kode QR"',
+      },
+      {
+        'title': 'Buka aplikasi pembayaran favorit Anda',
+        'body': 'Buka BCA mobile, GoPay, ShopeePay, DANA, OVO, Livin\' by Mandiri, atau m-Banking pilihan Anda.',
+      },
+      {
+        'title': 'Pilih menu Scan QR & upload gambar',
+        'body': 'Ketuk ikon QR/Bayar di aplikasi Anda, lalu pilih opsi ambil gambar dari galeri foto perangkat.',
+      },
+      {
+        'title': 'Periksa detail & konfirmasi nominal',
+        'body': 'Pastikan nama penerima adalah NutriMeal Official Catering dengan jumlah tepat.',
+        'highlight': 'NutriMeal Official Catering',
+      },
+      {
+        'title': 'Masukkan PIN transaksi Anda',
+        'body': 'Pesanan katering sehat Anda akan diverifikasi otomatis oleh sistem dalam 10-30 detik.',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Petunjuk Pembayaran QRIS',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...List.generate(instructions.length, (index) {
+          final item = instructions[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Step Number Circle (solid green with white number)
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF22C55E),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${index + 1}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['title']!,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item['body']!,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: const Color(0xFF64748B),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildBottomButtons(BuildContext context, String amountText) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Button 1: Simpan Kode QR
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Kode QR berhasil disimpan ke Galeri!'),
+                    backgroundColor: Color(0xFF16A34A),
+                    behavior: SnackBarBehavior.floating,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
+              label: Text(
+                'Simpan Kode QR',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F8A50),
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Button 2: Cek Status Pembayaran
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PaymentStatusScreen(
+                      totalAmount: amountText,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.sync_rounded, color: AppColors.textDark, size: 18),
+              label: Text(
+                'Cek Status Pembayaran',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF1F5F9),
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Custom painter for a QRIS QR code aesthetic
+class _QrisPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paintDark = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.fill;
+
+    final paintGreen = Paint()
+      ..color = const Color(0xFF0F8A50)
+      ..style = PaintingStyle.fill;
+
+    final w = size.width;
+    final h = size.height;
+
+    // Helper to draw a finder pattern
+    void drawFinderPattern(double x, double y, double s, Paint innerPaint) {
+      // Outer box
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(x, y, s, s), const Radius.circular(8)),
+        paintDark,
+      );
+      // Inner clear
+      final innerClearPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(x + s * 0.15, y + s * 0.15, s * 0.7, s * 0.7), const Radius.circular(5)),
+        innerClearPaint,
+      );
+      // Inner dot
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(x + s * 0.3, y + s * 0.3, s * 0.4, s * 0.4), const Radius.circular(3)),
+        innerPaint,
+      );
+    }
+
+    final cornerSize = w * 0.28;
+    // Top-Left Finder
+    drawFinderPattern(0, 0, cornerSize, paintGreen);
+    // Top-Right Finder
+    drawFinderPattern(w - cornerSize, 0, cornerSize, paintDark);
+    // Bottom-Left Finder
+    drawFinderPattern(0, h - cornerSize, cornerSize, paintDark);
+
+    // Decorative Data Modules / Matrix Dots
+    final dotSize = w * 0.042;
+    for (int r = 0; r < 21; r++) {
+      for (int c = 0; c < 21; c++) {
+        // Skip finder areas
+        if ((r < 7 && c < 7) || (r < 7 && c > 13) || (r > 13 && c < 7)) continue;
+        // Skip center area
+        if (r >= 8 && r <= 12 && c >= 8 && c <= 12) continue;
+
+        // Pseudo-random pattern based on formula
+        if ((r * 7 + c * 13 + (r * c)) % 3 == 0 || (r + c) % 5 == 0) {
+          final px = c * (w / 21);
+          final py = r * (h / 21);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(Rect.fromLTWH(px, py, dotSize, dotSize), const Radius.circular(1.5)),
+            paintDark,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

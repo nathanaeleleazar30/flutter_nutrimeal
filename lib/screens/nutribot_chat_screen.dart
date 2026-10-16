@@ -188,11 +188,13 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                   width: 40,
                   height: 40,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFDCFCE7),
                     shape: BoxShape.circle,
                   ),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.smart_toy_rounded, color: AppColors.primaryGreen, size: 24),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/images/nutribot_avatar.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 Positioned(
                   bottom: 0,
@@ -363,11 +365,13 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
               width: 32,
               height: 32,
               decoration: const BoxDecoration(
-                color: Color(0xFFDCFCE7),
                 shape: BoxShape.circle,
               ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.smart_toy_rounded, color: AppColors.primaryGreen, size: 18),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/images/nutribot_avatar.png',
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(

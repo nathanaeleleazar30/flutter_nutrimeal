@@ -54,11 +54,37 @@ class _SplashScreenState extends State<SplashScreen> {
               child: FoodDoodleBackground(fillFull: true),
             ),
 
-            // Centered Nutri Meal Logo
-            const Center(
-              child: NutriMealLogo(
-                fontSize: 38,
-                hasShadow: true,
+            // Centered Nutri Meal Logo with App Icon
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(26),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const NutriMealLogo(
+                    fontSize: 34,
+                    hasShadow: true,
+                  ),
+                ],
               ),
             ),
           ],
