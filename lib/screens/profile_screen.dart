@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../controllers/auth_controller.dart';
 import '../core/constants/app_colors.dart';
+import '../data/local/preferences/preferences_service.dart';
 import '../widgets/main_top_bar.dart';
 import 'address_screen.dart';
 import 'bantuan_faq_screen.dart';
@@ -24,6 +27,21 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final enabled = await PreferencesService.instance.isNotificationEnabled();
+    if (mounted) {
+      setState(() {
+        _notificationsEnabled = enabled;
+      });
+    }
+  }
 
   void _handleLogout() {
     showDialog(
@@ -57,10 +75,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              final nav = Navigator.of(context);
               Navigator.pop(ctx);
-              Navigator.of(context)
-                  .pushNamedAndRemoveUntil('/login', (route) => false);
+              await context.read<AuthController>().logout();
+              if (mounted) {
+                nav.pushNamedAndRemoveUntil('/login', (route) => false);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
@@ -560,6 +581,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               inactiveTrackColor: const Color(0xFFCBD5E1),
               onChanged: (val) {
                 setState(() => _notificationsEnabled = val);
+                PreferencesService.instance.setNotificationEnabled(val);
               },
             ),
           ),
