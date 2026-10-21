@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '172.16.6.234';
+  static const String hostLanIp = '10.200.17.103';
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
