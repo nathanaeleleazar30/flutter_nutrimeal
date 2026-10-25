@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../core/constants/api_config.dart';
+import '../data/local/secure/secure_storage_service.dart';
 
 class AuthController extends ChangeNotifier {
   // Google Sign-In instance untuk autentikasi akun Google resmi
@@ -22,6 +23,9 @@ class AuthController extends ChangeNotifier {
       clientId: clientId,
       scopes: const ['email', 'profile'],
     );
+
+    // Requirement 3: Pulihkan sesi pengguna dari secure storage saat app dibuka
+    restoreSession();
   }
 
   // Loading & Session State
@@ -66,6 +70,27 @@ class AuthController extends ChangeNotifier {
 
   // For Google Sign-In (real), expose basic info
   RealGoogleUser? get selectedGoogleAccount => _selectedGoogleAccount;
+
+  // Requirement 3: Restore session from FlutterSecureStorage
+  Future<void> restoreSession() async {
+    try {
+      final creds = await SecureStorageService.instance.getUserCredentials();
+      final token = creds['token'];
+      if (token != null && token.isNotEmpty) {
+        _authToken = token;
+        _customerId = creds['userId'];
+        _currentUserName = creds['name'];
+        _currentUserEmail = creds['email'];
+        _isLoggedIn = true;
+        notifyListeners();
+        if (kDebugMode) {
+          print('[NutriMeal Auth] 🔐 Sesi berhasil dipulihkan dari FlutterSecureStorage: $_currentUserEmail');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('[NutriMeal Auth] ⚠️ Gagal memulihkan sesi dari secure storage: $e');
+    }
+  }
 
   // Validation Logic
   void clearErrors() {
@@ -237,7 +262,17 @@ class AuthController extends ChangeNotifier {
       _isLoggedIn = true;
       _backendMessage = 'Login berhasil';
 
-      if (kDebugMode) print('[NutriMeal Auth] ✅ Login berhasil: $_currentUserEmail');
+      // Requirement 3.a: Simpan token & kredensial ke flutter_secure_storage
+      if (_authToken != null) {
+        await SecureStorageService.instance.saveUserCredentials(
+          token: _authToken,
+          userId: _customerId,
+          email: _currentUserEmail,
+          name: _currentUserName,
+        );
+      }
+
+      if (kDebugMode) print('[NutriMeal Auth] ✅ Login berhasil & tersimpan di SecureStorage: $_currentUserEmail');
     } catch (e) {
       _generalError = 'Terjadi kesalahan: $e';
       _isLoading = false;
@@ -300,16 +335,16 @@ class AuthController extends ChangeNotifier {
         return false;
       }
 
-      // Sukses
-      final customerData = resData['data'];
-      _authToken = customerData?['token'];
-      _customerId = customerData?['customer']?['id'];
-      _currentUserName = customerData?['customer']?['name'] ?? nama;
-      _currentUserEmail = customerData?['customer']?['email'] ?? email;
-      _isLoggedIn = true;
-      _backendMessage = 'Pendaftaran tersimpan ke Database';
+            // Sukses menyimpan ke database
+      // Jangan langsung login otomatis, agar user login manual terlebih dahulu
+      _authToken = null;
+      _customerId = null;
+      _currentUserName = null;
+      _currentUserEmail = null;
+      _isLoggedIn = false;
+      _backendMessage = 'Pendaftaran berhasil. Silakan masuk dengan akun Anda.';
 
-      if (kDebugMode) print('[NutriMeal Auth] ✅ Register berhasil: $_currentUserEmail');
+      if (kDebugMode) print('[NutriMeal Auth] 🚀 Register berhasil tersimpan di DB: ${email.trim()}');
     } catch (e) {
       _generalError = 'Terjadi kesalahan: $e';
       _isLoading = false;
@@ -393,6 +428,17 @@ class AuthController extends ChangeNotifier {
       _backendMessage = 'Tersambung via Akun Google Resmi';
 
       if (kDebugMode) print('[NutriMeal Auth] ✅ Google Sign-In berhasil: $_currentUserEmail');
+
+      // Requirement 3.a: Simpan token Google / backend ke flutter_secure_storage
+      if (_authToken != null) {
+        await SecureStorageService.instance.saveUserCredentials(
+          token: _authToken,
+          userId: _customerId,
+          email: _currentUserEmail,
+          name: _currentUserName,
+        );
+      }
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -445,7 +491,7 @@ class AuthController extends ChangeNotifier {
     return null;
   }
 
-  void logout() {
+  Future<void> logout() async {
     _isLoggedIn = false;
     _currentUserEmail = null;
     _currentUserName = null;
@@ -454,6 +500,8 @@ class AuthController extends ChangeNotifier {
     _selectedGoogleAccount = null;
     _backendMessage = null;
     _googleSignIn.signOut().catchError((_) => null);
+    // Requirement 3: Hapus semua data sensitif dari SecureStorage saat logout
+    await SecureStorageService.instance.clearAllSecrets();
     clearErrors();
     notifyListeners();
   }

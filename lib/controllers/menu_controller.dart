@@ -1,7 +1,8 @@
-import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../core/constants/api_config.dart';
+import '../data/local/preferences/preferences_service.dart';
+import '../data/repositories/meal_repository.dart';
 
 class NutritionInfo {
   final int calories;
@@ -191,14 +192,18 @@ class CateringDayItem {
 }
 
 class NutriMealMenuController extends ChangeNotifier {
+  final MealRepository _mealRepository = MealRepository();
+  final PreferencesService _prefsService = PreferencesService.instance;
+
+  StreamSubscription<List<MenuItem>>? _mealsSubscription;
+
   NutriMealMenuController() {
     _initDefaultCart();
-    // Langsung fetch menu dari backend saat pertama kali controller dibuat
-    fetchMenusFromApi();
+    _initLocalPreferencesAndDriftStream();
   }
 
   // -----------------------------------------------------------------------
-  // Fetch API State
+  // Offline-First & Storage State
   // -----------------------------------------------------------------------
   bool _isLoadingMenu = false;
   bool get isLoadingMenu => _isLoadingMenu;
@@ -206,93 +211,110 @@ class NutriMealMenuController extends ChangeNotifier {
   String? _menuError;
   String? get menuError => _menuError;
 
-
-  /// Flag apakah data menu sudah pernah diambil dari API
   bool _menuLoadedFromApi = false;
   bool get menuLoadedFromApi => _menuLoadedFromApi;
 
+  bool _isOffline = false;
+  bool get isOffline => _isOffline;
+
+  int? _lastSyncUtcMillis;
+  int? get lastSyncUtcMillis => _lastSyncUtcMillis;
+
+  /// Helper untuk menambahkan kategori baru dari menu
+  void _syncDynamicCategories(List<MenuItem> items) {
+    final serverCategories = items.map((m) => m.category).toSet().toList();
+    for (final cat in serverCategories) {
+      if (!_dynamicCategories.contains(cat)) {
+        _dynamicCategories.add(cat);
+      }
+    }
+  }
+
+  /// Inisialisasi:
+  /// 1. Muat preferensi dari SharedPreferences (Requirement 2.a)
+  /// 2. Muat cache awal dari Drift DB jika ada (Offline-First)
+  /// 3. Pasang Stream Reaktif (.watch() pada Drift) (Requirement 1.d)
+  /// 4. Fetch pembaruan dari backend API dan simpan atomik via Transaction (Requirement 1.b & 1.e)
+  Future<void> _initLocalPreferencesAndDriftStream() async {
+    // 1. Ambil preferensi filter kategori dari shared_preferences (Requirement 2.a)
+    try {
+      final savedCategory = await _prefsService.getSelectedFilterCategory();
+      if (savedCategory != null && savedCategory.isNotEmpty) {
+        _selectedCategory = savedCategory;
+      }
+      _lastSyncUtcMillis = await _prefsService.getLastCacheSyncUtcMillis();
+    } catch (e) {
+      debugPrint('[MenuController] Error reading SharedPreferences: $e');
+    }
+
+    // 2. Ambil cache awal dari Drift SQLite database
+    try {
+      final localMeals = await _mealRepository.getLocalMeals();
+      if (localMeals.isNotEmpty) {
+        _menuItems
+          ..clear()
+          ..addAll(localMeals);
+        _syncDynamicCategories(localMeals);
+        _menuLoadedFromApi = true;
+        notifyListeners();
+        debugPrint('[MenuController] 📦 Berhasil memuat ${localMeals.length} menu dari Drift DB lokal.');
+      }
+    } catch (e) {
+      debugPrint('[MenuController] Error loading local Drift DB: $e');
+    }
+
+    // 3. Requirement 1.d: Pasang Stream Reaktif (.watch() pada Drift DB)
+    // Lapisan data mengalirkan pembaruan otomatis ke UI segera setelah transaksi penulisan database selesai.
+    _mealsSubscription = _mealRepository.watchMeals().listen((meals) {
+      if (meals.isNotEmpty) {
+        _menuItems
+          ..clear()
+          ..addAll(meals);
+        _syncDynamicCategories(meals);
+        _menuLoadedFromApi = true;
+        notifyListeners();
+        debugPrint('[MenuController] 🔄 Drift Stream .watch() memicu pembaruan UI: ${meals.length} menu.');
+      }
+    });
+
+    // 4. Fetch dari backend & simpan secara atomik ke Drift DB
+    await fetchMenusFromApi();
+  }
+
   /// Fetch daftar menu dari GET /api/meals
-  /// Mencoba setiap URL kandidat secara berurutan hingga salah satu berhasil.
+  /// Data disimpan ke Drift database menggunakan Database Transaction secara atomik.
   Future<void> fetchMenusFromApi() async {
     if (_isLoadingMenu) return;
     _isLoadingMenu = true;
     _menuError = null;
     notifyListeners();
 
-    final candidates = ApiConfig.candidateMealsUrls;
-    Object? lastError;
+    try {
+      final success = await _mealRepository.fetchAndCacheMeals();
+      _isOffline = !success;
 
-    for (final url in candidates) {
-      try {
-        debugPrint('[MenuController] Mencoba fetch menu dari: $url');
-        final response = await http
-            .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 8));
-
-        if (response.statusCode == 200) {
-          final uri = Uri.parse(url);
-          final resolvedBase = '${uri.scheme}://${uri.host}:${uri.port}';
-
-          final decoded = jsonDecode(response.body);
-          List<dynamic> rawList;
-          if (decoded is List) {
-            rawList = decoded;
-          } else if (decoded is Map && decoded.containsKey('data')) {
-            rawList = decoded['data'] as List<dynamic>;
-          } else if (decoded is Map && decoded.containsKey('meals')) {
-            rawList = decoded['meals'] as List<dynamic>;
-          } else {
-            rawList = [];
-          }
-
-          if (rawList.isNotEmpty) {
-            final fetched = rawList
-                .map((e) => MenuItem.fromJson(
-                      e as Map<String, dynamic>,
-                      baseUrl: resolvedBase,
-                    ))
-                .toList();
-
-            // Ganti seluruh daftar menu dengan data dari server
-            _menuItems
-              ..clear()
-              ..addAll(fetched);
-
-            // Pastikan kategori tersedia di dropdown filter
-            final serverCategories = fetched
-                .map((m) => m.category)
-                .toSet()
-                .toList();
-            for (final cat in serverCategories) {
-              if (!_dynamicCategories.contains(cat)) {
-                _dynamicCategories.add(cat);
-              }
-            }
-
-            _menuLoadedFromApi = true;
-            _menuError = null;
-            debugPrint('[MenuController] Berhasil memuat ${fetched.length} menu dari $resolvedBase');
-          } else {
-            debugPrint('[MenuController] API mengembalikan list kosong dari $url, menggunakan data lokal.');
-          }
-          break; // Sukses, hentikan percobaan
-        } else {
-          lastError = 'HTTP ${response.statusCode}';
-          debugPrint('[MenuController] $url mengembalikan status ${response.statusCode}');
+      if (success) {
+        _lastSyncUtcMillis = await _prefsService.getLastCacheSyncUtcMillis();
+        _menuError = null;
+      } else {
+        if (_menuItems.isEmpty) {
+          _menuError = 'Tidak dapat terhubung ke server. Menampilkan menu offline.';
         }
-      } catch (e) {
-        lastError = e;
-        debugPrint('[MenuController] Gagal terhubung ke $url: $e');
       }
+    } catch (e) {
+      _isOffline = true;
+      _menuError = 'Gagal memuat data menu: $e';
+      debugPrint('[MenuController] Error fetchMenusFromApi: $e');
+    } finally {
+      _isLoadingMenu = false;
+      notifyListeners();
     }
+  }
 
-    if (!_menuLoadedFromApi && lastError != null) {
-      _menuError = 'Gagal memuat menu dari server. Menampilkan data lokal.';
-      debugPrint('[MenuController] Semua URL kandidat gagal. Error terakhir: $lastError');
-    }
-
-    _isLoadingMenu = false;
-    notifyListeners();
+  @override
+  void dispose() {
+    _mealsSubscription?.cancel();
+    super.dispose();
   }
 
   // Navigation State
@@ -339,6 +361,8 @@ class NutriMealMenuController extends ChangeNotifier {
 
   void selectCategory(String category) {
     _selectedCategory = category;
+    // Requirement 2.a: Simpan preferensi filter non-sensitif ke SharedPreferences
+    _prefsService.setSelectedFilterCategory(category);
     notifyListeners();
   }
 
