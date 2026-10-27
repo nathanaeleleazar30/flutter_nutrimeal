@@ -235,6 +235,24 @@ class _AddressScreenState extends State<AddressScreen> {
                         height: 46,
                         child: OutlinedButton(
                           onPressed: () {
+                            if (controller.savedAddresses.length >= 5) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Maksimal 5 alamat pengiriman telah tercapai.',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  backgroundColor: const Color(0xFFDC2626),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -633,6 +651,20 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       if (isEdit) {
         controller.updateSavedAddress(saved);
       } else {
+        if (controller.savedAddresses.length >= 5) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Maksimal 5 alamat pengiriman telah tercapai.',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+              ),
+              backgroundColor: const Color(0xFFDC2626),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+          return;
+        }
         controller.addSavedAddress(saved);
       }
 

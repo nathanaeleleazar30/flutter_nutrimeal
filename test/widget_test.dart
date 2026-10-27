@@ -157,8 +157,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('NutriBot AI'), findsOneWidget);
-    expect(find.text('Tanya rekomendasi menu & hitung kalori'), findsOneWidget);
+    expect(find.text('Langganan Katering Sehat'), findsOneWidget);
+    expect(find.text('HEMAT S.D 25%'), findsOneWidget);
     expect(find.text('Ikan'), findsOneWidget);
     expect(find.text('Daging'), findsOneWidget);
     expect(find.text('Seafood'), findsOneWidget);
@@ -166,13 +166,11 @@ void main() {
     expect(find.text('Jadwal Katering'), findsOneWidget);
     expect(find.text('Semua'), findsOneWidget);
     expect(find.text('Chicken Katsu Bowl'), findsOneWidget);
-    expect(find.text('480 kkal'), findsOneWidget);
-    expect(find.text('Menu Populer Hari Ini'), findsOneWidget);
-    expect(find.text('Lihat Semua'), findsOneWidget);
-    expect(find.text('Chicken Salad'), findsOneWidget);
-    expect(find.text('Beef Veggie'), findsOneWidget);
-    expect(find.text('Ayam Bowl'), findsOneWidget);
-    expect(find.text('Chicken Wrap'), findsOneWidget);
+    expect(find.text('12:00 WIB'), findsOneWidget);
+    expect(find.text('Ayam Bakar Madu'), findsOneWidget);
+    expect(find.text('Beef Brokoli'), findsOneWidget);
+    expect(find.text('Salad Ayam'), findsOneWidget);
+    expect(find.text('Ayam Bakar Bali'), findsOneWidget);
   });
 
   testWidgets('Renders GaleriMenuScreen and MenuDetailScreen', (WidgetTester tester) async {

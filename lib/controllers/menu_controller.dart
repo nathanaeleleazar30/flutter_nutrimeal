@@ -468,82 +468,82 @@ class NutriMealMenuController extends ChangeNotifier {
     ),
     const MenuItem(
       id: 'item-3',
-      name: 'Chicken Salad',
+      name: 'Ayam Bakar Madu',
       category: 'Ayam',
-      calories: 320,
-      price: 30000,
+      calories: 450,
+      price: 35000,
       imageUrl:
-          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=800&auto=format&fit=crop',
       description:
-          'Fresh green salad dengan irisan dada ayam bakar lembut, tomat ceri, dan dressing zaitun rendah kalori.',
-      tags: ['Dada Ayam', 'Romaine Lettuce', 'Tomat Ceri', 'Mentimun', 'Olive Oil'],
+          'Ayam bakar madu gurih manis dipanggang sempurna dengan bumbu rempah alami.',
+      tags: ['Dada Ayam Bakar', 'Madu Alami', 'Bumbu Rempah', 'Lalapan Segar'],
       schedule: 'Setiap Hari Rabu',
       deliveryTime: '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
-        calories: 320,
-        protein: '32gram',
-        fat: '8gram',
-        carbs: '22gram',
+        calories: 450,
+        protein: '35gram',
+        fat: '12gram',
+        carbs: '28gram',
       ),
     ),
     const MenuItem(
       id: 'item-4',
-      name: 'Beef Veggie',
+      name: 'Beef Brokoli',
       category: 'Daging',
-      calories: 520,
-      price: 40000,
+      calories: 450,
+      price: 35000,
       imageUrl:
           'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800&auto=format&fit=crop',
       description:
-          'Tumis daging sapi lada hitam rendah lemak dipadu paprika renyah dan brokoli segar bernutrisi tinggi.',
-      tags: ['Daging Sapi Lean', 'Paprika Merah & Hijau', 'Brokoli', 'Bawang Bombay'],
+          'Tumis potongan daging sapi empuk dipadu dengan kuntum brokoli segar bernutrisi tinggi.',
+      tags: ['Daging Sapi Lean', 'Brokoli Segar', 'Bawang Putih', 'Saus Tiram Rendah Garam'],
       schedule: 'Setiap Hari Kamis',
       deliveryTime: '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
-        calories: 520,
-        protein: '42gram',
-        fat: '15gram',
-        carbs: '40gram',
+        calories: 450,
+        protein: '38gram',
+        fat: '14gram',
+        carbs: '22gram',
       ),
     ),
     const MenuItem(
       id: 'item-5',
-      name: 'Ayam Bowl',
+      name: 'Salad Ayam',
       category: 'Ayam',
-      calories: 520,
-      price: 20000,
+      calories: 450,
+      price: 35000,
       imageUrl:
-          'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop',
       description:
-          'Healthy poke bowl dengan suwiran ayam gurih, jagung manis, kubis ungu, dan edamame segar.',
-      tags: ['Suwir Ayam', 'Jagung Manis', 'Kubis Ungu', 'Edamame', 'Nasi Coklat'],
+          'Fresh green salad dengan dada ayam panggang, selada renyah, tomat ceri, dan dressing zaitun.',
+      tags: ['Dada Ayam', 'Romaine Lettuce', 'Paprika Kuning', 'Dressing Zaitun'],
       schedule: 'Setiap Hari Jumat',
       deliveryTime: '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
-        calories: 520,
-        protein: '36gram',
-        fat: '14gram',
-        carbs: '58gram',
+        calories: 450,
+        protein: '34gram',
+        fat: '11gram',
+        carbs: '24gram',
       ),
     ),
     const MenuItem(
       id: 'item-6',
-      name: 'Chicken Wrap',
-      category: 'Roti',
-      calories: 350,
-      price: 28000,
+      name: 'Ayam Bakar Bali',
+      category: 'Ayam',
+      calories: 450,
+      price: 35000,
       imageUrl:
-          'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=800&auto=format&fit=crop',
       description:
-          'Tortilla bayam lembut membungkus ayam panggang, selada renyah, dan saus yoghurt herbs.',
-      tags: ['Tortilla Bayam', 'Ayam Panggang', 'Selada', 'Yoghurt Dressing'],
+          'Ayam panggang dengan bumbu khas Bali autentik, harum rempah, dan sambal matah segar.',
+      tags: ['Ayam Bakar', 'Bumbu Bali', 'Mentimun', 'Kemangi'],
       schedule: 'Setiap Hari Sabtu',
       deliveryTime: '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
-        calories: 350,
-        protein: '28gram',
-        fat: '11gram',
-        carbs: '38gram',
+        calories: 450,
+        protein: '36gram',
+        fat: '13gram',
+        carbs: '25gram',
       ),
     ),
   ];
@@ -759,6 +759,7 @@ class NutriMealMenuController extends ChangeNotifier {
   }
 
   void addSavedAddress(DeliveryAddress address) {
+    if (_savedAddresses.length >= 5) return;
     if (address.isDefault) {
       for (int i = 0; i < _savedAddresses.length; i++) {
         _savedAddresses[i] = _savedAddresses[i].copyWith(isDefault: false);
