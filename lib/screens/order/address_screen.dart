@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
@@ -588,18 +589,20 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     if (widget.mode == AddressFormMode.edit && addr != null) {
       _nameController = TextEditingController(text: addr.recipientName);
       _phoneController = TextEditingController(text: addr.phoneNumber);
+      final rawCoords = addr.fullAddress.isNotEmpty
+          ? addr.fullAddress
+          : 'Jl. Senopati, Kebayoran Baru, Jakarta Selatan, 12190';
       _coordinatesController = TextEditingController(
-          text: addr.fullAddress.isNotEmpty
-              ? addr.fullAddress
-              : 'Jl. Senopati, Kebayoran Baru, Jakarta Selatan, 12190');
+          text: rawCoords.length > 100 ? rawCoords.substring(0, 100) : rawCoords);
       _areaController = TextEditingController(
           text: addr.area.isNotEmpty
               ? addr.area
               : 'Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190');
+      final rawDetail = addr.deliveryNote.isNotEmpty
+          ? addr.deliveryNote
+          : 'Rumah pagar hitam samping Alfamart / Titipkan pos security';
       _detailController = TextEditingController(
-          text: addr.deliveryNote.isNotEmpty
-              ? addr.deliveryNote
-              : 'Rumah pagar hitam samping Alfamart / Titipkan pos security');
+          text: rawDetail.length > 100 ? rawDetail.substring(0, 100) : rawDetail);
       _selectedCategory = addr.addressType.isNotEmpty ? addr.addressType : 'Rumah';
       _isDefaultAddress = addr.isDefault;
     } else {
@@ -869,17 +872,26 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 3. Koordinat / Cari Pin Pengantaran
-                      _buildFieldLabel('Koordinat / Cari Pin Pengantaran'),
+                      // 3. Alamat Lengkap Pengiriman (Expandable & Max 100 Karakter)
+                      _buildFieldLabel('Alamat Lengkap Pengiriman'),
                       const SizedBox(height: 6),
                       _buildFormField(
                         controller: _coordinatesController,
                         icon: Icons.location_on_outlined,
-                        hint: 'Cari alamat atau geser pin',
-                        suffixIcon: Icons.chevron_right_rounded,
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Koordinat/alamat wajib diisi'
-                            : null,
+                        hint: 'Tuliskan nama jalan, no. rumah, RT/RW, dsb.',
+                        minLines: 2,
+                        maxLines: 5,
+                        maxLength: 100,
+                        showCounter: true,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Alamat pengiriman wajib diisi';
+                          }
+                          if (v.trim().length > 100) {
+                            return 'Alamat maksimal 100 karakter';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 12),
 
@@ -890,19 +902,24 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                         controller: _areaController,
                         icon: Icons.location_city_outlined,
                         hint: 'Kecamatan, Kota, Provinsi, Kode Pos',
+                        maxLength: 100,
                         validator: (v) => (v == null || v.trim().isEmpty)
                             ? 'Wilayah & kode pos wajib diisi'
                             : null,
                       ),
                       const SizedBox(height: 12),
 
-                      // 5. Detail & Patokan Domisili
-                      _buildFieldLabel('Detail & Patokan Domisili'),
+                      // 5. Detail & Patokan Domisili (Expandable & Max 100 Karakter)
+                      _buildFieldLabel('Detail & Patokan Domisili (Opsional)'),
                       const SizedBox(height: 6),
                       _buildFormField(
                         controller: _detailController,
                         icon: Icons.home_outlined,
                         hint: 'Cth: Pagar hitam samping Alfamart / Pos satpam',
+                        minLines: 2,
+                        maxLines: 4,
+                        maxLength: 100,
+                        showCounter: true,
                       ),
                       const SizedBox(height: 16),
 
@@ -1078,18 +1095,55 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     IconData? suffixIcon,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    int minLines = 1,
+    int? maxLines = 1,
+    int? maxLength,
+    bool showCounter = false,
   }) {
+    final isMultiLine = (maxLines == null || maxLines > 1 || minLines > 1);
     return TextFormField(
       controller: controller,
-      keyboardType: keyboardType,
+      keyboardType: isMultiLine ? TextInputType.multiline : keyboardType,
+      minLines: minLines,
+      maxLines: maxLines,
+      maxLength: maxLength,
+      maxLengthEnforcement: MaxLengthEnforcement.enforced,
       validator: validator,
       style: GoogleFonts.plusJakartaSans(
         fontSize: 12.5,
         fontWeight: FontWeight.w600,
         color: AppColors.textDark,
+        height: 1.45,
       ),
+      buildCounter: showCounter && maxLength != null
+          ? (context, {required currentLength, required isFocused, maxLength}) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 2),
+                child: Text(
+                  '$currentLength/$maxLength karakter',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: currentLength >= (maxLength ?? 100)
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF94A3B8),
+                  ),
+                ),
+              );
+            }
+          : (maxLength != null && !showCounter
+              ? (_, {required currentLength, required isFocused, maxLength}) => null
+              : null),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 18),
+        prefixIcon: isMultiLine
+            ? Padding(
+                padding: const EdgeInsets.only(left: 12, right: 10, top: 12),
+                child: Icon(icon, color: const Color(0xFF64748B), size: 18),
+              )
+            : Icon(icon, color: const Color(0xFF64748B), size: 18),
+        prefixIconConstraints: isMultiLine
+            ? const BoxConstraints(minWidth: 40, minHeight: 40)
+            : null,
         suffixIcon: suffixIcon != null
             ? Icon(suffixIcon, color: const Color(0xFF94A3B8), size: 18)
             : null,
@@ -1101,7 +1155,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
