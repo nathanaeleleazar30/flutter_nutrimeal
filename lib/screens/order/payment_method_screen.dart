@@ -5,7 +5,12 @@ import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 
 class PaymentMethodScreen extends StatefulWidget {
-  const PaymentMethodScreen({super.key});
+  final bool showBottomBar;
+
+  const PaymentMethodScreen({
+    super.key,
+    this.showBottomBar = true,
+  });
 
   @override
   State<PaymentMethodScreen> createState() => _PaymentMethodScreenState();
@@ -85,8 +90,8 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               ),
             ),
 
-            // Bottom Sticky Bar (Image 4 bottom)
-            _buildBottomBar(context, controller),
+            // Bottom Sticky Bar (Image 4 bottom) - only when initiated from cart/checkout
+            if (widget.showBottomBar) _buildBottomBar(context, controller),
           ],
         ),
       ),

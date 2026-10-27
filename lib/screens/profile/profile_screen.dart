@@ -187,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const PaymentMethodScreen()),
+                                    builder: (_) => const PaymentMethodScreen(showBottomBar: false)),
                               );
                             },
                           ),
