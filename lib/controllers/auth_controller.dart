@@ -1,3 +1,4 @@
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
@@ -48,6 +49,31 @@ class AuthController extends ChangeNotifier {
   // General error message (for backend errors)
   String? _generalError;
 
+  // Extended Customer Profile Data (synchronized with MySQL Backend)
+  String? _customerPhone;
+  String? _customerAvatarUrl;
+  String? _customerAddress;
+  double _customerHeight = 163.0;
+  double _customerWeight = 52.0;
+  int _customerAge = 24;
+  List<String> _customerAllergies = ['Kacang'];
+  String _customerDietGoal = 'Defisit Kalori';
+  int _customerTargetCalories = 1800;
+  bool _customerTwoFactorAuth = true;
+
+  void _resetCustomerProfile() {
+    _customerAvatarUrl = null;
+    _customerPhone = null;
+    _customerAddress = null;
+    _customerHeight = 163.0;
+    _customerWeight = 52.0;
+    _customerAge = 24;
+    _customerAllergies = [];
+    _customerDietGoal = 'Defisit Kalori';
+    _customerTargetCalories = 1800;
+    _customerTwoFactorAuth = true;
+  }
+
   // Selected Google Account (only set after successful real Google Sign-In)
   RealGoogleUser? _selectedGoogleAccount;
 
@@ -60,6 +86,18 @@ class AuthController extends ChangeNotifier {
   String? get customerId => _customerId;
   String? get backendMessage => _backendMessage;
   String? get generalError => _generalError;
+
+  // Profile Getters
+  String? get customerPhone => _customerPhone;
+  String? get customerAvatarUrl => _customerAvatarUrl;
+  String? get customerAddress => _customerAddress;
+  double get customerHeight => _customerHeight;
+  double get customerWeight => _customerWeight;
+  int get customerAge => _customerAge;
+  List<String> get customerAllergies => _customerAllergies;
+  String get customerDietGoal => _customerDietGoal;
+  int get customerTargetCalories => _customerTargetCalories;
+  bool get customerTwoFactorAuth => _customerTwoFactorAuth;
 
   String? get namaError => _namaError;
   String? get emailError => _emailError;
@@ -254,6 +292,7 @@ class AuthController extends ChangeNotifier {
       }
 
       // Berhasil login dari backend
+      _resetCustomerProfile(); // Bersihkan profil lama agar akun baru tidak mewarisi foto lama
       final customerData = successData['data'];
       _authToken = customerData?['token'];
       _customerId = customerData?['customer']?['id'] ?? customerData?['id'];
@@ -261,6 +300,12 @@ class AuthController extends ChangeNotifier {
       _currentUserEmail = customerData?['customer']?['email'] ?? customerData?['email'] ?? email;
       _isLoggedIn = true;
       _backendMessage = 'Login berhasil';
+
+      if (customerData?['customer'] != null) {
+        _applyCustomerData(customerData['customer']);
+      } else {
+        await fetchCustomerProfile();
+      }
 
       // Requirement 3.a: Simpan token & kredensial ke flutter_secure_storage
       if (_authToken != null) {
@@ -337,6 +382,7 @@ class AuthController extends ChangeNotifier {
 
             // Sukses menyimpan ke database
       // Jangan langsung login otomatis, agar user login manual terlebih dahulu
+      _resetCustomerProfile(); // Bersihkan seluruh profil akun lama
       _authToken = null;
       _customerId = null;
       _currentUserName = null;
@@ -491,6 +537,310 @@ class AuthController extends ChangeNotifier {
     return null;
   }
 
+  // =========================================================
+  // SYNC CUSTOMER PROFILE DENGAN BACKEND (MySQL)
+  // =========================================================
+  void _applyCustomerData(dynamic data) {
+    if (data == null) return;
+    if (data['id'] != null) _customerId = data['id'].toString();
+    if (data['name'] != null && data['name'].toString().isNotEmpty) {
+      _currentUserName = data['name'].toString();
+    }
+    if (data['email'] != null && data['email'].toString().isNotEmpty) {
+      _currentUserEmail = data['email'].toString();
+    }
+    _customerPhone = (data['phone'] != null && data['phone'].toString().trim().isNotEmpty)
+        ? data['phone'].toString().trim()
+        : null;
+
+    // SANGAT PENTING: Jika di database avatar_url kosong/null, pastikan direset menjadi null
+    // agar akun baru TIDAK mewarisi foto profil akun sebelumnya!
+    final rawAvatar = data['avatar_url'];
+    if (rawAvatar != null &&
+        rawAvatar.toString().trim().isNotEmpty &&
+        rawAvatar.toString().trim() != 'null') {
+      _customerAvatarUrl = rawAvatar.toString().trim();
+    } else {
+      _customerAvatarUrl = null;
+    }
+
+    _customerAddress = (data['address'] != null && data['address'].toString().trim().isNotEmpty)
+        ? data['address'].toString().trim()
+        : null;
+
+    if (data['height_cm'] != null) {
+      _customerHeight = double.tryParse(data['height_cm'].toString()) ?? 163.0;
+    }
+    if (data['weight_kg'] != null) {
+      _customerWeight = double.tryParse(data['weight_kg'].toString()) ?? 52.0;
+    }
+    if (data['age'] != null) {
+      _customerAge = int.tryParse(data['age'].toString()) ?? 24;
+    }
+    if (data['target_calories'] != null) {
+      _customerTargetCalories = int.tryParse(data['target_calories'].toString()) ?? 1800;
+    }
+    if (data['dietary_goals'] != null) {
+      if (data['dietary_goals'] is List) {
+        final list = data['dietary_goals'] as List;
+        _customerDietGoal = list.isNotEmpty ? list.first.toString() : 'Defisit Kalori';
+      } else {
+        _customerDietGoal = data['dietary_goals'].toString();
+      }
+    }
+    if (data['allergies'] != null) {
+      if (data['allergies'] is List) {
+        _customerAllergies = (data['allergies'] as List)
+            .map((e) => e.toString().trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      } else if (data['allergies'] is String) {
+        _customerAllergies = data['allergies']
+            .toString()
+            .split(',')
+            .map((e) => e.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      }
+    } else {
+      _customerAllergies = [];
+    }
+    if (data['two_factor_auth'] != null) {
+      _customerTwoFactorAuth = data['two_factor_auth'] == 1 ||
+          data['two_factor_auth'] == true ||
+          data['two_factor_auth'] == '1';
+    }
+  }
+
+  Future<void> fetchCustomerProfile() async {
+    final token = _authToken;
+    final id = _customerId;
+    final email = _currentUserEmail;
+
+    for (final urlStr in ApiConfig.candidateCustomerMeUrls) {
+      try {
+        final uri = Uri.parse(urlStr).replace(
+          queryParameters: {
+            if (id != null && id.isNotEmpty) 'id': id,
+            if (email != null && email.isNotEmpty) 'email': email,
+          },
+        );
+
+        final response = await http.get(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          },
+        ).timeout(const Duration(seconds: 5));
+
+        if (response.statusCode == 200) {
+          final json = jsonDecode(response.body);
+          if (json['success'] == true && json['data'] != null) {
+            _applyCustomerData(json['data']);
+            notifyListeners();
+            return;
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('[NutriMeal Auth] fetchCustomerProfile err: $e');
+      }
+    }
+
+    if (id != null && id.isNotEmpty) {
+      for (final base in ApiConfig.candidateCustomerUrls) {
+        try {
+          final url = Uri.parse('$base/$id');
+          final response = await http.get(
+            url,
+            headers: {'Content-Type': 'application/json'},
+          ).timeout(const Duration(seconds: 5));
+
+          if (response.statusCode == 200) {
+            final json = jsonDecode(response.body);
+            if (json['success'] == true && json['data'] != null) {
+              _applyCustomerData(json['data']);
+              notifyListeners();
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
+  Future<bool> updateCustomerProfile({
+    String? name,
+    String? email,
+    String? phone,
+    String? avatarUrl,
+    String? address,
+    double? heightCm,
+    double? weightKg,
+    int? age,
+    List<String>? allergies,
+    String? dietaryGoals,
+    int? targetCalories,
+    bool? twoFactorAuth,
+  }) async {
+    _isLoading = true;
+    _generalError = null;
+    notifyListeners();
+
+    final targetId = _customerId;
+    if (targetId == null || targetId.isEmpty) {
+      if (kDebugMode) print('[NutriMeal Auth] ⚠️ Tidak ada customerId aktif. Membatalkan update profil.');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+
+    final payload = <String, dynamic>{
+      'name': name ?? _currentUserName ?? '',
+      'email': email ?? _currentUserEmail ?? '',
+      'phone': phone ?? _customerPhone ?? '',
+      'avatar_url': avatarUrl ?? _customerAvatarUrl,
+      'address': address ?? _customerAddress ?? '',
+      'height_cm': heightCm ?? _customerHeight,
+      'weight_kg': weightKg ?? _customerWeight,
+      'age': age ?? _customerAge,
+      'allergies': allergies ?? _customerAllergies,
+      'dietary_goals': dietaryGoals ?? _customerDietGoal,
+      'target_calories': targetCalories ?? _customerTargetCalories,
+      'two_factor_auth': (twoFactorAuth ?? _customerTwoFactorAuth) ? 1 : 0,
+    };
+
+    for (final base in ApiConfig.candidateCustomerUrls) {
+      try {
+        final url = Uri.parse('$base/$targetId');
+        if (kDebugMode) print('[NutriMeal Auth] PUT customer profile ke: $url');
+
+        final response = await http
+            .put(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(payload),
+            )
+            .timeout(const Duration(seconds: 6));
+
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        if (response.statusCode == 200 && data['success'] == true) {
+          _applyCustomerData(data['data'] ?? payload);
+          await SecureStorageService.instance.saveUserCredentials(
+            token: _authToken,
+            userId: _customerId,
+            email: _currentUserEmail,
+            name: _currentUserName,
+          );
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          _generalError = data['message'] ?? 'Gagal memperbarui profil di server.';
+        }
+      } catch (e) {
+        if (kDebugMode) print('[NutriMeal Auth] Gagal PUT customer ke $base: $e');
+        continue;
+      }
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
+
+  Future<Map<String, dynamic>> changeCustomerPassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final targetId = _customerId;
+    if (targetId == null || targetId.isEmpty) return {'success': false, 'message': 'Sesi login tidak valid.'};
+    final payload = {
+      'old_password': oldPassword,
+      'new_password': newPassword,
+    };
+
+    for (final base in ApiConfig.candidateCustomerUrls) {
+      try {
+        final url = Uri.parse('$base/$targetId');
+        final response = await http
+            .put(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(payload),
+            )
+            .timeout(const Duration(seconds: 6));
+
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        if (response.statusCode == 200 && data['success'] == true) {
+          return {'success': true, 'message': data['message'] ?? 'Kata sandi berhasil diperbarui!'};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Kata sandi saat ini tidak cocok.'};
+        }
+      } catch (e) {
+        if (kDebugMode) print('[NutriMeal Auth] Gagal ubah password di $base: $e');
+        continue;
+      }
+    }
+    return {'success': false, 'message': 'Tidak dapat terhubung ke server backend.'};
+  }
+
+  // =========================================================
+  // UPLOAD FOTO PROFIL DARI DEVICE KE BACKEND (MySQL & /uploads)
+  // =========================================================
+  Future<String?> uploadProfileImage(XFile imageFile) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final filename = imageFile.name.isNotEmpty
+          ? imageFile.name
+          : 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      for (final urlStr in ApiConfig.candidateUploadUrls) {
+        try {
+          final uri = Uri.parse(urlStr);
+          if (kDebugMode) print('[NutriMeal Auth] Mengunggah foto profil ke: $uri');
+
+          final request = http.MultipartRequest('POST', uri);
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              'image',
+              bytes,
+              filename: filename,
+            ),
+          );
+
+          final streamedResponse =
+              await request.send().timeout(const Duration(seconds: 15));
+          final response = await http.Response.fromStream(streamedResponse);
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body) as Map<String, dynamic>;
+            if (data['success'] == true && data['imageUrl'] != null) {
+              final rawPath = data['imageUrl'].toString();
+              final resolved = ApiConfig.resolveImageUrl(rawPath);
+              _customerAvatarUrl = resolved;
+              _isLoading = false;
+              notifyListeners();
+              return resolved;
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) print('[NutriMeal Auth] Gagal upload foto di $urlStr: $e');
+          continue;
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('[NutriMeal Auth] Error uploadProfileImage: $e');
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return null;
+  }
+
   Future<void> logout() async {
     _isLoggedIn = false;
     _currentUserEmail = null;
@@ -499,6 +849,7 @@ class AuthController extends ChangeNotifier {
     _customerId = null;
     _selectedGoogleAccount = null;
     _backendMessage = null;
+    _resetCustomerProfile(); // Bersihkan foto dan data profil akun saat keluar
     _googleSignIn.signOut().catchError((_) => null);
     // Requirement 3: Hapus semua data sensitif dari SecureStorage saat logout
     await SecureStorageService.instance.clearAllSecrets();

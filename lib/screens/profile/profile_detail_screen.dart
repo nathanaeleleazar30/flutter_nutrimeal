@@ -1,7 +1,10 @@
+import 'package:image_picker/image_picker.dart';
+import '../../core/constants/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
+import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../address_screen.dart';
 import '../bantuan_faq_screen.dart';
@@ -14,18 +17,49 @@ class ProfileDetailScreen extends StatefulWidget {
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
-  String _name = 'Nadia Salsabila';
-  String _email = 'nadia.salsabila@email.com';
-  String _phone = '+62 812-8890-1234';
+  String _name = '';
+  String _email = '';
+  String _phone = '';
+  String? _avatarUrl;
   bool _twoFactorAuth = true;
+  bool _isSaving = false;
 
   // Physical & Nutrition Data
   double _heightCm = 163.0;
   double _weightKg = 52.0;
   int _age = 24;
   double _nutritionPercent = 0.85;
-  List<String> _selectedAllergies = ['Kacang'];
+  List<String> _selectedAllergies = [];
   String _dietGoal = 'Defisit Kalori';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfileFromBackend();
+    });
+  }
+
+  void _loadProfileFromBackend() async {
+    final auth = context.read<AuthController>();
+    await auth.fetchCustomerProfile();
+    if (!mounted) return;
+    setState(() {
+      _name = auth.currentUserName ?? _name;
+      _email = auth.currentUserEmail ?? _email;
+      if (auth.customerPhone != null && auth.customerPhone!.isNotEmpty) {
+        _phone = auth.customerPhone!;
+      }
+      _avatarUrl = auth.customerAvatarUrl;
+      _heightCm = auth.customerHeight;
+      _weightKg = auth.customerWeight;
+      _age = auth.customerAge;
+      _selectedAllergies = List.from(auth.customerAllergies);
+      _dietGoal = auth.customerDietGoal;
+      _twoFactorAuth = auth.customerTwoFactorAuth;
+      _nutritionPercent = _selectedAllergies.isNotEmpty ? 1.0 : 0.85;
+    });
+  }
 
   double get _bmi => _weightKg / ((_heightCm / 100) * (_heightCm / 100));
 
@@ -78,11 +112,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                setState(() => _name = controller.text.trim());
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                setState(() => _name = newName);
                 Navigator.pop(ctx);
-                _showSuccessToast('Nama profil berhasil diperbarui!');
+                final auth = context.read<AuthController>();
+                final ok = await auth.updateCustomerProfile(name: newName);
+                if (ok) {
+                  _showSuccessToast('Nama profil berhasil disimpan ke backend MySQL!');
+                } else {
+                  _showSuccessToast('Nama diperbarui secara lokal');
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -97,53 +138,142 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
+  Future<void> _pickAndUploadImage(ImageSource source) async {
+    final auth = context.read<AuthController>();
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      if (!mounted) return;
+      setState(() => _isSaving = true);
+      _showSuccessToast('Mengunggah foto profil dari perangkat ke server...');
+
+      final uploadedUrl = await auth.uploadProfileImage(pickedFile);
+
+      if (uploadedUrl != null) {
+        if (!mounted) return;
+        setState(() {
+          _avatarUrl = uploadedUrl;
+        });
+        final ok = await auth.updateCustomerProfile(avatarUrl: uploadedUrl);
+        if (!mounted) return;
+        if (ok) {
+          _showSuccessToast('Foto profil baru berhasil diunggah & disimpan ke MySQL!');
+        } else {
+          _showSuccessToast('Foto profil berhasil diunggah!');
+        }
+      } else {
+        if (!mounted) return;
+        _showErrorToast('Gagal mengunggah foto ke backend server. Periksa koneksi.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorToast('Gagal memilih foto: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   void _showAvatarPickerSheet() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Ubah Foto Profil',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
               Text(
-                'Ubah Foto Profil',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
+                'Pilih foto langsung dari galeri atau kamera perangkat Anda:',
+                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF64748B)),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
+
+              // Opsi 1: Kamera HP / Perangkat
               ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
                 leading: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: const BoxDecoration(color: Color(0xFFDCFCE7), shape: BoxShape.circle),
-                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF16A34A), size: 20),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF16A34A), size: 22),
                 ),
-                title: Text('Ambil Foto dari Kamera', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                title: Text(
+                  'Ambil Foto dari Kamera',
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13.5),
+                ),
+                subtitle: Text(
+                  'Gunakan kamera perangkat untuk memotret',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _showSuccessToast('Foto profil baru berhasil diunggah!');
+                  _pickAndUploadImage(ImageSource.camera);
                 },
               ),
+              const SizedBox(height: 10),
+
+              // Opsi 2: Galeri / File Explorer Perangkat
               ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(color: Color(0xFFE0F2FE), shape: BoxShape.circle),
-                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF0284C7), size: 20),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
-                title: Text('Pilih dari Galeri', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(color: Color(0xFFE0F2FE), shape: BoxShape.circle),
+                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF0284C7), size: 22),
+                ),
+                title: Text(
+                  'Pilih dari Galeri Perangkat',
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13.5),
+                ),
+                subtitle: Text(
+                  'Buka galeri foto atau penyimpanan perangkat',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _showSuccessToast('Foto profil dari galeri berhasil dipilih!');
+                  _pickAndUploadImage(ImageSource.gallery);
                 },
               ),
+              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -405,7 +535,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             setState(() {
                               _heightCm = tempHeight;
                               _weightKg = tempWeight;
@@ -415,7 +545,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               _nutritionPercent = tempAllergies.isNotEmpty ? 1.0 : 0.85;
                             });
                             Navigator.pop(ctx);
-                            _showSuccessToast('Data nutrisi & profil fisik berhasil disimpan!');
+                            final auth = context.read<AuthController>();
+                            final ok = await auth.updateCustomerProfile(
+                              heightCm: tempHeight,
+                              weightKg: tempWeight,
+                              age: tempAge,
+                              allergies: tempAllergies,
+                              dietaryGoals: tempDietGoal,
+                            );
+                            if (ok) {
+                              _showSuccessToast('Data nutrisi & fisik tersimpan di database MySQL!');
+                            } else {
+                              _showSuccessToast('Data nutrisi disimpan secara lokal');
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0F8A50),
@@ -479,11 +621,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
           ),
           ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty && controller.text.contains('@')) {
-                setState(() => _email = controller.text.trim());
+            onPressed: () async {
+              final newEmail = controller.text.trim();
+              if (newEmail.isNotEmpty && newEmail.contains('@')) {
+                setState(() => _email = newEmail);
                 Navigator.pop(ctx);
-                _showSuccessToast('Alamat email berhasil diperbarui!');
+                final auth = context.read<AuthController>();
+                final ok = await auth.updateCustomerProfile(email: newEmail);
+                if (ok) {
+                  _showSuccessToast('Alamat email berhasil disimpan ke backend MySQL!');
+                } else {
+                  _showSuccessToast('Email diperbarui secara lokal');
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -538,11 +687,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
           ),
           ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                setState(() => _phone = controller.text.trim());
+            onPressed: () async {
+              final newPhone = controller.text.trim();
+              if (newPhone.isNotEmpty) {
+                setState(() => _phone = newPhone);
                 Navigator.pop(ctx);
-                _showSuccessToast('Nomor WhatsApp katering berhasil diperbarui!');
+                final auth = context.read<AuthController>();
+                final ok = await auth.updateCustomerProfile(phone: newPhone);
+                if (ok) {
+                  _showSuccessToast('Nomor WhatsApp berhasil disimpan ke backend MySQL!');
+                } else {
+                  _showSuccessToast('Nomor diperbarui secara lokal');
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -623,21 +779,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (newPassController.text.trim().length < 6) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Kata sandi baru minimal 6 karakter!'), backgroundColor: Color(0xFFEF4444)),
-                      );
+                      _showErrorToast('Kata sandi baru minimal 6 karakter!');
                       return;
                     }
                     if (newPassController.text != confirmPassController.text) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Konfirmasi kata sandi tidak cocok!'), backgroundColor: Color(0xFFEF4444)),
-                      );
+                      _showErrorToast('Konfirmasi kata sandi tidak cocok!');
                       return;
                     }
+                    final auth = context.read<AuthController>();
                     Navigator.pop(ctx);
-                    _showSuccessToast('Kata sandi berhasil diperbarui dengan aman!');
+                    final res = await auth.changeCustomerPassword(
+                      oldPassword: oldPassController.text.trim(),
+                      newPassword: newPassController.text.trim(),
+                    );
+                    if (res['success'] == true) {
+                      _showSuccessToast(res['message'] ?? 'Kata sandi berhasil diperbarui di database MySQL!');
+                    } else {
+                      _showErrorToast(res['message'] ?? 'Kata sandi saat ini tidak cocok.');
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0F8A50),
@@ -655,10 +816,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   void _showSuccessToast(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
         backgroundColor: const Color(0xFF0F8A50),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showErrorToast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+        backgroundColor: const Color(0xFFEF4444),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -787,14 +961,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ],
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Image.asset(
-                  'assets/images/profile_avatar.jpg',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    color: const Color(0xFFDCFCE7),
-                    child: const Icon(Icons.person, color: Color(0xFF16A34A), size: 44),
-                  ),
-                ),
+                child: (_avatarUrl != null && _avatarUrl!.trim().isNotEmpty)
+                    ? Image.network(
+                        ApiConfig.resolveImageUrl(_avatarUrl),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => _buildAvatarPlaceholder(),
+                      )
+                    : _buildAvatarPlaceholder(),
               ),
               Positioned(
                 bottom: 2,
@@ -833,6 +1006,24 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAvatarPlaceholder() {
+    final initial = _name.trim().isNotEmpty ? _name.trim()[0].toUpperCase() : '';
+    return Container(
+      color: const Color(0xFFDCFCE7),
+      alignment: Alignment.center,
+      child: initial.isNotEmpty
+          ? Text(
+              initial,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 34,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F8A50),
+              ),
+            )
+          : const Icon(Icons.person_rounded, color: Color(0xFF16A34A), size: 44),
     );
   }
 
@@ -1307,10 +1498,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     activeTrackColor: const Color(0xFF0F8A50),
                     inactiveThumbColor: Colors.white,
                     inactiveTrackColor: const Color(0xFFCBD5E1),
-                    onChanged: (val) {
+                    onChanged: (val) async {
                       setState(() => _twoFactorAuth = val);
+                      final auth = context.read<AuthController>();
+                      await auth.updateCustomerProfile(twoFactorAuth: val);
                       _showSuccessToast(
-                        val ? 'Autentikasi 2 Langkah diaktifkan via SMS/WhatsApp' : 'Autentikasi 2 Langkah dinonaktifkan',
+                        val ? 'Autentikasi 2 Langkah diaktifkan & disimpan ke backend' : 'Autentikasi 2 Langkah dinonaktifkan',
                       );
                     },
                   ),
@@ -1326,41 +1519,71 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
-        // Button 1: Simpan Perubahan
+        // Button 1: Simpan Perubahan (Commit ke Backend Express & MySQL)
         SizedBox(
           width: double.infinity,
           height: 48,
           child: ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Semua perubahan data pribadi berhasil disimpan!'),
-                  backgroundColor: Color(0xFF0F8A50),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-              Navigator.pop(context);
-            },
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    setState(() => _isSaving = true);
+                    final auth = context.read<AuthController>();
+                    final ok = await auth.updateCustomerProfile(
+                      name: _name,
+                      email: _email,
+                      phone: _phone,
+                      avatarUrl: _avatarUrl,
+                      heightCm: _heightCm,
+                      weightKg: _weightKg,
+                      age: _age,
+                      allergies: _selectedAllergies,
+                      dietaryGoals: _dietGoal,
+                      twoFactorAuth: _twoFactorAuth,
+                    );
+                    if (!context.mounted) return;
+                    setState(() => _isSaving = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          ok
+                              ? 'Semua informasi pribadi berhasil disimpan ke Database MySQL!'
+                              : 'Perubahan informasi pribadi tersimpan secara lokal.',
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                        ),
+                        backgroundColor: const Color(0xFF0F8A50),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0F8A50),
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.check_rounded, color: Colors.white, size: 18),
-                const SizedBox(width: 6),
-                Text(
-                  'Simpan Perubahan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Simpan Perubahan',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
         const SizedBox(height: 10),
