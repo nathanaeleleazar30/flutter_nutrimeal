@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '10.200.117.9';
+  static const String hostLanIp = ' 10.200.63.174';
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
@@ -63,6 +63,27 @@ class ApiConfig {
     'http://10.0.2.2:5000/api/meals',
   ];
 
+  /// Daftar URL alternatif backend untuk Customer API (/api/customers)
+  static List<String> get candidateCustomerUrls => [
+    'http://localhost:5000/api/customers',
+    'http://$hostLanIp:5000/api/customers',
+    'http://10.0.2.2:5000/api/customers',
+  ];
+
+  /// Daftar URL alternatif backend untuk Upload File Gambar (/api/upload)
+  static List<String> get candidateUploadUrls => [
+    'http://localhost:5000/api/upload',
+    'http://$hostLanIp:5000/api/upload',
+    'http://10.0.2.2:5000/api/upload',
+  ];
+
+  /// Daftar URL alternatif backend untuk Sesi Customer (/api/auth/customer-me)
+  static List<String> get candidateCustomerMeUrls => [
+    'http://localhost:5000/api/auth/customer-me',
+    'http://$hostLanIp:5000/api/auth/customer-me',
+    'http://10.0.2.2:5000/api/auth/customer-me',
+  ];
+
   /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
   static String resolveImageUrl(String? rawUrl, {String? activeBaseUrl}) {
     if (rawUrl == null || rawUrl.trim().isEmpty) {
@@ -72,9 +93,7 @@ class ApiConfig {
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       return trimmed;
     }
-    final base =
-        activeBaseUrl ??
-        (kIsWeb ? 'http://localhost:5000' : 'http://$hostLanIp:5000');
+    final base = activeBaseUrl ?? baseUrl;
     final cleanPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
     return '$base$cleanPath';
   }

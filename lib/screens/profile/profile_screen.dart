@@ -1,3 +1,4 @@
+import '../../core/constants/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthController>().fetchCustomerProfile();
+    });
   }
 
   Future<void> _loadSettings() async {
@@ -275,6 +279,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildUserHeader() {
+    final auth = context.watch<AuthController>();
+    final displayName = auth.currentUserName ?? 'Nadia Salsabila';
+    final displayEmail = auth.currentUserEmail ?? 'nadia.salsabila@email.com';
+    final avatarUrl = auth.customerAvatarUrl;
+
     return Column(
       children: [
         Stack(
@@ -305,19 +314,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                'assets/images/profile_avatar.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Image.network(
-                  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: const Color(0xFFDCFCE7),
-                    child: const Icon(Icons.person,
-                        color: AppColors.primaryGreen, size: 40),
-                  ),
-                ),
-              ),
+              child: (avatarUrl != null && avatarUrl.trim().isNotEmpty)
+                  ? Image.network(
+                      ApiConfig.resolveImageUrl(avatarUrl),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: const Color(0xFFDCFCE7),
+                        alignment: Alignment.center,
+                        child: (displayName.trim().isNotEmpty)
+                            ? Text(
+                                displayName.trim()[0].toUpperCase(),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F8A50),
+                                ),
+                              )
+                            : const Icon(Icons.person, color: AppColors.primaryGreen, size: 40),
+                      ),
+                    )
+                  : Container(
+                      color: const Color(0xFFDCFCE7),
+                      alignment: Alignment.center,
+                      child: (displayName.trim().isNotEmpty)
+                          ? Text(
+                              displayName.trim()[0].toUpperCase(),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F8A50),
+                              ),
+                            )
+                          : const Icon(Icons.person, color: AppColors.primaryGreen, size: 40),
+                    ),
             ),
             // Green Edit Pencil Button
             Positioned(
@@ -329,7 +358,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (_) => const ProfileDetailScreen()),
-                  );
+                  ).then((_) {
+                    if (mounted) {
+                      context.read<AuthController>().fetchCustomerProfile();
+                    }
+                  });
                 },
                 child: Container(
                   width: 26,
@@ -353,7 +386,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Nadia Salsabila',
+              displayName,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -372,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Subtitle Email
         Text(
-          'nadia.salsabila@email.com',
+          displayEmail,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12.5,
             color: const Color(0xFF64748B),
