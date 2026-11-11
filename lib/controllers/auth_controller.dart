@@ -1,6 +1,5 @@
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -12,16 +11,8 @@ class AuthController extends ChangeNotifier {
   late final GoogleSignIn _googleSignIn;
 
   AuthController() {
-    String? clientId;
-    try {
-      if (Platform.isAndroid) {
-        clientId = ApiConfig.androidClientId;
-      }
-    } catch (_) {}
-
     _googleSignIn = GoogleSignIn(
       serverClientId: ApiConfig.webClientId,
-      clientId: clientId,
       scopes: const ['email', 'profile'],
     );
 
