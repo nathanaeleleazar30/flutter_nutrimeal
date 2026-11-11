@@ -4,13 +4,13 @@ import 'package:flutter/foundation.dart';
 class ApiConfig {
   /// Google OAuth Client IDs resmi dari Google Cloud Console
   static const String webClientId =
-      '326249737628-v0qtts2k6an7pgap2r6qo70bk0n3r81j.apps.googleusercontent.com';
+      '692683965471-fhlmrbkuf99b6mo2gh366vv18g50tpc2.apps.googleusercontent.com';
   static const String androidClientId =
       '326249737628-2glmsskab2ds7pe1p4f76hff1sp45vh3.apps.googleusercontent.com';
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = ' 10.200.63.174';
+  static const String hostLanIp = '192.168.1.104';
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
