@@ -965,9 +965,7 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      controller.selectedPaymentId == 'cod'
-                          ? 'COD (Bayar di Tempat)'
-                          : 'QRIS',
+                      controller.selectedPaymentOption.name,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,

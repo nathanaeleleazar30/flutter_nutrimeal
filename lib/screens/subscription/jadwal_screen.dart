@@ -522,48 +522,21 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Time Row & Ubah Button
+                // Time Row
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.access_time_rounded,
-                          size: 15,
-                          color: Color(0xFF64748B),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          meal.deliveryTime,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF475569),
-                          ),
-                        ),
-                      ],
+                    const Icon(
+                      Icons.access_time_rounded,
+                      size: 15,
+                      color: Color(0xFF64748B),
                     ),
-                    ElevatedButton(
-                      onPressed: () => _showChangeMenuDialog(meal),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDCFCE7),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                      ),
-                      child: Text(
-                        'Ubah',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primaryGreen,
-                        ),
+                    const SizedBox(width: 5),
+                    Text(
+                      meal.deliveryTime,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF475569),
                       ),
                     ),
                   ],

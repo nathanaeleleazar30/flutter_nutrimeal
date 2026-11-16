@@ -827,12 +827,6 @@ class NutriMealMenuController extends ChangeNotifier {
       subtitle: 'Verifikasi Otomatis',
       icon: Icons.account_balance_rounded,
     ),
-    PaymentOption(
-      id: 'cod',
-      name: 'Bayar di Tempat (COD)',
-      subtitle: 'Bayar tunai ke kurir katering',
-      icon: Icons.local_shipping_outlined,
-    ),
   ];
 
   PaymentOption get selectedPaymentOption {
