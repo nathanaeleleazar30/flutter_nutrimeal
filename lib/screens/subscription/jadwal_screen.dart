@@ -375,10 +375,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ),
                 children: [
                   ...currentSchedule.meals.map((meal) => _buildMealCard(meal)),
-                  const SizedBox(height: 10),
-
-                  // Nutrisi Mingguan Card
-                  _buildWeeklyNutritionCard(),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -540,71 +536,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
                       ),
                     ),
                   ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeeklyNutritionCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD1FAE5),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFA7F3D0)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: AppColors.primaryGreen,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.bolt_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Nutrisi Mingguan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF065F46),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Anda mencapai 80% target protein minggu ini. Teruskan!',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: const Color(0xFF047857),
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: const LinearProgressIndicator(
-                    value: 0.8,
-                    backgroundColor: Color(0xFFA7F3D0),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primaryGreen,
-                    ),
-                    minHeight: 6,
-                  ),
                 ),
               ],
             ),
