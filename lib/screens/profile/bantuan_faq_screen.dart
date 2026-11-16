@@ -38,7 +38,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
     {
       'question': 'Metode pembayaran apa saja yang aktif di NutriMeal?',
       'answer':
-          'NutriMeal mendukung QRIS Instant Pay (semua e-wallet dan mobile banking seperti GoPay, DANA, ShopeePay, BCA Mobile, Livin\' by Mandiri) serta COD (Bayar di Tempat) untuk area tertentu.',
+          'NutriMeal mendukung QRIS Instant Pay (semua e-wallet dan mobile banking seperti GoPay, DANA, ShopeePay, BCA Mobile, Livin\' by Mandiri) serta Virtual Account (BCA & Mandiri).',
     },
     {
       'question': 'Bagaimana cara refund jika ada kendala pesanan katering?',
