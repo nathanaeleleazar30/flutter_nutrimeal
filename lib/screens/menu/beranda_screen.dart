@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/schedule_data.dart';
 import '../../widgets/main_top_bar.dart';
 import '../../widgets/menu_card.dart';
 import '../../widgets/nutri_meal_image.dart';
@@ -366,9 +367,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
                         ),
                         child: Row(
                           children: List.generate(
-                            menuController.cateringDays.length,
+                            dummySchedules.length,
                             (index) {
-                              final item = menuController.cateringDays[index];
+                              final schedule = dummySchedules[index];
                               final isSelected =
                                   menuController.selectedCateringDayIndex ==
                                   index;
@@ -403,28 +404,26 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          item.dayShort,
+                                          schedule.dayName.toUpperCase(),
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w800,
                                             color: isSelected
-                                                ? Colors.white
-                                                : const Color(0xFF64748B),
+                                              ? Colors.white
+                                              : const Color(0xFF64748B),
                                           ),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          index == 0
-                                              ? 'Hari ini'
-                                              : item.subtitle,
+                                          '${schedule.dayNumber}',
                                           style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 9.5,
+                                            fontSize: 11,
                                             fontWeight: isSelected
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
+                                                ? FontWeight.w800
+                                                : FontWeight.w600,
                                             color: isSelected
                                                 ? Colors.white
-                                                : const Color(0xFF94A3B8),
+                                                : const Color(0xFF475569),
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -449,68 +448,141 @@ class _BerandaScreenState extends State<BerandaScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Active Catering Delivery Card (Chicken Katsu Bowl 12:00 WIB)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.025),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Food Image Thumbnail
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: const SizedBox(
-                                width: 58,
-                                height: 58,
-                                child: NutriMealImage(
-                                  imageUrl:
-                                      'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=300&auto=format&fit=crop',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
+                      // Active Catering Delivery Cards (Meals corresponding to selected day)
+                      Builder(
+                        builder: (context) {
+                          final selectedIdx = (menuController.selectedCateringDayIndex >= 0 &&
+                                  menuController.selectedCateringDayIndex < dummySchedules.length)
+                              ? menuController.selectedCateringDayIndex
+                              : 0;
+                          final currentDay = dummySchedules[selectedIdx];
 
-                            // Title & Time (Chicken Katsu Bowl, 12:00 WIB)
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Chicken Katsu Bowl',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textDark,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                          return Column(
+                            children: currentDay.meals.map((meal) {
+                              final isLunch = meal.slotType == 'Makan Siang';
+
+                              return GestureDetector(
+                                onTap: widget.onNavigateToSchedule ??
+                                    () => Navigator.of(context).pushNamed('/jadwal'),
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.025),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    '12:00 WIB',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF64748B),
-                                    ),
+                                  child: Row(
+                                    children: [
+                                      // Food Image Thumbnail
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: SizedBox(
+                                          width: 60,
+                                          height: 60,
+                                          child: NutriMealImage(
+                                            imageUrl: meal.imageUrl,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+
+                                      // Title, Slot & Time
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 7,
+                                                    vertical: 2.5,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: isLunch
+                                                        ? const Color(0xFFDCFCE7)
+                                                        : const Color(0xFFEEF2FF),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: Text(
+                                                    meal.slotType,
+                                                    style: GoogleFonts.plusJakartaSans(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: isLunch
+                                                          ? const Color(0xFF16A34A)
+                                                          : const Color(0xFF4F46E5),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  '${meal.calories} kkal',
+                                                  style: GoogleFonts.plusJakartaSans(
+                                                    fontSize: 10.5,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(0xFF64748B),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              meal.title,
+                                              style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 13.5,
+                                                fontWeight: FontWeight.w800,
+                                                color: AppColors.textDark,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 3),
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.access_time_rounded,
+                                                  size: 13,
+                                                  color: Color(0xFF94A3B8),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  meal.deliveryTime,
+                                                  style: GoogleFonts.plusJakartaSans(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: const Color(0xFF64748B),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // Chevron Right to indicate clickable
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: Color(0xFF94A3B8),
+                                        size: 20,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
                       ),
                       const SizedBox(height: 18),
 
