@@ -26,8 +26,6 @@ class _DevicePermissionsDebugScreenState
     AppPermissionType.location: PermissionStatus.denied,
   };
 
-  bool _isLoadingStatuses = true;
-
   // Media preview
   File? _capturedImage;
   String? _imageSourceType;
@@ -46,13 +44,12 @@ class _DevicePermissionsDebugScreenState
   }
 
   Future<void> _refreshAllPermissions() async {
-    setState(() => _isLoadingStatuses = true);
     for (final type in AppPermissionType.values) {
       final status = await PermissionService.instance.checkPermission(type);
       _permissionStatuses[type] = status;
     }
     if (mounted) {
-      setState(() => _isLoadingStatuses = false);
+      setState(() {});
     }
   }
 
@@ -223,8 +220,6 @@ class _DevicePermissionsDebugScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FA),
       appBar: AppBar(
