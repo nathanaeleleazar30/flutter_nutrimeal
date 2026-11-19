@@ -4,6 +4,14 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>NutriMeal membutuhkan akses kamera untuk mengambil foto profil atau memindai makanan.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>NutriMeal membutuhkan akses galeri foto untuk memilih foto profil atau bukti pembayaran.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>NutriMeal membutuhkan akses lokasi saat aplikasi digunakan untuk menentukan alamat pengantaran makanan.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>NutriMeal membutuhkan akses lokasi untuk menentukan alamat pengantaran pesanan secara akurat.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

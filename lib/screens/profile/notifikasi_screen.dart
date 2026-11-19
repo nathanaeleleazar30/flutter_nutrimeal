@@ -187,6 +187,17 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             color: AppColors.textDark,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.tune_rounded,
+              color: AppColors.primaryGreen,
+              size: 22,
+            ),
+            tooltip: 'Debug Izin & Notifikasi',
+            onPressed: () => Navigator.pushNamed(context, '/device-permissions'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
