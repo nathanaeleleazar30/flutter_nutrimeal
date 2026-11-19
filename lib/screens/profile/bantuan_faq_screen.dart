@@ -17,7 +17,6 @@ class BantuanFaqScreen extends StatefulWidget {
 }
 
 class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
-  final TextEditingController _searchController = TextEditingController();
   int? _expandedIndex;
 
   final List<Map<String, String>> _faqs = [
@@ -49,19 +48,8 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
   ];
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final query = _searchController.text.trim().toLowerCase();
-    final filtered = _faqs.where((faq) {
-      return query.isEmpty ||
-          faq['question']!.toLowerCase().contains(query) ||
-          faq['answer']!.toLowerCase().contains(query);
-    }).toList();
+    final filtered = _faqs;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -83,11 +71,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                     _buildHeroBanner(),
                     const SizedBox(height: 14),
 
-                    // 2. Search Bar
-                    _buildSearchBar(),
-                    const SizedBox(height: 10),
-
-                    // 3. Filter Chips
+                    // 2. Filter Chips
                     _buildFilterChips(),
                     const SizedBox(height: 18),
 
@@ -256,42 +240,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.textDark),
-              decoration: InputDecoration(
-                hintText: 'Cari bantuan, pesanan, akun, diet...',
-                hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF94A3B8)),
-                border: InputBorder.none,
-                isDense: true,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildFilterChips() {
     final chips = ['Jadwal', 'Penggantian Menu', 'Pengiriman Katering'];

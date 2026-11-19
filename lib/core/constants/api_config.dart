@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 class ApiConfig {
   /// Google OAuth Client IDs resmi dari Google Cloud Console
   static const String webClientId =
-      '326249737628-v0qtts2k6an7pgap2r6qo70bk0n3r81j.apps.googleusercontent.com';
+      '692683965471-fhlmrbkuf99b6mo2gh366vv18g50tpc2.apps.googleusercontent.com';
   static const String androidClientId =
       '326249737628-2glmsskab2ds7pe1p4f76hff1sp45vh3.apps.googleusercontent.com';
 
@@ -79,6 +79,27 @@ class ApiConfig {
     'http://10.0.2.2:5000/api/meals',
   ];
 
+  /// Daftar URL alternatif backend untuk Customer API (/api/customers)
+  static List<String> get candidateCustomerUrls => [
+    'http://localhost:5000/api/customers',
+    'http://$hostLanIp:5000/api/customers',
+    'http://10.0.2.2:5000/api/customers',
+  ];
+
+  /// Daftar URL alternatif backend untuk Upload File Gambar (/api/upload)
+  static List<String> get candidateUploadUrls => [
+    'http://localhost:5000/api/upload',
+    'http://$hostLanIp:5000/api/upload',
+    'http://10.0.2.2:5000/api/upload',
+  ];
+
+  /// Daftar URL alternatif backend untuk Sesi Customer (/api/auth/customer-me)
+  static List<String> get candidateCustomerMeUrls => [
+    'http://localhost:5000/api/auth/customer-me',
+    'http://$hostLanIp:5000/api/auth/customer-me',
+    'http://10.0.2.2:5000/api/auth/customer-me',
+  ];
+
   /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
   static String resolveImageUrl(String? rawUrl, {String? activeBaseUrl}) {
     if (rawUrl == null || rawUrl.trim().isEmpty) {
@@ -88,9 +109,7 @@ class ApiConfig {
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       return trimmed;
     }
-    final base =
-        activeBaseUrl ??
-        (kIsWeb ? 'http://localhost:5000' : 'http://$hostLanIp:5000');
+    final base = activeBaseUrl ?? baseUrl;
     final cleanPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
     return '$base$cleanPath';
   }
