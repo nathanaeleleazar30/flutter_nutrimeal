@@ -300,7 +300,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           const SizedBox(height: 18),
 
-          // QR Code Graphic with NutriMeal Leaf in center
+          // QR Code Graphic from Asset
           Container(
             width: 200,
             height: 200,
@@ -310,31 +310,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CustomPaint(
-                  size: const Size(184, 184),
-                  painter: _QrisPainter(),
-                ),
-                // Center Green Leaf
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F8A50),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
-                ),
-              ],
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/qris_code.jpg',
+                width: 184,
+                height: 184,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           const SizedBox(height: 14),

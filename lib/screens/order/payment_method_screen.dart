@@ -23,7 +23,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
   void initState() {
     super.initState();
     final controller = context.read<NutriMealMenuController>();
-    _selectedMethod = controller.selectedPaymentId == 'cod' ? 'cod' : 'qris';
+    _selectedMethod = controller.selectedPaymentId;
   }
 
   String _formatRupiah(int amount) {
@@ -74,15 +74,6 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                       isSelected: _selectedMethod == 'qris',
                       onTap: () {
                         setState(() => _selectedMethod = 'qris');
-                      },
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Option 2: COD (Bayar di Tempat)
-                    _buildCodCard(
-                      isSelected: _selectedMethod == 'cod',
-                      onTap: () {
-                        setState(() => _selectedMethod = 'cod');
                       },
                     ),
                   ],
@@ -229,62 +220,6 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCodCard({
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF22C55E) : const Color(0xFFE2E8F0),
-            width: isSelected ? 2.0 : 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFDCFCE7),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.payments_outlined,
-                color: Color(0xFF16A34A),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'COD (Bayar di Tempat)',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-            ),
-            _buildRadioIndicator(isSelected),
           ],
         ),
       ),
