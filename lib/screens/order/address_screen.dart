@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 
@@ -45,6 +46,11 @@ class _AddressScreenState extends State<AddressScreen> {
     );
 
     controller.selectDeliveryAddress(chosen);
+
+    final auth = context.read<AuthController>();
+    if (auth.isLoggedIn && chosen.fullAddress.isNotEmpty) {
+      auth.updateCustomerProfile(address: chosen.fullAddress);
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

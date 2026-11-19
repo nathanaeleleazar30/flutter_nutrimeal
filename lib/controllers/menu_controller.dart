@@ -549,6 +549,7 @@ class NutriMealMenuController extends ChangeNotifier {
   ];
 
   List<MenuItem> get allMenuItems => _menuItems;
+  List<MenuItem> get allMeals => _menuItems;
 
   List<MenuItem> get popularMenuItems {
     if (_menuItems.isEmpty) return [];
@@ -606,6 +607,7 @@ class NutriMealMenuController extends ChangeNotifier {
   List<CartItem> get cartItems => List.unmodifiable(_cartItems);
 
   int get cartItemCount => _cartItems.fold(0, (sum, i) => sum + i.quantity);
+  int get totalItems => cartItemCount;
 
   void addToCart(MenuItem item, {int quantity = 1}) {
     final index = _cartItems.indexWhere((c) => c.item.id == item.id);
@@ -679,6 +681,34 @@ class NutriMealMenuController extends ChangeNotifier {
 
   int _voucherDiscount = 0;
   int get voucherDiscount => _voucherDiscount;
+
+  bool applyVoucherData(Map<String, dynamic> voucher) {
+    final minSpend = int.tryParse('${voucher['min_spend']}') ?? 0;
+    if (subtotal < minSpend) {
+      return false;
+    }
+    final code = (voucher['code'] ?? '').toString().toUpperCase();
+    final type = voucher['discount_type']?.toString().toLowerCase();
+    final val = int.tryParse('${voucher['discount_value']}') ?? 0;
+    final maxDisc = int.tryParse('${voucher['max_discount']}');
+
+    int calculatedDiscount = 0;
+    if (type == 'percent') {
+      calculatedDiscount = (subtotal * (val / 100.0)).round();
+      if (maxDisc != null && maxDisc > 0 && calculatedDiscount > maxDisc) {
+        calculatedDiscount = maxDisc;
+      }
+    } else if (type == 'free_shipping') {
+      calculatedDiscount = val > 0 ? (shippingFee < val ? shippingFee : val) : shippingFee;
+    } else {
+      calculatedDiscount = val;
+    }
+
+    _voucherCode = code;
+    _voucherDiscount = calculatedDiscount;
+    notifyListeners();
+    return true;
+  }
 
   bool applyVoucher(String code) {
     final cleanCode = code.trim().toUpperCase();

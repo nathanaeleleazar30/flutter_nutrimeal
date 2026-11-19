@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/schedule_data.dart';
 import '../../widgets/main_top_bar.dart';
@@ -19,9 +21,57 @@ class JadwalScreen extends StatefulWidget {
 class _JadwalScreenState extends State<JadwalScreen> {
   int _selectedDayIndex = 0;
 
-  List<DaySchedule> get _schedules => dummySchedules;
+  List<DaySchedule> _buildDynamicSchedules(List<MenuItem> allMeals) {
+    if (allMeals.isEmpty) return dummySchedules;
 
-  void _showChangeMenuDialog(ScheduledMeal meal) {
+    final days = [
+      {'short': 'Sen', 'full': 'senin', 'num': 12},
+      {'short': 'Sel', 'full': 'selasa', 'num': 13},
+      {'short': 'Rab', 'full': 'rabu', 'num': 14},
+      {'short': 'Kam', 'full': 'kamis', 'num': 15},
+      {'short': 'Jum', 'full': 'jumat', 'num': 16},
+      {'short': 'Sab', 'full': 'sabtu', 'num': 17},
+      {'short': 'Min', 'full': 'minggu', 'num': 18},
+    ];
+
+    return days.map((d) {
+      final matchingMeals = allMeals.where((m) =>
+          m.schedule.toLowerCase().contains(d['full'] as String)).toList();
+
+      final scheduledMeals = <ScheduledMeal>[];
+      if (matchingMeals.isNotEmpty) {
+        for (int i = 0; i < matchingMeals.length && i < 2; i++) {
+          final m = matchingMeals[i];
+          scheduledMeals.add(ScheduledMeal(
+            slotType: i == 0 ? 'Makan Siang' : 'Makan Malam',
+            title: m.name,
+            imageUrl: m.imageUrl,
+            tags: m.tags.isNotEmpty ? m.tags : [m.category, '${m.calories} kkal'],
+            deliveryTime: m.deliveryTime,
+            calories: m.calories,
+          ));
+        }
+      } else {
+        final fallback = allMeals.first;
+        scheduledMeals.add(ScheduledMeal(
+          slotType: 'Makan Siang',
+          title: fallback.name,
+          imageUrl: fallback.imageUrl,
+          tags: fallback.tags.isNotEmpty ? fallback.tags : [fallback.category, '${fallback.calories} kkal'],
+          deliveryTime: fallback.deliveryTime,
+          calories: fallback.calories,
+        ));
+      }
+
+      return DaySchedule(
+        dayName: d['short'] as String,
+        dayNumber: d['num'] as int,
+        meals: scheduledMeals,
+      );
+    }).toList();
+  }
+
+  void _showChangeMenuDialog(ScheduledMeal meal, List<MenuItem> availableMeals) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -63,7 +113,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'PILIHAN MENU PENGGANTI',
+                'PILIHAN MENU DARI RESTO',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -71,9 +121,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              _buildAlternativeOption(ctx, 'Grilled Chicken Deli (450 kkal)'),
-              _buildAlternativeOption(ctx, 'Salmon Poke Bowl (420 kkal)'),
-              _buildAlternativeOption(ctx, 'Beef Veggie Bowl (460 kkal)'),
+              ...availableMeals.take(4).map(
+                    (m) => _buildAlternativeOption(ctx, '${m.name} (${m.calories} kkal)'),
+                  ),
               const SizedBox(height: 12),
             ],
           ),
@@ -137,7 +187,10 @@ class _JadwalScreenState extends State<JadwalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentSchedule = _schedules[_selectedDayIndex];
+    final menuController = context.watch<NutriMealMenuController>();
+    final schedules = _buildDynamicSchedules(menuController.allMeals);
+    final safeIndex = _selectedDayIndex < schedules.length ? _selectedDayIndex : 0;
+    final currentSchedule = schedules[safeIndex];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -156,11 +209,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
               height: 74,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _schedules.length,
+                itemCount: schedules.length,
                 separatorBuilder: (context, index) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
-                  final schedule = _schedules[index];
-                  final isSelected = _selectedDayIndex == index;
+                  final schedule = schedules[index];
+                  final isSelected = safeIndex == index;
 
                   return GestureDetector(
                     onTap: () {
@@ -226,7 +279,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   vertical: 6,
                 ),
                 children: [
-                  ...currentSchedule.meals.map((meal) => _buildMealCard(meal)),
+                  ...currentSchedule.meals.map((meal) => _buildMealCard(meal, menuController.allMeals)),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -237,7 +290,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
     );
   }
 
-  Widget _buildMealCard(ScheduledMeal meal) {
+  Widget _buildMealCard(ScheduledMeal meal, List<MenuItem> allMeals) {
     final isLunch = meal.slotType == 'Makan Siang';
 
     return Container(
@@ -370,21 +423,42 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Time Row
+                // Time & Action Row
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(
-                      Icons.access_time_rounded,
-                      size: 15,
-                      color: Color(0xFF64748B),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.access_time_rounded,
+                          size: 15,
+                          color: Color(0xFF64748B),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          meal.deliveryTime,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF475569),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      meal.deliveryTime,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF475569),
+                    TextButton(
+                      onPressed: () => _showChangeMenuDialog(meal, allMeals),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Ubah Menu',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F8A50),
+                        ),
                       ),
                     ),
                   ],

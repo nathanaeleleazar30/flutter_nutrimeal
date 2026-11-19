@@ -74,6 +74,7 @@ class AuthController extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
   String? get currentUserEmail => _currentUserEmail;
   String? get currentUserName => _currentUserName;
+  String? get customerName => _currentUserName;
   String? get authToken => _authToken;
   String? get customerId => _customerId;
   String? get backendMessage => _backendMessage;
