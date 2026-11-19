@@ -33,6 +33,22 @@ class ApiConfig {
   static String get customerRegisterUrl =>
       '$baseUrl/api/auth/customer-register';
   static String get customerMeUrl => '$baseUrl/api/auth/customer-me';
+  static String get customerFcmTokenUrl => '$baseUrl/api/customers/fcm-token';
+  static String get notificationsUrl => '$baseUrl/api/notifications';
+
+  /// Daftar URL alternatif backend untuk Update FCM Token
+  static List<String> get candidateFcmTokenUrls => [
+    'http://localhost:5000/api/customers/fcm-token',
+    'http://$hostLanIp:5000/api/customers/fcm-token',
+    'http://10.0.2.2:5000/api/customers/fcm-token',
+  ];
+
+  /// Daftar URL alternatif backend untuk Notifikasi
+  static List<String> get candidateNotificationUrls => [
+    'http://localhost:5000/api/notifications',
+    'http://$hostLanIp:5000/api/notifications',
+    'http://10.0.2.2:5000/api/notifications',
+  ];
 
   /// Daftar URL alternatif backend untuk Customer Register (mobile)
   static List<String> get candidateRegisterUrls => [
