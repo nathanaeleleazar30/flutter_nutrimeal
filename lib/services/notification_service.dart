@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import '../core/constants/api_config.dart';
+import '../data/local/secure/secure_storage_service.dart';
 
 /// Top-level background message handler wajib untuk FCM saat aplikasi di background / terminated
 @pragma('vm:entry-point')
@@ -143,7 +146,7 @@ class NotificationService {
         if (kDebugMode) {
           print('[NotificationService] 🔄 FCM Token diperbarui: $newToken');
         }
-        // TODO: kirim ke backend saat server sudah siap (misal POST /api/customers/fcm-token)
+        sendTokenToBackend(newToken);
       });
 
       // Listener 1: Foreground Message (Aplikasi sedang dibuka)
@@ -222,7 +225,7 @@ class NotificationService {
         print(token);
         print('========================================================');
       }
-      // TODO: kirim ke backend saat server sudah siap (misal POST /api/customers/fcm-token)
+      sendTokenToBackend(token);
       return token;
     } catch (e) {
       if (kDebugMode) {
@@ -241,6 +244,55 @@ class NotificationService {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Mengirimkan FCM Token ke backend server agar server dapat mengirim push notification
+  Future<bool> sendTokenToBackend(String? token, {String? customerId}) async {
+    final activeToken = token ?? _fcmToken;
+    if (activeToken == null || activeToken.isEmpty) return false;
+
+    try {
+      final creds = await SecureStorageService.instance.getUserCredentials();
+      final targetCustomerId = customerId ?? creds['userId'];
+
+      if (targetCustomerId == null || targetCustomerId.isEmpty) {
+        if (kDebugMode) {
+          print('[NotificationService] ℹ️ Customer ID belum ada, token tersimpan di lokal.');
+        }
+        return false;
+      }
+
+      final payload = jsonEncode({
+        'customerId': targetCustomerId,
+        'email': creds['email'],
+        'fcmToken': activeToken,
+      });
+
+      for (final urlStr in ApiConfig.candidateFcmTokenUrls) {
+        try {
+          final url = Uri.parse(urlStr);
+          final response = await http
+              .post(
+                url,
+                headers: {'Content-Type': 'application/json'},
+                body: payload,
+              )
+              .timeout(const Duration(seconds: 4));
+
+          if (response.statusCode == 200) {
+            if (kDebugMode) {
+              print('[NotificationService] ✅ FCM token berhasil disinkronkan ke backend: $urlStr');
+            }
+            return true;
+          }
+        } catch (_) {}
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('[NotificationService] ⚠️ Gagal mengirim FCM token ke backend: $e');
+      }
+    }
+    return false;
   }
 
   /// Menampilkan banner notifikasi lokal saat ada push message masuk di Foreground

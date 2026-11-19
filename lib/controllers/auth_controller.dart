@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../core/constants/api_config.dart';
 import '../data/local/secure/secure_storage_service.dart';
+import '../services/notification_service.dart';
 
 class AuthController extends ChangeNotifier {
   // Google Sign-In instance untuk autentikasi akun Google resmi
@@ -308,6 +309,12 @@ class AuthController extends ChangeNotifier {
         );
       }
 
+      // Sinkronkan token FCM ke backend untuk push notification
+      NotificationService.instance.sendTokenToBackend(
+        NotificationService.instance.fcmToken,
+        customerId: _customerId,
+      );
+
       if (kDebugMode) print('[NutriMeal Auth] ✅ Login berhasil & tersimpan di SecureStorage: $_currentUserEmail');
     } catch (e) {
       _generalError = 'Terjadi kesalahan: $e';
@@ -475,6 +482,12 @@ class AuthController extends ChangeNotifier {
           name: _currentUserName,
         );
       }
+
+      // Sinkronkan token FCM ke backend untuk push notification
+      NotificationService.instance.sendTokenToBackend(
+        NotificationService.instance.fcmToken,
+        customerId: _customerId,
+      );
 
       _isLoading = false;
       notifyListeners();
