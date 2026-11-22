@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/constants/api_config.dart';
 import '../data/local/preferences/preferences_service.dart';
+import '../data/models/ai_planner_models.dart';
 import '../data/repositories/meal_repository.dart';
 
 class NutritionInfo {
@@ -613,6 +614,17 @@ class NutriMealMenuController extends ChangeNotifier {
       _cartItems[index].quantity += quantity;
     } else {
       _cartItems.add(CartItem(item: item, quantity: quantity));
+    }
+    notifyListeners();
+  }
+
+  /// Memasukkan seluruh paket rekomendasi NutriMeal AI Planner ke keranjang
+  void addAiPlannedPackageToCart(AiPlannedPackage package) {
+    for (final item in package.items) {
+      if (item.quantity > 0) {
+        final existing = _menuItems.where((m) => m.id == item.meal.id).firstOrNull ?? item.meal;
+        addToCart(existing, quantity: item.quantity);
+      }
     }
     notifyListeners();
   }
