@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../services/api_service.dart';
 import '../admin_chat_screen.dart';
 import '../nutribot_chat_screen.dart';
 
@@ -18,38 +19,54 @@ class BantuanFaqScreen extends StatefulWidget {
 
 class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
   int? _expandedIndex;
+  int _selectedFilterIndex = 0;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _faqs = [];
 
-  final List<Map<String, String>> _faqs = [
-    {
-      'question': 'Bagaimana cara mengubah alamat pengantaran katering aktif?',
-      'answer':
-          'Anda dapat mengubah alamat pengantaran melalui menu Alamat Pengiriman atau tab Jadwal. Pastikan konfirmasi perubahan dilakukan maksimal pukul 20.00 WIB sebelum hari pengiriman berikutnya agar kurir katering dapat mengantarkan ke alamat baru dengan tepat.',
-    },
-    {
-      'question': 'Apakah menu katering diet NutriMeal disesuaikan alergi pelanggan?',
-      'answer':
-          'Tentu! Di menu Informasi Pribadi, Anda dapat mencantumkan catatan alergi atau preferensi diet (seperti gluten-free, no seafood, rendah natrium). Tim nutisionis kami akan menyesuaikan sajian Anda secara aman.',
-    },
-    {
-      'question': 'Kapan batas waktu konfirmasi cuti / reschedule jadwal katering?',
-      'answer':
-          'Pengajuan cuti atau reschedule jadwal katering dapat dilakukan melalui tab Jadwal paling lambat H-1 pukul 20.00 WIB. Porsi makan Anda akan otomatis tersimpan dan diperpanjang di akhir periode langganan.',
-    },
-    {
-      'question': 'Metode pembayaran apa saja yang aktif di NutriMeal?',
-      'answer':
-          'NutriMeal mendukung QRIS Instant Pay (semua e-wallet dan mobile banking seperti GoPay, DANA, ShopeePay, BCA Mobile, Livin\' by Mandiri) serta Virtual Account (BCA & Mandiri).',
-    },
-    {
-      'question': 'Bagaimana cara refund jika ada kendala pesanan katering?',
-      'answer':
-          'Jika terjadi kendala kualitas makanan atau keterlambatan kurir lebih dari 30 menit, silakan hubungi Admin NutriCare via WhatsApp atau live chat dengan melampirkan foto makanan. Kami memberikan garansi penggantian porsi atau refund 100%.',
-    },
+  final List<String> _filterCategories = [
+    'Semua',
+    'Pengantaran',
+    'Menu & Diet',
+    'Jadwal & Langganan',
+    'Pembayaran',
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadFaqs();
+  }
+
+  Future<void> _loadFaqs() async {
+    setState(() => _isLoading = true);
+    try {
+      final list = await ApiService.instance.fetchFaqs();
+      if (mounted) {
+        setState(() {
+          _faqs = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> get _filteredFaqs {
+    if (_selectedFilterIndex == 0) return _faqs;
+    final cat = _filterCategories[_selectedFilterIndex].toLowerCase();
+    return _faqs.where((f) {
+      final itemCat = (f['category'] ?? '').toString().toLowerCase();
+      final q = (f['question'] ?? '').toString().toLowerCase();
+      return itemCat.contains(cat) || q.contains(cat);
+    }).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final filtered = _faqs;
+    final filtered = _filteredFaqs;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -62,36 +79,77 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
 
             // Content Body
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. Hero Card: Bantuan NutriCare 24/7
-                    _buildHeroBanner(),
-                    const SizedBox(height: 14),
+              child: RefreshIndicator(
+                onRefresh: _loadFaqs,
+                color: AppColors.primaryGreen,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. Hero Card: Bantuan NutriCare 24/7
+                      _buildHeroBanner(),
+                      const SizedBox(height: 14),
 
-                    // 2. Filter Chips
-                    _buildFilterChips(),
-                    const SizedBox(height: 18),
+                      // 2. Filter Chips
+                      _buildFilterChips(),
+                      const SizedBox(height: 18),
 
-                    // 4. Saluran Bantuan Cepat
-                    _buildQuickSupportSection(context),
-                    const SizedBox(height: 20),
+                      // 4. Saluran Bantuan Cepat
+                      _buildQuickSupportSection(context),
+                      const SizedBox(height: 20),
 
-                    // 5. Pertanyaan Sering Diajukan
-                    _buildFaqAccordionSection(filtered),
-                    const SizedBox(height: 20),
+                      // 5. Pertanyaan Sering Diajukan
+                      if (_isLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 30),
+                          child: Center(
+                            child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                          ),
+                        )
+                      else if (filtered.isEmpty)
+                        _buildEmptyFaqState()
+                      else
+                        _buildFaqAccordionSection(filtered),
+                      const SizedBox(height: 20),
 
-                    // 6. Bottom WhatsApp Card
-                    _buildBottomWhatsAppCard(context),
-                    const SizedBox(height: 20),
-                  ],
+                      // 6. Bottom WhatsApp Card
+                      _buildBottomWhatsAppCard(context),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyFaqState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.help_outline_rounded, size: 36, color: Color(0xFF94A3B8)),
+          const SizedBox(height: 8),
+          Text(
+            'Belum ada pertanyaan FAQ untuk kategori ini.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -243,29 +301,40 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
 
 
   Widget _buildFilterChips() {
-    final chips = ['Jadwal', 'Penggantian Menu', 'Pengiriman Katering'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: chips.map((c) {
-          return Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Text(
-              c,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF64748B),
+        children: List.generate(_filterCategories.length, (index) {
+          final c = _filterCategories[index];
+          final isSelected = _selectedFilterIndex == index;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedFilterIndex = index;
+                _expandedIndex = null;
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF0F5132) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              child: Text(
+                c,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11.5,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                ),
               ),
             ),
           );
-        }).toList(),
+        }),
       ),
     );
   }
@@ -403,7 +472,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
     );
   }
 
-  Widget _buildFaqAccordionSection(List<Map<String, String>> faqs) {
+  Widget _buildFaqAccordionSection(List<Map<String, dynamic>> faqs) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -419,7 +488,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
               ),
             ),
             Text(
-              'Lihat Semua',
+              '${faqs.length} Pertanyaan',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w800,
@@ -451,7 +520,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 },
                 tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                 title: Text(
-                  item['question']!,
+                  item['question']?.toString() ?? '',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
@@ -467,7 +536,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
                     child: Text(
-                      item['answer']!,
+                      item['answer']?.toString() ?? '',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11.5,
                         color: const Color(0xFF64748B),

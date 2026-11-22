@@ -6,6 +6,7 @@ import 'controllers/menu_controller.dart';
 import 'core/constants/app_colors.dart';
 import 'screens/address_screen.dart';
 import 'screens/admin_chat_screen.dart';
+import 'screens/ai_planner/ai_planner_screen.dart';
 import 'screens/bantuan_faq_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/device_permissions_debug_screen.dart';
@@ -84,6 +85,7 @@ class NutriMealApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/verify-email': (context) => const VerifyEmailScreen(),
         '/home': (context) => const MainNavigationShell(),
+        '/ai-planner': (context) => const AiPlannerScreen(),
         '/menu': (context) => const MainNavigationShell(initialIndex: 1),
         '/pesan': (context) => const MainNavigationShell(initialIndex: 2),
         '/chat-ai': (context) => const NutriBotChatScreen(),

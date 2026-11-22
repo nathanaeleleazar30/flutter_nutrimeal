@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '192.168.1.31';
+  static const String hostLanIp = '172.16.108.108';
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
@@ -35,6 +35,14 @@ class ApiConfig {
   static String get customerMeUrl => '$baseUrl/api/auth/customer-me';
   static String get customerFcmTokenUrl => '$baseUrl/api/customers/fcm-token';
   static String get notificationsUrl => '$baseUrl/api/notifications';
+  static String get aiPlannerUrl => '$baseUrl/api/ai-planner/generate';
+
+  /// Daftar URL alternatif backend untuk AI Planner
+  static List<String> get candidateAiPlannerUrls => [
+    'http://localhost:5000/api/ai-planner/generate',
+    'http://$hostLanIp:5000/api/ai-planner/generate',
+    'http://10.0.2.2:5000/api/ai-planner/generate',
+  ];
 
   /// Daftar URL alternatif backend untuk Update FCM Token
   static List<String> get candidateFcmTokenUrls => [
@@ -98,6 +106,41 @@ class ApiConfig {
     'http://localhost:5000/api/auth/customer-me',
     'http://$hostLanIp:5000/api/auth/customer-me',
     'http://10.0.2.2:5000/api/auth/customer-me',
+  ];
+
+  /// Daftar URL alternatif backend untuk Packages (/api/packages)
+  static List<String> get candidatePackagesUrls => [
+    'http://localhost:5000/api/packages',
+    'http://$hostLanIp:5000/api/packages',
+    'http://10.0.2.2:5000/api/packages',
+  ];
+
+  /// Daftar URL alternatif backend untuk Subscriptions (/api/subscriptions)
+  static List<String> get candidateSubscriptionsUrls => [
+    'http://localhost:5000/api/subscriptions',
+    'http://$hostLanIp:5000/api/subscriptions',
+    'http://10.0.2.2:5000/api/subscriptions',
+  ];
+
+  /// Daftar URL alternatif backend untuk Orders (/api/orders)
+  static List<String> get candidateOrdersUrls => [
+    'http://localhost:5000/api/orders',
+    'http://$hostLanIp:5000/api/orders',
+    'http://10.0.2.2:5000/api/orders',
+  ];
+
+  /// Daftar URL alternatif backend untuk Vouchers (/api/vouchers)
+  static List<String> get candidateVouchersUrls => [
+    'http://localhost:5000/api/vouchers',
+    'http://$hostLanIp:5000/api/vouchers',
+    'http://10.0.2.2:5000/api/vouchers',
+  ];
+
+  /// Daftar URL alternatif backend untuk FAQs (/api/faqs)
+  static List<String> get candidateFaqsUrls => [
+    'http://localhost:5000/api/faqs',
+    'http://$hostLanIp:5000/api/faqs',
+    'http://10.0.2.2:5000/api/faqs',
   ];
 
   /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
