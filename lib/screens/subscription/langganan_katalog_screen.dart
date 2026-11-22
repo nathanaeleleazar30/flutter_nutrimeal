@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../services/api_service.dart';
 import '../checkout_screen.dart';
 
 class LanggananKatalogScreen extends StatefulWidget {
@@ -16,7 +17,44 @@ class LanggananKatalogScreen extends StatefulWidget {
 }
 
 class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
-  int _selectedTierIndex = 1; // Default: Paket Bulanan Lengkap (Paling Populer)
+  int _selectedTierIndex = 0;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _packages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackages();
+  }
+
+  Future<void> _loadPackages() async {
+    setState(() => _isLoading = true);
+    try {
+      final list = await ApiService.instance.fetchPackages();
+      if (mounted) {
+        setState(() {
+          _packages = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _formatRupiah(int amount) {
+    final str = amount.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(str[i]);
+    }
+    return 'Rp$buffer';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,38 +97,44 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Tier 1: Paket Mingguan
-                    _buildTierCard(
-                      index: 0,
-                      title: 'Paket Mingguan',
-                      badge: 'Trial',
-                      badgeColor: const Color(0xFFDCFCE7),
-                      badgeTextColor: const Color(0xFF166534),
-                      subtitle: '7 Hari • 14x makan (Siang & Malam)',
-                      price: 'Rp175.000',
-                      period: '/ 7 hr',
-                      perMeal: 'Rp12.500/makan',
-                      isSelected: _selectedTierIndex == 0,
-                    ),
-                    const SizedBox(height: 14),
+                    // Dynamic Packages from API
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 30),
+                        child: Center(
+                          child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                        ),
+                      )
+                    else if (_packages.isNotEmpty)
+                      ...List.generate(_packages.length, (index) {
+                        final pkg = _packages[index];
+                        final isSel = _selectedTierIndex == index;
+                        final priceInt = int.tryParse('${pkg['price']}') ?? 0;
+                        final formattedPrice = _formatRupiah(priceInt);
+                        final typeStr = pkg['type']?.toString() ?? 'Mingguan';
+                        final portions = pkg['portions']?.toString() ?? '';
+                        final desc = pkg['description']?.toString() ?? '';
 
-                    // Tier 2: Paket Bulanan Lengkap (Paling Populer)
-                    _buildPopularTierCard(),
-                    const SizedBox(height: 14),
-
-                    // Tier 3: Paket Hemat Siang
-                    _buildTierCard(
-                      index: 2,
-                      title: 'Paket Hemat Siang',
-                      badge: 'Khusus Kantor',
-                      badgeColor: const Color(0xFFF1F5F9),
-                      badgeTextColor: const Color(0xFF475569),
-                      subtitle: '30 Hari • 30x makan (1x makan siang/hari)',
-                      price: 'Rp400.000',
-                      period: '/ bln',
-                      perMeal: 'Rp13.300/makan siang',
-                      isSelected: _selectedTierIndex == 2,
-                    ),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _buildTierCard(
+                            index: index,
+                            title: pkg['name']?.toString() ?? 'Paket Katering',
+                            badge: typeStr,
+                            badgeColor: isSel ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                            badgeTextColor: isSel ? const Color(0xFF166534) : const Color(0xFF475569),
+                            subtitle: portions.isNotEmpty ? '$portions • $desc' : desc,
+                            price: formattedPrice,
+                            period: '/ $typeStr',
+                            perMeal: portions.isNotEmpty ? portions : 'Porsi Lengkap',
+                            isSelected: isSel,
+                          ),
+                        );
+                      })
+                    else ...[
+                      _buildPopularTierCard(),
+                      const SizedBox(height: 14),
+                    ],
                     const SizedBox(height: 24),
 
                     // 3. Section: Contoh Menu Mingguan
@@ -796,6 +840,15 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
   }
 
   Widget _buildBottomBar(BuildContext context) {
+    String priceDisplay = 'Rp25.000';
+    String periodDisplay = '/hari';
+    if (_packages.isNotEmpty && _selectedTierIndex < _packages.length) {
+      final selectedPkg = _packages[_selectedTierIndex];
+      final p = int.tryParse('${selectedPkg['price']}') ?? 0;
+      priceDisplay = _formatRupiah(p);
+      periodDisplay = '/ ${selectedPkg['type'] ?? 'paket'}';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -816,18 +869,18 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Mulai dari',
+                'Total Paket',
                 style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B)),
               ),
               RichText(
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: 'Rp25.000',
+                      text: priceDisplay,
                       style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.textDark),
                     ),
                     TextSpan(
-                      text: '/hari',
+                      text: ' $periodDisplay',
                       style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B)),
                     ),
                   ],

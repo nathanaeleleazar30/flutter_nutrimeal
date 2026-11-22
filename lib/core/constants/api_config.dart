@@ -108,6 +108,41 @@ class ApiConfig {
     'http://10.0.2.2:5000/api/auth/customer-me',
   ];
 
+  /// Daftar URL alternatif backend untuk Packages (/api/packages)
+  static List<String> get candidatePackagesUrls => [
+    'http://localhost:5000/api/packages',
+    'http://$hostLanIp:5000/api/packages',
+    'http://10.0.2.2:5000/api/packages',
+  ];
+
+  /// Daftar URL alternatif backend untuk Subscriptions (/api/subscriptions)
+  static List<String> get candidateSubscriptionsUrls => [
+    'http://localhost:5000/api/subscriptions',
+    'http://$hostLanIp:5000/api/subscriptions',
+    'http://10.0.2.2:5000/api/subscriptions',
+  ];
+
+  /// Daftar URL alternatif backend untuk Orders (/api/orders)
+  static List<String> get candidateOrdersUrls => [
+    'http://localhost:5000/api/orders',
+    'http://$hostLanIp:5000/api/orders',
+    'http://10.0.2.2:5000/api/orders',
+  ];
+
+  /// Daftar URL alternatif backend untuk Vouchers (/api/vouchers)
+  static List<String> get candidateVouchersUrls => [
+    'http://localhost:5000/api/vouchers',
+    'http://$hostLanIp:5000/api/vouchers',
+    'http://10.0.2.2:5000/api/vouchers',
+  ];
+
+  /// Daftar URL alternatif backend untuk FAQs (/api/faqs)
+  static List<String> get candidateFaqsUrls => [
+    'http://localhost:5000/api/faqs',
+    'http://$hostLanIp:5000/api/faqs',
+    'http://10.0.2.2:5000/api/faqs',
+  ];
+
   /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
   static String resolveImageUrl(String? rawUrl, {String? activeBaseUrl}) {
     if (rawUrl == null || rawUrl.trim().isEmpty) {

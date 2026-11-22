@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../core/constants/app_colors.dart';
 
 class AdminChatMessage {
@@ -35,38 +36,13 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
     const AdminChatMessage(
       isUser: false,
       text:
-          'Halo Andi! 👋 Selamat datang di layanan NutriCare! Saya Sarah dari tim Customer Care & Ahli Gizi NutriMeal. Ada kendala jadwal pengiriman katering, perubahan alamat, atau konsultasi menu diet yang bisa saya bantu hari ini?',
-      time: '10:15',
+          'Halo! 👋 Selamat datang di layanan Customer Care NutriMeal. Ada kendala jadwal pengiriman katering, perubahan alamat, atau konsultasi menu yang bisa kami bantu hari ini?',
+      time: '08:00',
       chips: [
         '📍 Ubah Alamat Pengiriman',
         '⚡ Ganti Jadwal Makan Siang',
         '📋 Konsultasi Alergi Menu',
       ],
-    ),
-    const AdminChatMessage(
-      isUser: true,
-      text:
-          'Halo Kak Sarah, besok siang jam 11:30 katering saya mau dialihkan ke kantor di SCBD Lot 18 lantai 12 apa masih sempat diproses? Soalnya pagi ada rapat dadakan.',
-      time: '10:17',
-    ),
-    const AdminChatMessage(
-      isUser: false,
-      text:
-          'Tentu bisa Kak Andi! Perubahan alamat makan siang untuk besok kami terima maksimal pukul 19:00 WIB malam ini. Sudah kami catat dan update ke sistem kurir katering ya.',
-      time: '10:19',
-      hasTicketCard: true,
-    ),
-    const AdminChatMessage(
-      isUser: true,
-      text:
-          'Mantap, terima kasih banyak Kak Sarah! Kurirnya tolong ingatkan jangan pakai sendok plastik ya, di kantor sudah ada cutlery.',
-      time: '10:20',
-    ),
-    const AdminChatMessage(
-      isUser: false,
-      text:
-          'Siap Kak Andi!, catatan zero-waste (tanpa alat makan plastik) sudah kami tambahkan ke slip pengiriman kurir. Selamat beristirahat dan menikmati menu NutriMeal besok! 🌱',
-      time: '10:21',
     ),
   ];
 
@@ -85,13 +61,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     setState(() {
-      _messages.add(
-        AdminChatMessage(
-          isUser: true,
-          text: text,
-          time: timeStr,
-        ),
-      );
+      _messages.add(AdminChatMessage(isUser: true, text: text, time: timeStr));
     });
 
     if (customText == null) {
@@ -107,8 +77,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
         _messages.add(
           AdminChatMessage(
             isUser: false,
-            text:
-                'Terima kasih pesannya Kak Andi! Permintaan Anda sedang kami tindak lanjuti bersama tim katering kami.',
+            text: 'Terima kasih pesannya Kak Andi! Permintaan Anda sedang kami tindak lanjuti bersama tim katering kami.',
             time: timeStr,
           ),
         );
@@ -148,7 +117,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
             ? Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false),
+                  onTap: () =>
+                      Navigator.of(context)
+                          .pushNamedAndRemoveUntil('/home', (route) => false),
                   child: Container(
                     width: 36,
                     height: 36,
@@ -210,7 +181,8 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   if (Navigator.of(context).canPop()) {
                     Navigator.pop(context);
                   } else {
-                    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil('/home', (route) => false);
                   }
                 },
               ),
@@ -222,16 +194,17 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
                   clipBehavior: Clip.antiAlias,
                   child: Image.network(
                     'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: const Color(0xFFDCFCE7),
-                      child: const Icon(Icons.support_agent_rounded, color: AppColors.primaryGreen),
+                      child: const Icon(
+                        Icons.support_agent_rounded,
+                        color: AppColors.primaryGreen,
+                      ),
                     ),
                   ),
                 ),
@@ -292,11 +265,19 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.phone_outlined, color: Color(0xFF64748B), size: 22),
+            icon: const Icon(
+              Icons.phone_outlined,
+              color: Color(0xFF64748B),
+              size: 22,
+            ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF64748B), size: 22),
+            icon: const Icon(
+              Icons.more_vert_rounded,
+              color: Color(0xFF64748B),
+              size: 22,
+            ),
             onPressed: () {},
           ),
           Padding(
@@ -310,7 +291,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   color: Color(0xFFDCFCE7),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.person_rounded, color: AppColors.primaryGreen, size: 18),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 18,
+                ),
               ),
             ),
           ),
@@ -371,9 +356,8 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: const Color(0xFF15803D),
-            borderRadius: BorderRadius.circular(18).copyWith(
-              bottomRight: const Radius.circular(4),
-            ),
+            borderRadius: BorderRadius.circular(18)
+                .copyWith(bottomRight: const Radius.circular(4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -395,9 +379,16 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                     style: const TextStyle(fontSize: 10, color: Colors.white70),
                   ),
                   const SizedBox(width: 4),
-                  const Text('• Dibaca', style: TextStyle(fontSize: 10, color: Colors.white70)),
+                  const Text(
+                    '• Dibaca',
+                    style: TextStyle(fontSize: 10, color: Colors.white70),
+                  ),
                   const SizedBox(width: 3),
-                  const Icon(Icons.done_all_rounded, size: 12, color: Color(0xFF86EFAC)),
+                  const Icon(
+                    Icons.done_all_rounded,
+                    size: 12,
+                    color: Color(0xFF86EFAC),
+                  ),
                 ],
               ),
             ],
@@ -417,16 +408,18 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(shape: BoxShape.circle),
               clipBehavior: Clip.antiAlias,
               child: Image.network(
                 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: const Color(0xFFDCFCE7),
-                  child: const Icon(Icons.support_agent_rounded, color: AppColors.primaryGreen, size: 18),
+                  child: const Icon(
+                    Icons.support_agent_rounded,
+                    color: AppColors.primaryGreen,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -439,9 +432,8 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(18).copyWith(
-                        topLeft: const Radius.circular(4),
-                      ),
+                      borderRadius: BorderRadius.circular(18)
+                          .copyWith(topLeft: const Radius.circular(4)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.04),
@@ -471,7 +463,10 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                         const SizedBox(height: 6),
                         Text(
                           message.time,
-                          style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.textMuted),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ],
                     ),
@@ -487,11 +482,16 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                         return GestureDetector(
                           onTap: () => _sendMessage(chip),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.02),
@@ -538,7 +538,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: AppColors.primaryGreen, size: 16),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.primaryGreen,
+                    size: 16,
+                  ),
                   const SizedBox(width: 5),
                   Text(
                     'Status Tiket Permintaan',
@@ -579,7 +583,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.verified_rounded, color: AppColors.primaryGreen, size: 14),
+                const Icon(
+                  Icons.verified_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 14,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -601,9 +609,16 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           const SizedBox(height: 5),
           _buildTicketRow('Pengiriman', 'Makan Siang (Besok, 25 Okt 2024)'),
           const SizedBox(height: 5),
-          _buildTicketRow('Alamat Baru', 'Pacific Century Place Lt. 12, SCBD\nJakarta Selatan'),
+          _buildTicketRow(
+            'Alamat Baru',
+            'Pacific Century Place Lt. 12, SCBD\nJakarta Selatan',
+          ),
           const SizedBox(height: 5),
-          _buildTicketRow('Estimasi Tiba', '11:15 - 11:45 WIB', isHighlight: true),
+          _buildTicketRow(
+            'Estimasi Tiba',
+            '11:15 - 11:45 WIB',
+            isHighlight: true,
+          ),
           const SizedBox(height: 10),
 
           // Mini Dish Preview
@@ -626,7 +641,10 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: const Color(0xFFDCFCE7),
-                        child: const Icon(Icons.restaurant_rounded, color: AppColors.primaryGreen),
+                        child: const Icon(
+                          Icons.restaurant_rounded,
+                          color: AppColors.primaryGreen,
+                        ),
                       ),
                     ),
                   ),
@@ -646,13 +664,19 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                       ),
                       Text(
                         'Bebas Gluten • 480 kkal',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: AppColors.textMuted),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE0F2FE),
                     borderRadius: BorderRadius.circular(6),
@@ -687,8 +711,14 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _buildMiniActionButton('Hubungi Kurir Langsung', Icons.phone_rounded),
-              _buildMiniActionButton('Tambah Catatan Khusus', Icons.edit_note_rounded),
+              _buildMiniActionButton(
+                'Hubungi Kurir Langsung',
+                Icons.phone_rounded,
+              ),
+              _buildMiniActionButton(
+                'Tambah Catatan Khusus',
+                Icons.edit_note_rounded,
+              ),
               _buildMiniActionButton('Konfirmasi WhatsApp', Icons.chat_rounded),
             ],
           ),
@@ -697,7 +727,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
     );
   }
 
-  Widget _buildTicketRow(String label, String value, {bool isHighlight = false}) {
+  Widget _buildTicketRow(
+    String label,
+    String value, {
+    bool isHighlight = false,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -705,10 +739,16 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           width: 90,
           child: Text(
             label,
-            style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B)),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: const Color(0xFF64748B),
+            ),
           ),
         ),
-        const Text(': ', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+        const Text(
+          ': ',
+          style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+        ),
         Expanded(
           child: Text(
             value,
@@ -757,7 +797,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.bolt_rounded, size: 14, color: AppColors.primaryGreen),
+              const Icon(
+                Icons.bolt_rounded,
+                size: 14,
+                color: AppColors.primaryGreen,
+              ),
               const SizedBox(width: 4),
               Text(
                 'Saran pesan cepat:',
@@ -781,7 +825,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                     onPressed: () => _sendMessage(sug),
                     backgroundColor: Colors.white,
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     labelStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -824,11 +870,20 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                 child: TextField(
                   controller: _textController,
                   onSubmitted: (val) => _sendMessage(),
-                  style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.textDark),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: AppColors.textDark,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Tulis pesan ke NutriCare...',
-                    hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12.5, color: AppColors.textMuted),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    hintStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      color: AppColors.textMuted,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     border: InputBorder.none,
                   ),
                 ),
@@ -845,7 +900,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                child: const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ),
           ],

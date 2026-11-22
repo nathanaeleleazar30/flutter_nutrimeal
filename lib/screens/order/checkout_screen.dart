@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../services/api_service.dart';
 import '../payment_status_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -14,6 +16,8 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
+  bool _isSubmittingOrder = false;
+
   String _formatRupiah(int amount) {
     final str = amount.toString();
     final buffer = StringBuffer();
@@ -317,6 +321,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: 184,
                 height: 184,
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => CustomPaint(
+                  painter: _QrisPainter(),
+                  size: const Size(184, 184),
+                ),
               ),
             ),
           ),
@@ -487,19 +495,89 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PaymentStatusScreen(
-                      totalAmount: amountText,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.sync_rounded, color: AppColors.textDark, size: 18),
+              onPressed: _isSubmittingOrder
+                  ? null
+                  : () async {
+                      final nav = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
+                      setState(() => _isSubmittingOrder = true);
+                      try {
+                        final auth = context.read<AuthController>();
+                        final menuController = context.read<NutriMealMenuController>();
+
+                        final customerId = auth.customerId ?? 'cst-guest';
+                        final customerName = (auth.customerName?.isNotEmpty == true)
+                            ? auth.customerName!
+                            : 'Customer NutriMeal';
+                        final customerPhone = (auth.customerPhone?.isNotEmpty == true)
+                            ? auth.customerPhone!
+                            : '08123456789';
+                        final customerAddress = menuController.deliveryAddress.fullAddress.isNotEmpty
+                            ? menuController.deliveryAddress.fullAddress
+                            : (auth.customerAddress?.isNotEmpty == true
+                                ? auth.customerAddress!
+                                : 'Malang');
+
+                        final packageSummary = menuController.cartItems.isNotEmpty
+                            ? menuController.cartItems
+                                .map((c) => '${c.quantity}x ${c.item.name}')
+                                .join(', ')
+                            : 'Paket Katering Sehat NutriMeal';
+
+                        final totalPrice = menuController.grandTotal > 0
+                            ? menuController.grandTotal
+                            : 170347;
+
+                        final res = await ApiService.instance.createOrder({
+                          'customer_id': customerId,
+                          'customer_name': customerName,
+                          'customer_phone': customerPhone,
+                          'customer_address': customerAddress,
+                          'package_name': packageSummary,
+                          'total_price': totalPrice,
+                          'portions_count':
+                              menuController.totalItems > 0 ? menuController.totalItems : 1,
+                          'payment_method': 'QRIS',
+                          'payment_status': 'Lunas',
+                        });
+
+                        final generatedOrderId = res != null && res['data'] != null
+                            ? res['data']['id']?.toString() ??
+                                'ORD-${DateTime.now().millisecondsSinceEpoch % 10000}'
+                            : 'ORD-${DateTime.now().millisecondsSinceEpoch % 10000}';
+
+                        menuController.clearCart();
+
+                        if (!mounted) return;
+                        nav.pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => PaymentStatusScreen(
+                              orderId: generatedOrderId,
+                              totalAmount: amountText,
+                            ),
+                          ),
+                        );
+                      } catch (e) {
+                        if (mounted) {
+                          setState(() => _isSubmittingOrder = false);
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text('Terjadi kendala saat memproses pesanan: $e'),
+                              backgroundColor: const Color(0xFFEF4444),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              icon: _isSubmittingOrder
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textDark),
+                    )
+                  : const Icon(Icons.sync_rounded, color: AppColors.textDark, size: 18),
               label: Text(
-                'Cek Status Pembayaran',
+                _isSubmittingOrder ? 'Memproses Pesanan...' : 'Cek Status Pembayaran',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../services/api_service.dart';
 import '../address_screen.dart';
+import 'langganan_katalog_screen.dart';
 
 class LanggananSayaScreen extends StatefulWidget {
   final bool showBottomNav;
@@ -16,7 +20,101 @@ class LanggananSayaScreen extends StatefulWidget {
 }
 
 class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _subscription;
   bool _isAutoRenew = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSubscription();
+    });
+  }
+
+  Future<void> _loadSubscription() async {
+    final auth = context.read<AuthController>();
+    final customerId = auth.customerId;
+    setState(() => _isLoading = true);
+
+    try {
+      final list = await ApiService.instance.fetchSubscriptions(customerId);
+      if (mounted) {
+        setState(() {
+          // Cari langganan yang aktif atau dijeda
+          _subscription = list.firstWhere(
+            (s) => (s['status'] ?? '').toString() != 'Selesai',
+            orElse: () => list.isNotEmpty ? list.first : {},
+          );
+          if (_subscription?.isEmpty ?? true) {
+            _subscription = null;
+          }
+          if (_subscription != null) {
+            _isAutoRenew = _subscription!['auto_renew'] == 1 ||
+                _subscription!['auto_renew'] == true;
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _toggleAutoRenew(bool val) async {
+    if (_subscription == null) return;
+    final subId = _subscription!['id']?.toString() ?? '';
+    setState(() => _isAutoRenew = val);
+
+    final ok = await ApiService.instance.updateSubscriptionStatus(
+      subId,
+      autoRenew: val,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ok
+                ? 'Perpanjangan otomatis berhasil ${val ? "diaktifkan" : "dimatikan"}'
+                : 'Gagal memperbarui status perpanjangan otomatis',
+          ),
+          backgroundColor: ok ? const Color(0xFF16A34A) : const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _togglePause() async {
+    if (_subscription == null) return;
+    final subId = _subscription!['id']?.toString() ?? '';
+    final currentStatus = _subscription!['status']?.toString() ?? 'Aktif';
+    final newStatus = currentStatus == 'Aktif' ? 'Dijeda' : 'Aktif';
+
+    final ok = await ApiService.instance.updateSubscriptionStatus(
+      subId,
+      status: newStatus,
+    );
+
+    if (ok) {
+      setState(() {
+        _subscription!['status'] = newStatus;
+      });
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Status langganan berhasil diubah menjadi: $newStatus'),
+          backgroundColor: const Color(0xFF16A34A),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,62 +124,159 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
         top: false,
         child: Column(
           children: [
-            // Top App Bar with soft mint background matching Image 4
+            // Top App Bar
             _buildHeader(context),
 
             // Main Content
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. Active Package Card
-                    _buildActivePackageCard(),
-                    const SizedBox(height: 20),
-
-                    // 2. Jadwal Hari Ini Section
-                    _buildTodayScheduleSection(),
-                    const SizedBox(height: 20),
-
-                    // 3. Alamat Pengantaran Section
-                    _buildDeliveryAddressSection(context),
-                    const SizedBox(height: 20),
-
-                    // 4. Perpanjang Otomatis Section
-                    _buildAutoRenewSection(),
-                    const SizedBox(height: 20),
-
-                    // 5. Button: Jadwal & Menu Bulanan
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/jadwal');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F8A50),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        ),
-                        child: Text(
-                          'Jadwal & Menu Bulanan',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+              child: RefreshIndicator(
+                onRefresh: _loadSubscription,
+                color: AppColors.primaryGreen,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: _isLoading
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 60),
+                          child: Center(
+                            child: CircularProgressIndicator(color: AppColors.primaryGreen),
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                        )
+                      : _subscription == null
+                          ? _buildEmptySubscriptionState()
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 1. Active Package Card
+                                _buildActivePackageCard(),
+                                const SizedBox(height: 20),
+
+                                // 2. Jadwal Hari Ini Section
+                                _buildTodayScheduleSection(),
+                                const SizedBox(height: 20),
+
+                                // 3. Alamat Pengantaran Section
+                                _buildDeliveryAddressSection(context),
+                                const SizedBox(height: 20),
+
+                                // 4. Perpanjang Otomatis Section
+                                _buildAutoRenewSection(),
+                                const SizedBox(height: 20),
+
+                                // 5. Button: Jadwal & Menu Bulanan
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pushNamed(context, '/jadwal');
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF0F8A50),
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Jadwal & Menu Bulanan',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptySubscriptionState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: const BoxDecoration(
+              color: Color(0xFFDCFCE7),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.calendar_month_rounded,
+              size: 42,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Belum Ada Langganan Aktif',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Nikmati makanan katering sehat terjadwal setiap hari langsung diantar ke rumah atau kantormu.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 22),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const LanggananKatalogScreen(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F8A50),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: Text(
+              'Lihat Katalog Paket Langganan',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -141,12 +336,29 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
   }
 
   Widget _buildActivePackageCard() {
+    final sub = _subscription!;
+    final pkgName = sub['package_name'] ?? 'Paket Langganan';
+    final slot = sub['meal_slot'] ?? 'Siang & Malam';
+    final status = sub['status'] ?? 'Aktif';
+    final isPaused = status == 'Dijeda';
+
+    final totalDays = int.tryParse('${sub['total_days']}') ?? 30;
+    final daysRemaining = int.tryParse('${sub['days_remaining']}') ?? 0;
+    final daysUsed = (totalDays - daysRemaining).clamp(0, totalDays);
+    final progressVal = totalDays > 0 ? (daysUsed / totalDays).clamp(0.0, 1.0) : 0.0;
+    final percent = (progressVal * 100).round();
+
+    final startDate = sub['start_date']?.toString() ?? '-';
+    final endDate = sub['end_date']?.toString() ?? '-';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isPaused ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -158,41 +370,60 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Badge: • Aktif Berlangganan
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF16A34A),
-                    shape: BoxShape.circle,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isPaused ? const Color(0xFFFEF3C7) : const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: isPaused ? const Color(0xFFD97706) : const Color(0xFF16A34A),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isPaused ? 'Langganan Dijeda' : 'Aktif Berlangganan',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: isPaused ? const Color(0xFF92400E) : const Color(0xFF166534),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InkWell(
+                onTap: _togglePause,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    isPaused ? 'Lanjutkan' : 'Jeda',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: isPaused ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  'Aktif Berlangganan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF166534),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
 
           // Title
           Text(
-            'Paket Bulanan Lengkap',
+            pkgName,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -202,25 +433,11 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           const SizedBox(height: 4),
 
           // Subtitle
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Paling Populer',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F8A50),
-                  ),
-                ),
-                TextSpan(
-                  text: ' • Durasi 30 Hari (60x Makan)',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-              ],
+          Text(
+            'Slot: $slot • Sisa $daysRemaining dari $totalDays Hari',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: const Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 14),
@@ -230,7 +447,7 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '18 dari 60 Box Terkirim',
+                '$daysUsed dari $totalDays Hari Berjalan',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -238,7 +455,7 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                 ),
               ),
               Text(
-                '30% Selesai',
+                '$percent% Selesai',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -252,10 +469,10 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           // Progress Bar
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: const LinearProgressIndicator(
-              value: 0.30,
-              backgroundColor: Color(0xFFE2E8F0),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0F8A50)),
+            child: LinearProgressIndicator(
+              value: progressVal,
+              backgroundColor: const Color(0xFFE2E8F0),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F8A50)),
               minHeight: 6,
             ),
           ),
@@ -266,14 +483,14 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Mulai: 1 Nov 2026',
+                'Mulai: $startDate',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11.5,
                   color: const Color(0xFF64748B),
                 ),
               ),
               Text(
-                'Berakhir: 30 Nov 2026',
+                'Berakhir: $endDate',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11.5,
                   color: const Color(0xFF64748B),
@@ -287,6 +504,9 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
   }
 
   Widget _buildTodayScheduleSection() {
+    final sub = _subscription!;
+    final timeSlot = sub['delivery_time_slot'] ?? '11.30 – 13.00 WIB (Slot Utama)';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -298,216 +518,51 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                 const Icon(Icons.restaurant_rounded, color: Color(0xFF0F8A50), size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  'Jadwal Hari Ini',
+                  'Waktu Pengantaran',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
                   ),
                 ),
               ],
             ),
-            Text(
-              'Hari ke-9 • 9 Nov',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F8A50),
-              ),
-            ),
           ],
         ),
-        const SizedBox(height: 12),
-
-        // Meal 1: Makan Siang
-        _buildMealCard(
-          category: 'Makan Siang',
-          time: '11.30 WIB',
-          statusBadge: 'Kurir OTW',
-          statusColor: const Color(0xFFDCFCE7),
-          statusTextColor: const Color(0xFF166534),
-          statusIcon: Icons.delivery_dining_rounded,
-          title: 'Nasi Ayam Teriyaki',
-          subtitle: 'Sayur Brokoli Kukus & Wijen',
-          tags: ['450 kkal', '38g Protein'],
-          imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop',
-        ),
-        const SizedBox(height: 12),
-
-        // Meal 2: Makan Malam
-        _buildMealCard(
-          category: 'Makan Malam',
-          time: '17.30 WIB',
-          statusBadge: 'Disiapkan Dapur',
-          statusColor: const Color(0xFFF1F5F9),
-          statusTextColor: const Color(0xFF64748B),
-          statusIcon: Icons.soup_kitchen_rounded,
-          title: 'Chicken Katsu Salad',
-          subtitle: 'Roasted Sesame Dressing',
-          tags: ['420 kkal', '34g Protein'],
-          imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=400&auto=format&fit=crop',
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.access_time_rounded, color: Color(0xFF0F8A50), size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  timeSlot,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildMealCard({
-    required String category,
-    required String time,
-    required String statusBadge,
-    required Color statusColor,
-    required Color statusTextColor,
-    required IconData statusIcon,
-    required String title,
-    required String subtitle,
-    required List<String> tags,
-    required String imageUrl,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Row: Category + Time | Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      category,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    time,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  children: [
-                    Icon(statusIcon, size: 12, color: statusTextColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      statusBadge,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: statusTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Content Row: Thumbnail + Info
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  imageUrl,
-                  width: 58,
-                  height: 58,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: 58,
-                    height: 58,
-                    color: const Color(0xFFDCFCE7),
-                    child: const Icon(Icons.restaurant_rounded, color: Color(0xFF16A34A)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: tags.map((t) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            t,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF475569),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDeliveryAddressSection(BuildContext context) {
+    final sub = _subscription;
+    final address = sub?['address'] ?? 'Alamat pengantaran terdaftar';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -540,7 +595,7 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Alamat Pengantaran',
+                          'Lokasi Pengiriman',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w800,
@@ -567,7 +622,7 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Jl. Soekarno Hatta No. 42, Lowokwaru, Kota Malang (Sesi Siang & Malam)',
+                      address,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11.5,
                         color: const Color(0xFF64748B),
@@ -608,29 +663,26 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                 Row(
                   children: [
                     Text(
-                      'Perpanjang\nOtomatis',
+                      'Perpanjang Otomatis',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
-                        height: 1.2,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5DF593),
+                        color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        'Diskon\n+10%',
-                        textAlign: TextAlign.center,
+                        'Hemat +10%',
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF065F46),
-                          height: 1.1,
+                          color: const Color(0xFF166534),
                         ),
                       ),
                     ),
@@ -638,7 +690,7 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Perpanjang di 1 Des 2026 secara otomatis tanpa ribet',
+                  'Tagihan otomatis diperpanjang di akhir siklus.',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: const Color(0xFF64748B),
@@ -647,16 +699,10 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
               ],
             ),
           ),
-          Transform.scale(
-            scale: 0.85,
-            child: Switch(
-              value: _isAutoRenew,
-              activeThumbColor: Colors.white,
-              activeTrackColor: const Color(0xFF0F8A50),
-              onChanged: (val) {
-                setState(() => _isAutoRenew = val);
-              },
-            ),
+          Switch(
+            value: _isAutoRenew,
+            onChanged: _toggleAutoRenew,
+            activeThumbColor: const Color(0xFF0F8A50),
           ),
         ],
       ),

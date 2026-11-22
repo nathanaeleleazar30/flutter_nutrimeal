@@ -37,44 +37,13 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
     const ChatMessage(
       isUser: false,
       text:
-          'Halo Andi! 👋 Saya NutriBot, asisten AI pribadi kamu. Tanyakan apa saja seputar hitungan kalori, rekomendasi menu sehat NutriMeal harian, atau tips diet sesuai targetmu hari ini.',
-      time: '18:40',
+          'Halo! 👋 Saya NutriBot, asisten AI pribadi NutriMeal. Tanyakan apa saja seputar hitungan kalori harian, rekomendasi menu diet, atau tips gizi seimbang untuk gaya hidup sehatmu!',
+      time: '08:00',
       chips: [
         '🥗 Hitung kalori makan siang',
         '⚡ Menu rendah garam',
-        '🍗 Protein tinggi > 40g',
+        '🍗 Rekomendasi protein tinggi',
       ],
-    ),
-    const ChatMessage(
-      isUser: true,
-      text:
-          'Halo NutriBot, hari ini jatah kalori saya sisa 520 kkal. Mau tanya, apakah Salmon Poke Bowl cocok buat makan malam saya dan berapa rincian makronya?',
-      time: '18:42',
-    ),
-    const ChatMessage(
-      isUser: false,
-      text:
-          'Pilihan yang sangat tepat, Andi! 🥗 Poke Bowl Salmon sangat pas untuk sisa target kalori harianmu.',
-      time: '18:43',
-      hasMacroCard: true,
-      hasMenuCard: true,
-      chips: [
-        'Cek alergen hidangan ini',
-        'Ganti saus rendah kalori',
-        'Rekomendasi minuman',
-      ],
-    ),
-    const ChatMessage(
-      isUser: true,
-      text:
-          'Kalau mau ganti dressing wijen sangrai ke lemon olive oil bisa potong berapa kalori?',
-      time: '18:44',
-    ),
-    const ChatMessage(
-      isUser: false,
-      text:
-          'Bisa menghemat sekitar 65 kkal dan mengurangi 5g lemak jenuh! 🍋 Pilihan cerdas untuk defisit kalori ringan tanpa mengubah cita rasa segar hidangan.',
-      time: '18:45',
     ),
   ];
 
