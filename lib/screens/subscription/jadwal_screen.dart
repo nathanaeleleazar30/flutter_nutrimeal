@@ -21,56 +21,6 @@ class JadwalScreen extends StatefulWidget {
 class _JadwalScreenState extends State<JadwalScreen> {
   int _selectedDayIndex = 0;
 
-  List<DaySchedule> _buildDynamicSchedules(List<MenuItem> allMeals) {
-    if (allMeals.isEmpty) return dummySchedules;
-
-    final days = [
-      {'short': 'Sen', 'full': 'senin', 'num': 12},
-      {'short': 'Sel', 'full': 'selasa', 'num': 13},
-      {'short': 'Rab', 'full': 'rabu', 'num': 14},
-      {'short': 'Kam', 'full': 'kamis', 'num': 15},
-      {'short': 'Jum', 'full': 'jumat', 'num': 16},
-      {'short': 'Sab', 'full': 'sabtu', 'num': 17},
-      {'short': 'Min', 'full': 'minggu', 'num': 18},
-    ];
-
-    return days.map((d) {
-      final matchingMeals = allMeals.where((m) =>
-          m.schedule.toLowerCase().contains(d['full'] as String)).toList();
-
-      final scheduledMeals = <ScheduledMeal>[];
-      if (matchingMeals.isNotEmpty) {
-        for (int i = 0; i < matchingMeals.length && i < 2; i++) {
-          final m = matchingMeals[i];
-          scheduledMeals.add(ScheduledMeal(
-            slotType: i == 0 ? 'Makan Siang' : 'Makan Malam',
-            title: m.name,
-            imageUrl: m.imageUrl,
-            tags: m.tags.isNotEmpty ? m.tags : [m.category, '${m.calories} kkal'],
-            deliveryTime: m.deliveryTime,
-            calories: m.calories,
-          ));
-        }
-      } else {
-        final fallback = allMeals.first;
-        scheduledMeals.add(ScheduledMeal(
-          slotType: 'Makan Siang',
-          title: fallback.name,
-          imageUrl: fallback.imageUrl,
-          tags: fallback.tags.isNotEmpty ? fallback.tags : [fallback.category, '${fallback.calories} kkal'],
-          deliveryTime: fallback.deliveryTime,
-          calories: fallback.calories,
-        ));
-      }
-
-      return DaySchedule(
-        dayName: d['short'] as String,
-        dayNumber: d['num'] as int,
-        meals: scheduledMeals,
-      );
-    }).toList();
-  }
-
   void _showChangeMenuDialog(ScheduledMeal meal, List<MenuItem> availableMeals) {
     showModalBottomSheet(
       context: context,
