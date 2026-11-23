@@ -158,10 +158,17 @@ class ApiService {
     return await _post(ApiConfig.candidateOrdersUrls, orderData);
   }
 
-  Future<List<Map<String, dynamic>>> fetchOrders({String? search, String? status}) async {
+  Future<List<Map<String, dynamic>>> fetchOrders({
+    String? search,
+    String? status,
+    String? customerId,
+  }) async {
     final query = <String, String>{};
     if (search != null && search.isNotEmpty) query['search'] = search;
     if (status != null && status.isNotEmpty) query['status'] = status;
+    if (customerId != null && customerId.isNotEmpty) {
+      query['customer_id'] = customerId;
+    }
 
     final res = await _get(ApiConfig.candidateOrdersUrls, queryParams: query);
     if (res != null && res['data'] is List) {
