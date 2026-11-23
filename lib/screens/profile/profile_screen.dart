@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/local/preferences/preferences_service.dart';
 import '../../widgets/main_top_bar.dart';

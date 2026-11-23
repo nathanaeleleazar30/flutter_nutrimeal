@@ -106,7 +106,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
 
             // Sticky Bottom Action Buttons
-            _buildBottomButtons(context, amountText),
+            _buildBottomButtons(context, amountText, totalAmountInt),
           ],
         ),
       ),
@@ -479,7 +479,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildBottomButtons(BuildContext context, String amountText) {
+  Widget _buildBottomButtons(
+      BuildContext context, String amountText, int totalAmountInt) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
