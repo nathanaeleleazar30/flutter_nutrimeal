@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../services/notification_service.dart';
 
 class NotifikasiScreen extends StatefulWidget {
   const NotifikasiScreen({super.key});
@@ -28,19 +29,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
   Future<void> _loadNotifications() async {
     final auth = context.read<AuthController>();
     final customerId = auth.customerId;
-    if (customerId == null || customerId.isEmpty) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _notifications = [];
-        });
-      }
-      return;
-    }
-
     setState(() => _isLoading = true);
+
     try {
-      final list = await ApiService.instance.fetchNotifications(customerId);
+      final list = await ApiService.instance.fetchNotifications(customerId ?? '');
       if (mounted) {
         setState(() {
           _notifications = list;
@@ -49,7 +41,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        final fallback = NotificationService.instance.inMemoryNotifications;
+        setState(() {
+          _notifications = List.from(fallback);
+          _isLoading = false;
+        });
       }
     }
   }
@@ -403,6 +399,36 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                         height: 1.35,
                       ),
                     ),
+                    if (item['estimated_minutes'] != null || item['order_id'] != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF86EFAC)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.delivery_dining_rounded,
+                              size: 15,
+                              color: Color(0xFF166534),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Estimasi Sampai: ${item['estimated_minutes'] ?? 30} Menit',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF166534),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

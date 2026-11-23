@@ -120,24 +120,58 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
 
                   // Address List
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          ...List.generate(savedAddresses.length, (index) {
-                            final addr = savedAddresses[index];
-                            final isSelected = _selectedAddressIndex == index;
+                    child: savedAddresses.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.location_off_outlined,
+                                    size: 40,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Belum Ada Alamat Tersimpan',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Silakan tambahkan alamat pengiriman terlebih dahulu.',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 12,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                ...List.generate(savedAddresses.length, (index) {
+                                  final addr = savedAddresses[index];
+                                  final isSelected = _selectedAddressIndex == index;
 
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(
-                                  () => _selectedAddressIndex = index,
-                                );
-                                setState(() => _selectedAddressIndex = index);
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
+                                  return GestureDetector(
+                                    onTap: () {
+                                      setModalState(
+                                        () => _selectedAddressIndex = index,
+                                      );
+                                      setState(() => _selectedAddressIndex = index);
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(bottom: 12),
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
@@ -310,6 +344,16 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () {
+                        if (savedAddresses.isEmpty) {
+                          Navigator.pop(ctx);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AddressScreen(),
+                            ),
+                          );
+                          return;
+                        }
                         if (_selectedAddressIndex < savedAddresses.length) {
                           controller.selectDeliveryAddress(
                             savedAddresses[_selectedAddressIndex],
@@ -328,7 +372,9 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Gunakan Alamat Ini',
+                            savedAddresses.isEmpty
+                                ? 'Tambah Alamat Sekarang'
+                                : 'Gunakan Alamat Ini',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -336,8 +382,10 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          const Icon(
-                            Icons.arrow_forward_rounded,
+                          Icon(
+                            savedAddresses.isEmpty
+                                ? Icons.add_rounded
+                                : Icons.arrow_forward_rounded,
                             color: Colors.white,
                             size: 16,
                           ),
@@ -544,7 +592,9 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                       ),
                     ),
                     Text(
-                      '${address.label} • ${address.recipientName}',
+                      address.id.isNotEmpty
+                          ? '${address.label} • ${address.recipientName}'
+                          : 'Belum Ada Alamat Pengiriman',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
@@ -557,7 +607,7 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
               GestureDetector(
                 onTap: _showSelectAddressBottomSheet,
                 child: Text(
-                  'Ubah',
+                  address.id.isNotEmpty ? 'Ubah' : 'Atur Alamat',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -567,27 +617,28 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // Phone
-          Row(
-            children: [
-              const Icon(
-                Icons.phone_outlined,
-                size: 13,
-                color: Color(0xFF64748B),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                address.phoneNumber,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF475569),
+          if (address.phoneNumber.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            // Phone
+            Row(
+              children: [
+                const Icon(
+                  Icons.phone_outlined,
+                  size: 13,
+                  color: Color(0xFF64748B),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 6),
+                Text(
+                  address.phoneNumber,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 4),
 
           // Full Address

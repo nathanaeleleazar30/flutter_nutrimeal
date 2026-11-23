@@ -191,7 +191,7 @@ class _GaleriMenuScreenState extends State<GaleriMenuScreen> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
-                        childAspectRatio: 0.76,
+                        childAspectRatio: 0.72,
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {

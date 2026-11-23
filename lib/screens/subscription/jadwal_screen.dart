@@ -188,7 +188,8 @@ class _JadwalScreenState extends State<JadwalScreen> {
   @override
   Widget build(BuildContext context) {
     final menuController = context.watch<NutriMealMenuController>();
-    final schedules = _buildDynamicSchedules(menuController.allMeals);
+    // Sinkron 100% dengan Beranda: 5 hari (Senin s/d Jumat) & tanggal real-time
+    final schedules = menuController.cateringSchedules;
     final safeIndex = _selectedDayIndex < schedules.length ? _selectedDayIndex : 0;
     final currentSchedule = schedules[safeIndex];
 
@@ -392,12 +393,13 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // Tags Row
-                Row(
+                // Tags Wrap (aman dari RenderFlex overflow)
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
                   children: meal.tags.map((tag) {
                     final isCalorie = tag.contains('kkal');
                     return Container(
-                      margin: const EdgeInsets.only(right: 6),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 4,

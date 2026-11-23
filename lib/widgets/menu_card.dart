@@ -60,56 +60,60 @@ class MenuCard extends StatelessWidget {
             ),
 
             // Card Details
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Title
-                  Text(
-                    item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-
-                  // Calories Row
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.energy_savings_leaf_rounded,
-                        size: 13,
-                        color: AppColors.primaryGreen,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Title
+                    Text(
+                      item.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${item.calories} kcal',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                    ),
+
+                    // Calories Row
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.energy_savings_leaf_rounded,
+                          size: 13,
+                          color: AppColors.primaryGreen,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Price
-                  Text(
-                    _formatPrice(item.price),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaryGreenHover,
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${item.calories} kcal',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+
+                    // Price
+                    Text(
+                      _formatPrice(item.price),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryGreenHover,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

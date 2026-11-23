@@ -42,28 +42,29 @@ class AuthController extends ChangeNotifier {
   String? _generalError;
 
   // Extended Customer Profile Data (synchronized with MySQL Backend)
+  // Akun baru harus benar-benar kosongan
   String? _customerPhone;
   String? _customerAvatarUrl;
   String? _customerAddress;
-  double _customerHeight = 163.0;
-  double _customerWeight = 52.0;
-  int _customerAge = 24;
-  List<String> _customerAllergies = ['Kacang'];
-  String _customerDietGoal = 'Defisit Kalori';
-  int _customerTargetCalories = 1800;
-  bool _customerTwoFactorAuth = true;
+  double _customerHeight = 0.0;
+  double _customerWeight = 0.0;
+  int _customerAge = 0;
+  List<String> _customerAllergies = [];
+  String _customerDietGoal = 'Belum diatur';
+  int _customerTargetCalories = 0;
+  bool _customerTwoFactorAuth = false;
 
   void _resetCustomerProfile() {
     _customerAvatarUrl = null;
     _customerPhone = null;
     _customerAddress = null;
-    _customerHeight = 163.0;
-    _customerWeight = 52.0;
-    _customerAge = 24;
+    _customerHeight = 0.0;
+    _customerWeight = 0.0;
+    _customerAge = 0;
     _customerAllergies = [];
-    _customerDietGoal = 'Defisit Kalori';
-    _customerTargetCalories = 1800;
-    _customerTwoFactorAuth = true;
+    _customerDietGoal = 'Belum diatur';
+    _customerTargetCalories = 0;
+    _customerTwoFactorAuth = false;
   }
 
   // Selected Google Account (only set after successful real Google Sign-In)
@@ -574,21 +575,21 @@ class AuthController extends ChangeNotifier {
         : null;
 
     if (data['height_cm'] != null) {
-      _customerHeight = double.tryParse(data['height_cm'].toString()) ?? 163.0;
+      _customerHeight = double.tryParse(data['height_cm'].toString()) ?? 0.0;
     }
     if (data['weight_kg'] != null) {
-      _customerWeight = double.tryParse(data['weight_kg'].toString()) ?? 52.0;
+      _customerWeight = double.tryParse(data['weight_kg'].toString()) ?? 0.0;
     }
     if (data['age'] != null) {
-      _customerAge = int.tryParse(data['age'].toString()) ?? 24;
+      _customerAge = int.tryParse(data['age'].toString()) ?? 0;
     }
     if (data['target_calories'] != null) {
-      _customerTargetCalories = int.tryParse(data['target_calories'].toString()) ?? 1800;
+      _customerTargetCalories = int.tryParse(data['target_calories'].toString()) ?? 0;
     }
     if (data['dietary_goals'] != null) {
       if (data['dietary_goals'] is List) {
         final list = data['dietary_goals'] as List;
-        _customerDietGoal = list.isNotEmpty ? list.first.toString() : 'Defisit Kalori';
+        _customerDietGoal = list.isNotEmpty ? list.first.toString() : 'Belum diatur';
       } else {
         _customerDietGoal = data['dietary_goals'].toString();
       }

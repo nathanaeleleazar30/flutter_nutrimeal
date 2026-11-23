@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
 import '../checkout_screen.dart';
@@ -892,9 +894,25 @@ class _LanggananKatalogScreenState extends State<LanggananKatalogScreen> {
             height: 46,
             child: ElevatedButton(
               onPressed: () {
+                Map<String, dynamic> chosenPkg;
+                if (_packages.isNotEmpty && _selectedTierIndex < _packages.length) {
+                  chosenPkg = _packages[_selectedTierIndex];
+                } else {
+                  chosenPkg = {
+                    'id': 'pkg_5day',
+                    'name': '5 Hari Meal Prep (10 Box)',
+                    'type': 'Mingguan',
+                    'price': 140000,
+                    'portions': '10 Box (Siang & Malam)',
+                    'description': 'Makan Siang & Malam Senin-Jumat',
+                  };
+                }
+                context.read<NutriMealMenuController>().setSelectedSubscriptionPackage(chosenPkg);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const CheckoutScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => CheckoutScreen(subscriptionPackage: chosenPkg),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(

@@ -26,6 +26,20 @@ class BerandaScreen extends StatefulWidget {
 }
 
 class _BerandaScreenState extends State<BerandaScreen> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleRefresh() async {
     final menuController = context.read<NutriMealMenuController>();
     await menuController.fetchMenusFromApi();
@@ -35,6 +49,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
   Widget build(BuildContext context) {
     final menuController = context.watch<NutriMealMenuController>();
     final popularItems = menuController.popularMenuItems;
+    final filteredItems = menuController.filteredMenuItems;
+    final cateringList = menuController.cateringSchedules;
+    final isSearching = menuController.searchQuery.trim().isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFE6F7ED),
@@ -90,8 +107,10 @@ class _BerandaScreenState extends State<BerandaScreen> {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: TextField(
-                                  onChanged: (val) =>
-                                      menuController.setSearchQuery(val),
+                                  controller: _searchController,
+                                  onChanged: (val) {
+                                    menuController.setSearchQuery(val);
+                                  },
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12.5,
                                     color: AppColors.textDark,
@@ -109,7 +128,22 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 14),
+                              if (isSearching)
+                                GestureDetector(
+                                  onTap: () {
+                                    _searchController.clear();
+                                    menuController.setSearchQuery('');
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8),
+                                    child: Icon(
+                                      Icons.close_rounded,
+                                      size: 18,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
                             ],
                           ),
                         ),
@@ -483,7 +517,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 5-Day Selector Bar (Segmented Light Capsule Container)
+                      // 5-Day Selector Bar (Senin s/d Jumat, Tanggal Real-Time)
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
@@ -492,9 +526,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
                         ),
                         child: Row(
                           children: List.generate(
-                            dummySchedules.length,
+                            cateringList.length,
                             (index) {
-                              final schedule = dummySchedules[index];
+                              final schedule = cateringList[index];
                               final isSelected =
                                   menuController.selectedCateringDayIndex ==
                                   index;
@@ -577,10 +611,10 @@ class _BerandaScreenState extends State<BerandaScreen> {
                       Builder(
                         builder: (context) {
                           final selectedIdx = (menuController.selectedCateringDayIndex >= 0 &&
-                                  menuController.selectedCateringDayIndex < dummySchedules.length)
+                                  menuController.selectedCateringDayIndex < cateringList.length)
                               ? menuController.selectedCateringDayIndex
                               : 0;
-                          final currentDay = dummySchedules[selectedIdx];
+                          final currentDay = cateringList.isNotEmpty ? cateringList[selectedIdx] : dummySchedules[0];
 
                           return Column(
                             children: currentDay.meals.map((meal) {
@@ -711,35 +745,110 @@ class _BerandaScreenState extends State<BerandaScreen> {
                       ),
                       const SizedBox(height: 18),
 
-                      // Popular Items Grid (2 Columns, 4 Items Matching Screenshot)
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
-                              childAspectRatio: 0.76,
+                      // Section Title: Hasil Pencarian atau Menu Populer
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            isSearching
+                                ? 'Hasil Pencarian (${filteredItems.length})'
+                                : 'Menu Populer Hari Ini',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textDark,
                             ),
-                        itemCount: popularItems.length,
-                        itemBuilder: (context, index) {
-                          final item = popularItems[index];
-                          return MenuCard(
-                            item: item,
-                            onTap: () {
-                              menuController.selectMenuItem(item);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      MenuDetailScreen(item: item),
+                          ),
+                          if (isSearching)
+                            GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                menuController.setSearchQuery('');
+                              },
+                              child: Text(
+                                'Reset',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFEF4444),
                                 ),
-                              );
-                            },
-                          );
-                        },
+                              ),
+                            ),
+                        ],
                       ),
+                      const SizedBox(height: 12),
+
+                      if (isSearching && filteredItems.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(
+                                Icons.search_off_rounded,
+                                size: 40,
+                                color: Color(0xFF94A3B8),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Menu tidak ditemukan',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Coba cari dengan kata kunci lain atau pilih dari kategori.',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        // Menu Items Grid (2 Columns)
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                childAspectRatio: 0.72,
+                              ),
+                          itemCount: isSearching
+                              ? filteredItems.length
+                              : popularItems.length,
+                          itemBuilder: (context, index) {
+                            final item = isSearching
+                                ? filteredItems[index]
+                                : popularItems[index];
+                            return MenuCard(
+                              item: item,
+                              onTap: () {
+                                menuController.selectMenuItem(item);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MenuDetailScreen(item: item),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),

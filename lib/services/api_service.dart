@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../core/constants/api_config.dart';
+import 'notification_service.dart';
 
 class ApiService {
   ApiService._();
@@ -211,14 +212,24 @@ class ApiService {
   // 6. NOTIFICATIONS (Pusat Notifikasi)
   // ===========================================================================
   Future<List<Map<String, dynamic>>> fetchNotifications(String customerId) async {
+    final localList = NotificationService.instance.inMemoryNotifications;
     final res = await _get(
       ApiConfig.candidateNotificationUrls,
       queryParams: {'customerId': customerId},
     );
     if (res != null && res['data'] is List) {
-      return (res['data'] as List).cast<Map<String, dynamic>>();
+      final serverList = (res['data'] as List).cast<Map<String, dynamic>>();
+      // Gabungkan server list dengan local in-memory yang belum ada di server
+      final Set<String> existingIds = serverList.map((e) => e['id'].toString()).toSet();
+      final combined = <Map<String, dynamic>>[...serverList];
+      for (final loc in localList) {
+        if (!existingIds.contains(loc['id'].toString())) {
+          combined.insert(0, loc);
+        }
+      }
+      return combined;
     }
-    return [];
+    return List<Map<String, dynamic>>.from(localList);
   }
 
   Future<bool> markNotificationAsRead(int notifId, String customerId) async {

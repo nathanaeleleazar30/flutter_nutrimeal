@@ -6,10 +6,16 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../services/notification_service.dart';
 import '../payment_status_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  final Map<String, dynamic>? subscriptionPackage;
+
+  const CheckoutScreen({
+    super.key,
+    this.subscriptionPackage,
+  });
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -30,10 +36,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return 'Rp$buffer';
   }
 
+  String _getRealtimeDueDate() {
+    final due = DateTime.now().add(const Duration(hours: 24));
+    final months = [
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    final hour = due.hour.toString().padLeft(2, '0');
+    final min = due.minute.toString().padLeft(2, '0');
+    return '${due.day} ${months[due.month]} ${due.year}, $hour:$min WIB';
+  }
+
+  int _calculateTotal(NutriMealMenuController controller) {
+    final subPkg =
+        widget.subscriptionPackage ?? controller.selectedSubscriptionPackage;
+    if (subPkg != null) {
+      return int.tryParse('${subPkg['price']}') ?? 140000;
+    }
+    return controller.grandTotal > 0 ? controller.grandTotal : 35000;
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<NutriMealMenuController>();
-    final amountText = controller.grandTotal > 0 ? _formatRupiah(controller.grandTotal) : 'Rp170.347';
+    final totalAmountInt = _calculateTotal(controller);
+    final amountText = _formatRupiah(totalAmountInt);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -229,7 +267,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
           const SizedBox(height: 10),
 
-          // Jatuh tempo
+          // Jatuh tempo real-time
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -241,7 +279,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               Text(
-                '12 Oktober 2026, 22:26 WIB',
+                _getRealtimeDueDate(),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -505,6 +543,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         final auth = context.read<AuthController>();
                         final menuController = context.read<NutriMealMenuController>();
 
+                        final subPkg = widget.subscriptionPackage ?? menuController.selectedSubscriptionPackage;
+                        final isSubscription = subPkg != null;
+
                         final customerId = auth.customerId ?? 'cst-guest';
                         final customerName = (auth.customerName?.isNotEmpty == true)
                             ? auth.customerName!
@@ -518,15 +559,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ? auth.customerAddress!
                                 : 'Malang');
 
-                        final packageSummary = menuController.cartItems.isNotEmpty
-                            ? menuController.cartItems
-                                .map((c) => '${c.quantity}x ${c.item.name}')
-                                .join(', ')
-                            : 'Paket Katering Sehat NutriMeal';
+                        String packageSummary;
+                        String firstMealName;
+                        String firstMealImage;
+                        int portionsCount;
 
-                        final totalPrice = menuController.grandTotal > 0
-                            ? menuController.grandTotal
-                            : 170347;
+                        if (isSubscription) {
+                          packageSummary = subPkg['name']?.toString() ?? 'Paket 5 Hari Meal Prep (10 Box)';
+                          firstMealName = 'Ayam Bakar Madu & Quinoa Hijau';
+                          firstMealImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop';
+                          portionsCount = 10;
+                        } else if (menuController.cartItems.isNotEmpty) {
+                          packageSummary = menuController.cartItems
+                              .map((c) => '${c.quantity}x ${c.item.name}')
+                              .join(', ');
+                          firstMealName = menuController.cartItems.first.item.name;
+                          firstMealImage = menuController.cartItems.first.item.imageUrl;
+                          portionsCount = menuController.totalItems;
+                        } else {
+                          packageSummary = 'Menu Sehat NutriMeal';
+                          firstMealName = 'Grilled Chicken';
+                          firstMealImage = 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=800&auto=format&fit=crop';
+                          portionsCount = 1;
+                        }
+
+                        final totalPrice = totalAmountInt;
 
                         final res = await ApiService.instance.createOrder({
                           'customer_id': customerId,
@@ -535,18 +592,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           'customer_address': customerAddress,
                           'package_name': packageSummary,
                           'total_price': totalPrice,
-                          'portions_count':
-                              menuController.totalItems > 0 ? menuController.totalItems : 1,
+                          'portions_count': portionsCount,
                           'payment_method': 'QRIS',
                           'payment_status': 'Lunas',
                         });
 
                         final generatedOrderId = res != null && res['data'] != null
                             ? res['data']['id']?.toString() ??
-                                'ORD-${DateTime.now().millisecondsSinceEpoch % 10000}'
-                            : 'ORD-${DateTime.now().millisecondsSinceEpoch % 10000}';
+                                'ORD-${DateTime.now().millisecondsSinceEpoch % 100000}'
+                            : 'ORD-${DateTime.now().millisecondsSinceEpoch % 100000}';
+
+                        // Integrasi ke Notifikasi dengan Estimasi Menit Sampai (30 Menit)
+                        const estimatedMinutes = 30;
+                        await NotificationService.instance.addOrderNotification(
+                          title: 'Pembayaran Berhasil! (#$generatedOrderId)',
+                          body: 'Pesanan $packageSummary sedang disiapkan oleh dapur NutriMeal. Estimasi tiba dalam $estimatedMinutes menit.',
+                          orderId: generatedOrderId,
+                          packageName: packageSummary,
+                          estimatedMinutes: estimatedMinutes,
+                          customerId: customerId,
+                        );
 
                         menuController.clearCart();
+                        menuController.clearSubscriptionPackage();
 
                         if (!mounted) return;
                         nav.pushReplacement(
@@ -554,6 +622,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             builder: (_) => PaymentStatusScreen(
                               orderId: generatedOrderId,
                               totalAmount: amountText,
+                              packageName: packageSummary,
+                              paymentMethod: 'QRIS',
+                              firstMealName: firstMealName,
+                              firstMealImage: firstMealImage,
+                              deliveryTime: isSubscription ? 'Senin, 11:30 WIB' : 'Hari Ini, 12:00 WIB',
+                              estimatedMinutes: estimatedMinutes,
+                              isSubscription: isSubscription,
                             ),
                           ),
                         );

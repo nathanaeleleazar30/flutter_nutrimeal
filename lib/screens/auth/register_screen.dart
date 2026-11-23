@@ -57,6 +57,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleDaftar() async {
     final authController = context.read<AuthController>();
     final registeredEmail = _emailController.text.trim();
+    // Bersihkan data lokal cart / address dari session sebelumnya
+    context.read<NutriMealMenuController>().resetAllUserData();
     final success = await authController.register(
       nama: _namaController.text,
       email: registeredEmail,

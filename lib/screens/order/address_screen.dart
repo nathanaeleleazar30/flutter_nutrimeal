@@ -38,7 +38,15 @@ class _AddressScreenState extends State<AddressScreen> {
 
   void _confirmSelection(NutriMealMenuController controller) {
     final list = controller.savedAddresses;
-    if (list.isEmpty) return;
+    if (list.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan tambahkan alamat pengiriman terlebih dahulu.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     final chosen = list.firstWhere(
       (a) => a.id == _selectedAddressId,
@@ -148,31 +156,70 @@ class _AddressScreenState extends State<AddressScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // List of Saved Address Cards
-                        ...addresses.map((address) {
-                          final isSelected = address.id == _selectedAddressId;
-                          return _buildAddressItemCard(
-                            context: context,
-                            address: address,
-                            isSelected: isSelected,
-                            onSelect: () {
-                              setState(() {
-                                _selectedAddressId = address.id;
-                              });
-                            },
-                            onEdit: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => AddressFormScreen(
-                                    mode: AddressFormMode.edit,
-                                    address: address,
+                        if (addresses.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 14),
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.location_off_outlined,
+                                  size: 40,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Belum Ada Alamat Tersimpan',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textDark,
                                   ),
                                 ),
-                              );
-                            },
-                          );
-                        }),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Tambahkan alamat pengiriman agar makanan kateringmu sampai tepat waktu.',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          // List of Saved Address Cards
+                          ...addresses.map((address) {
+                            final isSelected = address.id == _selectedAddressId;
+                            return _buildAddressItemCard(
+                              context: context,
+                              address: address,
+                              isSelected: isSelected,
+                              onSelect: () {
+                                setState(() {
+                                  _selectedAddressId = address.id;
+                                });
+                              },
+                              onEdit: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AddressFormScreen(
+                                      mode: AddressFormMode.edit,
+                                      address: address,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }),
 
                         const SizedBox(height: 6),
 
@@ -304,7 +351,9 @@ class _AddressScreenState extends State<AddressScreen> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: () => _confirmSelection(controller),
+                          onPressed: controller.savedAddresses.isEmpty
+                              ? null
+                              : () => _confirmSelection(controller),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0F8A50),
                             shape: RoundedRectangleBorder(

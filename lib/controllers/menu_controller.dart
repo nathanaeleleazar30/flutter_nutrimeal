@@ -4,6 +4,7 @@ import '../core/constants/api_config.dart';
 import '../data/local/preferences/preferences_service.dart';
 import '../data/models/ai_planner_models.dart';
 import '../data/repositories/meal_repository.dart';
+import '../data/schedule_data.dart';
 
 class NutritionInfo {
   final int calories;
@@ -327,9 +328,14 @@ class NutriMealMenuController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Selected Catering Day
+  // Selected Catering Day (Senin s/d Jumat)
   int _selectedCateringDayIndex = 0;
   int get selectedCateringDayIndex => _selectedCateringDayIndex;
+
+  /// Daftar jadwal katering Senin s/d Jumat (5 hari) dengan tanggal kalender REAL-TIME
+  /// dan menu yang sinkron 100% antara Beranda dan Jadwal Screen.
+  List<DaySchedule> get cateringSchedules =>
+      buildRealtimeCateringSchedules(dynamicMeals: _menuItems);
 
   final List<CateringDayItem> cateringDays = const [
     CateringDayItem(dayShort: 'SEN', subtitle: 'Hari Ini'),
@@ -588,21 +594,25 @@ class NutriMealMenuController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Cart State (Initialized with Cheesy Chicken & Chicken Kare to match screenshot)
+  // Selected Subscription Package (for Checkout from Langganan Katalog)
+  Map<String, dynamic>? _selectedSubscriptionPackage;
+  Map<String, dynamic>? get selectedSubscriptionPackage => _selectedSubscriptionPackage;
+
+  void setSelectedSubscriptionPackage(Map<String, dynamic>? package) {
+    _selectedSubscriptionPackage = package;
+    notifyListeners();
+  }
+
+  void clearSubscriptionPackage() {
+    _selectedSubscriptionPackage = null;
+    notifyListeners();
+  }
+
+  // Cart State — akun baru harus kosongan
   final List<CartItem> _cartItems = [];
 
   void _initDefaultCart() {
-    if (_menuItems.isEmpty) return;
-    final cheesy = _menuItems.firstWhere(
-      (i) => i.id == 'item-cheesy',
-      orElse: () => _menuItems[0],
-    );
-    final kare = _menuItems.firstWhere(
-      (i) => i.id == 'item-kare',
-      orElse: () => _menuItems.length > 1 ? _menuItems[1] : _menuItems[0],
-    );
-    _cartItems.add(CartItem(item: cheesy, quantity: 1));
-    _cartItems.add(CartItem(item: kare, quantity: 1));
+    _cartItems.clear();
   }
 
   List<CartItem> get cartItems => List.unmodifiable(_cartItems);
@@ -750,49 +760,54 @@ class NutriMealMenuController extends ChangeNotifier {
     return total > 0 ? total : 0;
   }
 
-  // Delivery Address State & Saved Addresses (Matching screenshot)
-  final List<DeliveryAddress> _savedAddresses = [
-    const DeliveryAddress(
-      id: 'addr_1',
-      label: 'Rumah (Senopati)',
-      recipientName: 'Nadia Salsabila',
-      phoneNumber: '+62 812-8890-1234',
-      area: 'Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190',
-      fullAddress:
-          'Jl. Senopati No. 42, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190',
-      deliveryNote:
-          'Rumah pagar hitam samping Alfamart / Titipkan pos security',
-      addressType: 'Rumah',
-      isDefault: true,
-    ),
-    const DeliveryAddress(
-      id: 'addr_2',
-      label: 'Kantor (Malang)',
-      recipientName: 'Nadia Salsabila',
-      phoneNumber: '+62 812-8890-1234',
-      area: 'Lowokwaru, Kota Malang',
-      fullAddress:
-          'Jl. Soekarno Hatta No. 42, Lowokwaru, Kota Malang (Sesi Siang & Malam)',
-      deliveryNote:
-          'Titipkan ke satpam lobi kantor jika siang hari',
-      addressType: 'Kantor',
-      isDefault: false,
-    ),
-  ];
+  // Delivery Address State & Saved Addresses — setiap akun baru harus kosongan
+  final List<DeliveryAddress> _savedAddresses = [];
 
-  late DeliveryAddress _deliveryAddress = _savedAddresses[0];
+  DeliveryAddress? _customDeliveryAddress;
 
   List<DeliveryAddress> get savedAddresses => List.unmodifiable(_savedAddresses);
 
-  DeliveryAddress get deliveryAddress => _deliveryAddress;
+  DeliveryAddress get deliveryAddress {
+    if (_customDeliveryAddress != null) return _customDeliveryAddress!;
+    if (_savedAddresses.isNotEmpty) {
+      return _savedAddresses.firstWhere(
+        (a) => a.isDefault,
+        orElse: () => _savedAddresses.first,
+      );
+    }
+    return const DeliveryAddress(
+      id: '',
+      label: 'Alamat Utama',
+      recipientName: 'Customer',
+      phoneNumber: '',
+      area: '',
+      fullAddress: 'Belum ada alamat pengiriman. Silakan tambah alamat Anda.',
+      deliveryNote: '',
+      addressType: 'Rumah',
+      isDefault: true,
+    );
+  }
+
+  void resetAllUserData() {
+    _cartItems.clear();
+    _savedAddresses.clear();
+    _customDeliveryAddress = null;
+    _selectedSubscriptionPackage = null;
+    _voucherCode = null;
+    _voucherDiscount = 0;
+    _searchQuery = '';
+    _selectedCategory = 'Semua';
+    _selectedCateringDayIndex = 0;
+    notifyListeners();
+  }
 
   void selectDeliveryAddress(DeliveryAddress address) {
-    _deliveryAddress = address;
+    _customDeliveryAddress = address;
     notifyListeners();
   }
 
   void updateDeliveryAddress(DeliveryAddress address) {
-    _deliveryAddress = address;
+    _customDeliveryAddress = address;
     final index = _savedAddresses.indexWhere((a) => a.id == address.id);
     if (index != -1) {
       _savedAddresses[index] = address;
@@ -806,7 +821,7 @@ class NutriMealMenuController extends ChangeNotifier {
       for (int i = 0; i < _savedAddresses.length; i++) {
         _savedAddresses[i] = _savedAddresses[i].copyWith(isDefault: false);
       }
-      _deliveryAddress = address;
+      _customDeliveryAddress = address;
     }
     _savedAddresses.add(address);
     notifyListeners();
@@ -821,9 +836,9 @@ class NutriMealMenuController extends ChangeNotifier {
             _savedAddresses[i] = _savedAddresses[i].copyWith(isDefault: false);
           }
         }
-        _deliveryAddress = address;
-      } else if (_deliveryAddress.id == address.id) {
-        _deliveryAddress = address;
+        _customDeliveryAddress = address;
+      } else if (_customDeliveryAddress?.id == address.id) {
+        _customDeliveryAddress = address;
       }
       _savedAddresses[index] = address;
       notifyListeners();
@@ -832,8 +847,10 @@ class NutriMealMenuController extends ChangeNotifier {
 
   void removeSavedAddress(String id) {
     _savedAddresses.removeWhere((a) => a.id == id);
-    if (_deliveryAddress.id == id && _savedAddresses.isNotEmpty) {
-      _deliveryAddress = _savedAddresses.first;
+    if (_customDeliveryAddress?.id == id && _savedAddresses.isNotEmpty) {
+      _customDeliveryAddress = _savedAddresses.first;
+    } else if (_savedAddresses.isEmpty) {
+      _customDeliveryAddress = null;
     }
     notifyListeners();
   }
