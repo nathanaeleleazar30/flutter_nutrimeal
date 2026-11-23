@@ -56,6 +56,45 @@ class NotificationService {
   /// Notifier agar UI dapat mendengarkan perubahan token secara reaktif
   final ValueNotifier<String?> fcmTokenNotifier = ValueNotifier<String?>(null);
 
+  /// Penyimpanan notifikasi lokal in-memory (disinkronkan dengan UI dan backend)
+  final List<Map<String, dynamic>> _inMemoryNotifications = [];
+  List<Map<String, dynamic>> get inMemoryNotifications =>
+      List.unmodifiable(_inMemoryNotifications);
+
+  /// Menambahkan notifikasi pesanan / pembaruan status ke sistem notifikasi
+  Future<void> addOrderNotification({
+    required String title,
+    required String body,
+    String type = 'order',
+    String? orderId,
+    String? packageName,
+    int estimatedMinutes = 30,
+    String? customerId,
+  }) async {
+    final now = DateTime.now();
+    final notifItem = {
+      'id': now.millisecondsSinceEpoch,
+      'title': title,
+      'body': body,
+      'type': type,
+      'order_id': orderId,
+      'package_name': packageName,
+      'estimated_minutes': estimatedMinutes,
+      'created_at': now.toIso8601String(),
+      'is_read': false,
+      'customer_id': customerId,
+    };
+
+    _inMemoryNotifications.insert(0, notifItem);
+
+    // Kirim pop-up banner notifikasi lokal ke OS perangkat
+    await showInstantNotification(
+      title: title,
+      body: body,
+      payload: '/notifikasi',
+    );
+  }
+
   /// Inisialisasi utama Notification Service
   Future<void> initialize() async {
     await _initLocalNotifications();

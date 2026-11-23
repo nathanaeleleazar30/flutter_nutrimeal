@@ -8,11 +8,26 @@ import '../../core/constants/app_colors.dart';
 class PaymentStatusScreen extends StatelessWidget {
   final String orderId;
   final String totalAmount;
+  final String packageName;
+  final String paymentMethod;
+  final String firstMealName;
+  final String firstMealImage;
+  final String deliveryTime;
+  final int estimatedMinutes;
+  final bool isSubscription;
 
   const PaymentStatusScreen({
     super.key,
     this.orderId = 'NM-2026-88421',
     this.totalAmount = 'Rp170.347',
+    this.packageName = 'Paket Katering Sehat NutriMeal',
+    this.paymentMethod = 'QRIS',
+    this.firstMealName = 'Grilled Chicken Rice Bowl',
+    this.firstMealImage =
+        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
+    this.deliveryTime = 'Hari Ini, 12:00 WIB',
+    this.estimatedMinutes = 30,
+    this.isSubscription = false,
   });
 
   @override
@@ -230,23 +245,29 @@ class PaymentStatusScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Row 2: Paket
+          // Row 2: Paket / Menu Pesanan
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Paket',
+                'Paket / Menu',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   color: const Color(0xFF64748B),
                 ),
               ),
-              Text(
-                '5 Hari Meal Prep (10 Box)',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  packageName,
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -265,7 +286,7 @@ class PaymentStatusScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                'QRIS',
+                paymentMethod,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w800,
@@ -300,7 +321,7 @@ class PaymentStatusScreen extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.network(
-              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
+              firstMealImage,
               width: 58,
               height: 58,
               fit: BoxFit.cover,
@@ -324,7 +345,7 @@ class PaymentStatusScreen extends StatelessWidget {
                     const Icon(Icons.access_time_filled_rounded, size: 13, color: Color(0xFF16A34A)),
                     const SizedBox(width: 4),
                     Text(
-                      'Besok, 11:30 WIB',
+                      deliveryTime,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
@@ -335,16 +356,20 @@ class PaymentStatusScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Grilled Chicken Rice Bowl',
+                  firstMealName,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Pengiriman perdana makan siang',
+                  isSubscription
+                      ? 'Pengiriman katering • Estimasi tiba $estimatedMinutes menit'
+                      : 'Sedang disiapkan di dapur • Estimasi tiba $estimatedMinutes menit',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: const Color(0xFF64748B),

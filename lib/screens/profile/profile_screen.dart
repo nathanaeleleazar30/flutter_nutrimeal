@@ -82,6 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               final nav = Navigator.of(context);
               Navigator.pop(ctx);
+              context.read<NutriMealMenuController>().resetAllUserData();
               await context.read<AuthController>().logout();
               if (mounted) {
                 nav.pushNamedAndRemoveUntil('/login', (route) => false);

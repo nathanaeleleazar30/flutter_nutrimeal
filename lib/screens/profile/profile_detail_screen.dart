@@ -24,13 +24,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool _twoFactorAuth = true;
   bool _isSaving = false;
 
-  // Physical & Nutrition Data
-  double _heightCm = 163.0;
-  double _weightKg = 52.0;
-  int _age = 24;
-  double _nutritionPercent = 0.85;
+  // Physical & Nutrition Data — akun baru kosongan
+  double _heightCm = 0.0;
+  double _weightKg = 0.0;
+  int _age = 0;
+  double _nutritionPercent = 0.0;
   List<String> _selectedAllergies = [];
-  String _dietGoal = 'Defisit Kalori';
+  String _dietGoal = 'Belum diatur';
 
   @override
   void initState() {
@@ -57,13 +57,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       _selectedAllergies = List.from(auth.customerAllergies);
       _dietGoal = auth.customerDietGoal;
       _twoFactorAuth = auth.customerTwoFactorAuth;
-      _nutritionPercent = _selectedAllergies.isNotEmpty ? 1.0 : 0.85;
+      _nutritionPercent = (_heightCm > 0 && _weightKg > 0) ? 0.85 : 0.0;
     });
   }
 
-  double get _bmi => _weightKg / ((_heightCm / 100) * (_heightCm / 100));
+  double get _bmi => (_heightCm > 0 && _weightKg > 0)
+      ? _weightKg / ((_heightCm / 100) * (_heightCm / 100))
+      : 0.0;
 
   String get _bmiCategory {
+    if (_bmi <= 0) return 'Belum dihitung';
     if (_bmi < 18.5) return 'Kurang (Underweight)';
     if (_bmi < 24.9) return 'Ideal & Normal (Healthy)';
     if (_bmi < 29.9) return 'Kelebihan (Overweight)';
@@ -1085,7 +1088,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Data Fisik: ${_heightCm.toInt()} cm • ${_weightKg.toInt()} kg (BMI: ${_bmiCategory.split(' ').first}) • Tap untuk lengkapi riwayat alergi.',
+              (_heightCm > 0 && _weightKg > 0)
+                  ? 'Data Fisik: ${_heightCm.toInt()} cm • ${_weightKg.toInt()} kg (BMI: ${_bmiCategory.split(' ').first}) • Tap untuk lengkapi riwayat alergi.'
+                  : 'Data Fisik: Belum diisi • Tap untuk melengkapi data fisik & riwayat alergi.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 color: const Color(0xFF64748B),
