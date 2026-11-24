@@ -17,11 +17,7 @@ class ProfileScreen extends StatefulWidget {
   final VoidCallback? onCartTap;
   final bool showBottomNav;
 
-  const ProfileScreen({
-    super.key,
-    this.onCartTap,
-    this.showBottomNav = false,
-  });
+  const ProfileScreen({super.key, this.onCartTap, this.showBottomNav = false});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -93,11 +89,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: const Color(0xFFEF4444),
               elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Keluar',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Keluar',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -113,14 +114,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             // Top Bar with brand logo, notification bell, & cart badge
             MainTopBar(
-              onCartTap: widget.onCartTap ?? () => Navigator.pushNamed(context, '/cart'),
+              onCartTap:
+                  widget.onCartTap ??
+                  () => Navigator.pushNamed(context, '/cart'),
               onProfileTap: () {},
             ),
 
             // Profile Body Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
@@ -159,7 +165,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const ProfileDetailScreen()),
+                                  builder: (_) => const ProfileDetailScreen(),
+                                ),
                               );
                             },
                           ),
@@ -174,7 +181,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const AddressScreen()),
+                                  builder: (_) => const AddressScreen(),
+                                ),
                               );
                             },
                           ),
@@ -193,7 +201,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const PaymentMethodScreen(showBottomBar: false)),
+                                  builder: (_) => const PaymentMethodScreen(
+                                    showBottomBar: false,
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -218,7 +229,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const BantuanFaqScreen()),
+                                  builder: (_) => const BantuanFaqScreen(),
+                                ),
                               );
                             },
                           ),
@@ -243,8 +255,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.logout_rounded,
-                                color: Color(0xFFDC2626), size: 18),
+                            const Icon(
+                              Icons.logout_rounded,
+                              color: Color(0xFFDC2626),
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Keluar',
@@ -282,126 +297,167 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildUserHeader() {
     final auth = context.watch<AuthController>();
-    final displayName = auth.currentUserName ?? 'Nadia Salsabila';
-    final displayEmail = auth.currentUserEmail ?? 'nadia.salsabila@email.com';
+    final displayName = auth.currentUserName?.isNotEmpty == true
+        ? auth.currentUserName!
+        : (auth.currentUserEmail?.isNotEmpty == true
+              ? auth.currentUserEmail!.split('@').first
+              : 'Pelanggan NutriMeal');
+    final displayEmail = auth.currentUserEmail?.isNotEmpty == true
+        ? auth.currentUserEmail!
+        : 'Belum terdaftar';
     final avatarUrl = auth.customerAvatarUrl;
 
     return Column(
       children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            // Soft mint green aura glow
-            Container(
-              width: 104,
-              height: 104,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFDCFCE7).withValues(alpha: 0.6),
-              ),
-            ),
-            // Avatar Image
-            Container(
-              width: 86,
-              height: 86,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: (avatarUrl != null && avatarUrl.trim().isNotEmpty)
-                  ? Image.network(
-                      ApiConfig.resolveImageUrl(avatarUrl),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: const Color(0xFFDCFCE7),
-                        alignment: Alignment.center,
-                        child: (displayName.trim().isNotEmpty)
-                            ? Text(
-                                displayName.trim()[0].toUpperCase(),
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF0F8A50),
-                                ),
-                              )
-                            : const Icon(Icons.person, color: AppColors.primaryGreen, size: 40),
-                      ),
-                    )
-                  : Container(
-                      color: const Color(0xFFDCFCE7),
-                      alignment: Alignment.center,
-                      child: (displayName.trim().isNotEmpty)
-                          ? Text(
-                              displayName.trim()[0].toUpperCase(),
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF0F8A50),
-                              ),
-                            )
-                          : const Icon(Icons.person, color: AppColors.primaryGreen, size: 40),
-                    ),
-            ),
-            // Green Edit Pencil Button
-            Positioned(
-              bottom: 4,
-              right: 8,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const ProfileDetailScreen()),
-                  ).then((_) {
-                    if (mounted) {
-                      context.read<AuthController>().fetchCustomerProfile();
-                    }
-                  });
-                },
-                child: Container(
-                  width: 26,
-                  height: 26,
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileDetailScreen()),
+            ).then((_) {
+              if (mounted) {
+                context.read<AuthController>().fetchCustomerProfile();
+              }
+            });
+          },
+          child: SizedBox(
+            width: 104,
+            height: 104,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                // 1. Soft mint green aura glow
+                Container(
+                  width: 104,
+                  height: 104,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF16A34A),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    color: const Color(0xFFDCFCE7).withValues(alpha: 0.75),
                   ),
-                  child: const Icon(Icons.edit_rounded,
-                      color: Colors.white, size: 13),
                 ),
-              ),
+                // 2. Pure white circular frame + razor-sharp circular avatar
+                Container(
+                  width: 92,
+                  height: 92,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(3.5),
+                  child: ClipOval(
+                    child: Container(
+                      color: const Color(0xFFF1F5F9),
+                      child: (avatarUrl != null && avatarUrl.trim().isNotEmpty)
+                          ? Image.network(
+                              ApiConfig.resolveImageUrl(avatarUrl),
+                              fit: BoxFit.cover,
+                              alignment: Alignment.center,
+                              width: double.infinity,
+                              height: double.infinity,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  color: const Color(0xFFDCFCE7),
+                                  alignment: Alignment.center,
+                                  child: const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF0F8A50),
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    color: const Color(0xFFDCFCE7),
+                                    alignment: Alignment.center,
+                                    child: (displayName.trim().isNotEmpty)
+                                        ? Text(
+                                            displayName.trim()[0].toUpperCase(),
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 34,
+                                              fontWeight: FontWeight.w800,
+                                              color: const Color(0xFF0F8A50),
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.person,
+                                            color: AppColors.primaryGreen,
+                                            size: 42,
+                                          ),
+                                  ),
+                            )
+                          : Container(
+                              color: const Color(0xFFDCFCE7),
+                              alignment: Alignment.center,
+                              child: (displayName.trim().isNotEmpty)
+                                  ? Text(
+                                      displayName.trim()[0].toUpperCase(),
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 34,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF0F8A50),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      color: AppColors.primaryGreen,
+                                      size: 42,
+                                    ),
+                            ),
+                    ),
+                  ),
+                ),
+                // 3. Green Edit Pencil Button neatly anchored at bottom-right
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF16A34A),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
         const SizedBox(height: 12),
 
-        // Name with Green Verified Icon
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              displayName,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(
-              Icons.check_circle_rounded,
-              color: Color(0xFF16A34A),
-              size: 18,
-            ),
-          ],
+        // User Name
+        Text(
+          displayName,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+          ),
         ),
         const SizedBox(height: 3),
 
@@ -478,8 +534,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: Color(0xFF94A3B8), size: 20),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF94A3B8),
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -510,8 +569,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: const Color(0xFF0F8A50),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.verified_rounded,
-                  color: Colors.white, size: 20),
+              child: const Icon(
+                Icons.verified_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -531,7 +593,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 1.5),
+                          horizontal: 6,
+                          vertical: 1.5,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0F8A50),
                           borderRadius: BorderRadius.circular(6),
@@ -559,8 +623,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: Color(0xFF0F8A50), size: 20),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF0F8A50),
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -579,8 +646,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.notifications_none_rounded,
-                color: Color(0xFF64748B), size: 20),
+            child: const Icon(
+              Icons.notifications_none_rounded,
+              color: Color(0xFF64748B),
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

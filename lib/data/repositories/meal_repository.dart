@@ -13,11 +13,9 @@ class MealRepository {
   final AppDatabase _db;
   final PreferencesService _prefs;
 
-  MealRepository({
-    AppDatabase? database,
-    PreferencesService? preferences,
-  })  : _db = database ?? AppDatabase.instance,
-        _prefs = preferences ?? PreferencesService.instance;
+  MealRepository({AppDatabase? database, PreferencesService? preferences})
+    : _db = database ?? AppDatabase.instance,
+      _prefs = preferences ?? PreferencesService.instance;
 
   /// Requirement 1.d: Terapkan fitur Stream reaktif (.watch() pada Drift) pada lapisan data.
   /// UI akan langsung bereaksi secara instan saat data lokal bertambah/berubah.
@@ -65,40 +63,57 @@ class MealRepository {
 
           if (rawList.isNotEmpty) {
             // Requirement 1.c: Timestamp UTC millis saat data di-fetch dari server
-            final currentUtcMillis = DateTime.now().toUtc().millisecondsSinceEpoch;
+            final currentUtcMillis = DateTime.now()
+                .toUtc()
+                .millisecondsSinceEpoch;
 
             final entries = rawList.map((e) {
               final json = e as Map<String, dynamic>;
-              final rawImg = (json['image_url'] ?? json['imageUrl'])?.toString();
-              final resolvedImg = ApiConfig.resolveImageUrl(rawImg, activeBaseUrl: resolvedBase);
+              final rawImg = (json['image_url'] ?? json['imageUrl'])
+                  ?.toString();
+              final resolvedImg = ApiConfig.resolveImageUrl(
+                rawImg,
+                activeBaseUrl: resolvedBase,
+              );
 
-              final cal = int.tryParse(json['calories']?.toString() ?? '0') ?? 0;
+              final cal =
+                  int.tryParse(json['calories']?.toString() ?? '0') ?? 0;
               final prc = int.tryParse(json['price']?.toString() ?? '0') ?? 0;
-              final rawDiscount = json['discount_percent'] ?? json['discountPercent'];
+              final rawDiscount =
+                  json['discount_percent'] ?? json['discountPercent'];
               final disc = int.tryParse(rawDiscount?.toString() ?? '0');
 
               List<String> tagsList = [];
               if (json['tags'] is List) {
-                tagsList = (json['tags'] as List).map((t) => t.toString()).toList();
+                tagsList = (json['tags'] as List)
+                    .map((t) => t.toString())
+                    .toList();
               } else if (json['tags'] is String) {
-                tagsList = (json['tags'] as String).split(',').map((t) => t.trim()).toList();
+                tagsList = (json['tags'] as String)
+                    .split(',')
+                    .map((t) => t.trim())
+                    .toList();
               }
 
               return MealsCompanion.insert(
-                id: json['id']?.toString() ?? 'item-${DateTime.now().millisecondsSinceEpoch}',
+                id:
+                    json['id']?.toString() ??
+                    'item-${DateTime.now().millisecondsSinceEpoch}',
                 name: json['name']?.toString() ?? 'Menu Sehat',
                 category: json['category']?.toString() ?? 'Lainnya',
                 calories: Value(cal),
                 price: Value(prc),
                 discountPercent: Value(disc != null && disc > 0 ? disc : null),
                 imageUrl: resolvedImg,
-                description: json['description']?.toString() ?? 'Menu lezat bergizi seimbang dari NutriMeal.',
+                description:
+                    json['description']?.toString() ??
+                    'Menu lezat bergizi seimbang dari NutriMeal.',
                 tags: Value(tagsList.join(',')),
                 schedule: Value(json['schedule']?.toString() ?? 'Setiap Hari'),
                 deliveryTime: Value(
                   json['delivery_time']?.toString() ??
-                  json['deliveryTime']?.toString() ??
-                  '12:00 - 13:00 WIB',
+                      json['deliveryTime']?.toString() ??
+                      '12:00 - 13:00 WIB',
                 ),
                 protein: Value(json['protein']?.toString() ?? '30g'),
                 fat: Value(json['fat']?.toString() ?? '10g'),
@@ -116,7 +131,9 @@ class MealRepository {
             await _prefs.setLastCacheSyncUtcMillis(currentUtcMillis);
 
             if (kDebugMode) {
-              print('[MealRepository] ✅ Berhasil menyimpan ${entries.length} menu secara atomik ke Drift DB. lastFetched=$currentUtcMillis');
+              print(
+                '[MealRepository] ✅ Berhasil menyimpan ${entries.length} menu secara atomik ke Drift DB. lastFetched=$currentUtcMillis',
+              );
             }
             return true;
           }
@@ -128,7 +145,9 @@ class MealRepository {
     }
 
     if (kDebugMode) {
-      print('[MealRepository] Offline mode: Server tidak dapat dijangkau ($lastError). Menggunakan cache lokal Drift.');
+      print(
+        '[MealRepository] Offline mode: Server tidak dapat dijangkau ($lastError). Menggunakan cache lokal Drift.',
+      );
     }
     return false;
   }
@@ -136,7 +155,11 @@ class MealRepository {
   /// Helper untuk memetakan Drift Entity (Meal) ke Domain Model (MenuItem)
   MenuItem _mapMealEntityToModel(Meal meal) {
     final tags = meal.tags.isNotEmpty
-        ? meal.tags.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList()
+        ? meal.tags
+              .split(',')
+              .map((t) => t.trim())
+              .where((t) => t.isNotEmpty)
+              .toList()
         : <String>[];
 
     return MenuItem(

@@ -6,11 +6,7 @@ class NutriMealLogo extends StatelessWidget {
   final double fontSize;
   final bool hasShadow;
 
-  const NutriMealLogo({
-    super.key,
-    this.fontSize = 32,
-    this.hasShadow = true,
-  });
+  const NutriMealLogo({super.key, this.fontSize = 32, this.hasShadow = true});
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +18,7 @@ class NutriMealLogo extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          'Nutri',
-          style: AppTextStyles.logoNutri(fontSize: fontSize),
-        ),
+        Text('Nutri', style: AppTextStyles.logoNutri(fontSize: fontSize)),
         SizedBox(width: fontSize * 0.12),
         Container(
           padding: EdgeInsets.symmetric(

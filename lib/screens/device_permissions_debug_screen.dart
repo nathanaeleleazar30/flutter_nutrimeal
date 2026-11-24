@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../core/constants/app_colors.dart';
 import '../services/notification_service.dart';
 import '../services/permission_service.dart';
+import '../core/widgets/center_feedback_toast.dart';
 
 class DevicePermissionsDebugScreen extends StatefulWidget {
   const DevicePermissionsDebugScreen({super.key});
@@ -75,8 +76,9 @@ class _DevicePermissionsDebugScreenState
     );
     if (!status.isGranted && !status.isLimited) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Izin kamera diperlukan untuk mengambil foto.')),
+        CenterFeedbackToast.showError(
+          context,
+          message: 'Izin kamera diperlukan untuk mengambil foto.',
         );
       }
       return;
@@ -95,8 +97,9 @@ class _DevicePermissionsDebugScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuka kamera: $e')),
+        CenterFeedbackToast.showError(
+          context,
+          message: 'Gagal membuka kamera: $e',
         );
       }
     }
@@ -110,8 +113,9 @@ class _DevicePermissionsDebugScreenState
     );
     if (!status.isGranted && !status.isLimited) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Izin galeri diperlukan untuk memilih foto.')),
+        CenterFeedbackToast.showError(
+          context,
+          message: 'Izin galeri diperlukan untuk memilih foto.',
         );
       }
       return;
@@ -130,8 +134,9 @@ class _DevicePermissionsDebugScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuka galeri: $e')),
+        CenterFeedbackToast.showError(
+          context,
+          message: 'Gagal membuka galeri: $e',
         );
       }
     }
@@ -161,7 +166,8 @@ class _DevicePermissionsDebugScreenState
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
-          _locationError = 'Layanan GPS di HP dalam keadaan mati. Silakan aktifkan GPS.';
+          _locationError =
+              'Layanan GPS di HP dalam keadaan mati. Silakan aktifkan GPS.';
           _isLoadingLocation = false;
         });
         return;
@@ -193,16 +199,16 @@ class _DevicePermissionsDebugScreenState
 
     await NotificationService.instance.showInstantNotification(
       title: 'Pesanan NutriMeal Sedang Disiapkan! 🥗',
-      body: 'Catering sehat paket Defisit Kalori sedang dimasak oleh chef. Ketuk untuk melihat notifikasi.',
+      body:
+          'Catering sehat paket Defisit Kalori sedang dimasak oleh chef. Ketuk untuk melihat notifikasi.',
       payload: '/notifikasi',
     );
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🔔 Notifikasi instan berhasil dikirim! Periksa bar notifikasi HP Anda.'),
-          backgroundColor: AppColors.primaryGreen,
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message:
+            '🔔 Notifikasi instan berhasil dikirim! Periksa bar notifikasi HP Anda.',
       );
     }
   }
@@ -210,11 +216,9 @@ class _DevicePermissionsDebugScreenState
   // Salin Token FCM
   void _copyFcmToken(String token) {
     Clipboard.setData(ClipboardData(text: token));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ Token FCM berhasil disalin ke clipboard!'),
-        backgroundColor: AppColors.primaryGreen,
-      ),
+    CenterFeedbackToast.showSuccess(
+      context,
+      message: '✅ Token FCM berhasil disalin ke clipboard!',
     );
   }
 
@@ -247,11 +251,15 @@ class _DevicePermissionsDebugScreenState
           const SizedBox(height: 8),
           ...AppPermissionType.values.map(_buildPermissionTile),
           const SizedBox(height: 20),
-          _buildSectionHeader('2. Uji Coba Push & Notifikasi Lokal (Tanpa Server)'),
+          _buildSectionHeader(
+            '2. Uji Coba Push & Notifikasi Lokal (Tanpa Server)',
+          ),
           const SizedBox(height: 8),
           _buildNotificationCard(),
           const SizedBox(height: 20),
-          _buildSectionHeader('3. Token FCM Perangkat (Firebase Cloud Messaging)'),
+          _buildSectionHeader(
+            '3. Token FCM Perangkat (Firebase Cloud Messaging)',
+          ),
           const SizedBox(height: 8),
           _buildFcmTokenCard(),
           const SizedBox(height: 20),
@@ -270,17 +278,27 @@ class _DevicePermissionsDebugScreenState
       decoration: BoxDecoration(
         color: AppColors.primaryGreen.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.primaryGreen.withValues(alpha: 0.3),
+        ),
       ),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.verified_user_outlined, color: AppColors.primaryGreen, size: 22),
+          Icon(
+            Icons.verified_user_outlined,
+            color: AppColors.primaryGreen,
+            size: 22,
+          ),
           SizedBox(width: 10),
           Expanded(
             child: Text(
               'Halaman ini dirancang untuk menguji izin perangkat fisik dan Push Notification secara lokal tanpa ketergantungan pada backend server.',
-              style: TextStyle(fontSize: 12.5, height: 1.4, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.4,
+                color: Colors.black87,
+              ),
             ),
           ),
         ],
@@ -342,7 +360,9 @@ class _DevicePermissionsDebugScreenState
                 decoration: BoxDecoration(
                   color: isGranted
                       ? Colors.green.shade50
-                      : (isPermanentlyDenied ? Colors.deepOrange.shade50 : Colors.amber.shade50),
+                      : (isPermanentlyDenied
+                            ? Colors.deepOrange.shade50
+                            : Colors.amber.shade50),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(type.icon, color: badgeColor, size: 22),
@@ -354,7 +374,10 @@ class _DevicePermissionsDebugScreenState
                   children: [
                     Text(
                       type.displayName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Row(
@@ -381,23 +404,38 @@ class _DevicePermissionsDebugScreenState
                         ? Colors.deepOrange
                         : AppColors.primaryGreen,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: isPermanentlyDenied
                       ? () => PermissionService.instance.openSettings()
                       : () => _handleRequestPermission(type),
-                  child: Text(isPermanentlyDenied ? 'Buka Pengaturan' : 'Minta Izin'),
+                  child: Text(
+                    isPermanentlyDenied ? 'Buka Pengaturan' : 'Minta Izin',
+                  ),
                 )
               else
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.green,
                     side: const BorderSide(color: Colors.green),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     textStyle: const TextStyle(fontSize: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () => _handleRequestPermission(type),
                   child: const Text('Cek Ulang'),
@@ -407,7 +445,11 @@ class _DevicePermissionsDebugScreenState
           const SizedBox(height: 8),
           Text(
             type.defaultReason,
-            style: const TextStyle(fontSize: 11.5, color: Colors.black54, height: 1.3),
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: Colors.black54,
+              height: 1.3,
+            ),
           ),
         ],
       ),
@@ -429,7 +471,11 @@ class _DevicePermissionsDebugScreenState
         children: [
           const Row(
             children: [
-              Icon(Icons.notifications_active, color: AppColors.primaryGreen, size: 22),
+              Icon(
+                Icons.notifications_active,
+                color: AppColors.primaryGreen,
+                size: 22,
+              ),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -452,7 +498,9 @@ class _DevicePermissionsDebugScreenState
                 backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               icon: const Icon(Icons.send_rounded, size: 18),
               label: const Text(
@@ -479,7 +527,11 @@ class _DevicePermissionsDebugScreenState
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
-              BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
             ],
           ),
           child: Column(
@@ -487,19 +539,27 @@ class _DevicePermissionsDebugScreenState
             children: [
               Row(
                 children: [
-                  const Icon(Icons.vpn_key_outlined, color: Colors.indigo, size: 20),
+                  const Icon(
+                    Icons.vpn_key_outlined,
+                    color: Colors.indigo,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
                       'FCM Device Registration Token',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.refresh, size: 20),
                     tooltip: 'Refresh Token',
                     onPressed: () async {
-                      await NotificationService.instance.refreshFcmTokenManual();
+                      await NotificationService.instance
+                          .refreshFcmTokenManual();
                     },
                   ),
                 ],
@@ -507,7 +567,11 @@ class _DevicePermissionsDebugScreenState
               const SizedBox(height: 6),
               const Text(
                 'Token ini dapat langsung ditempel ke Firebase Console (Messaging > Test on Device) untuk mengirim notifikasi uji coba:',
-                style: TextStyle(fontSize: 12, color: Colors.black54, height: 1.4),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black54,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 10),
               if (currentToken != null && currentToken.isNotEmpty) ...[
@@ -536,7 +600,9 @@ class _DevicePermissionsDebugScreenState
                       backgroundColor: Colors.indigo,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     icon: const Icon(Icons.copy, size: 16),
                     label: const Text('Salin Token FCM ke Clipboard'),
@@ -557,7 +623,10 @@ class _DevicePermissionsDebugScreenState
                     children: [
                       Text(
                         'Token FCM belum tersedia.',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                        ),
                       ),
                       SizedBox(height: 4),
                       Text(
@@ -599,10 +668,15 @@ class _DevicePermissionsDebugScreenState
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   icon: const Icon(Icons.camera_alt, size: 18),
-                  label: const Text('Buka Kamera', style: TextStyle(fontSize: 12)),
+                  label: const Text(
+                    'Buka Kamera',
+                    style: TextStyle(fontSize: 12),
+                  ),
                   onPressed: _pickFromCamera,
                 ),
               ),
@@ -611,10 +685,15 @@ class _DevicePermissionsDebugScreenState
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   icon: const Icon(Icons.photo_library, size: 18),
-                  label: const Text('Pilih dari Galeri', style: TextStyle(fontSize: 12)),
+                  label: const Text(
+                    'Pilih dari Galeri',
+                    style: TextStyle(fontSize: 12),
+                  ),
                   onPressed: _pickFromGallery,
                 ),
               ),
@@ -634,14 +713,19 @@ class _DevicePermissionsDebugScreenState
                   Row(
                     children: [
                       Icon(
-                        _imageSourceType == 'Kamera' ? Icons.camera : Icons.photo,
+                        _imageSourceType == 'Kamera'
+                            ? Icons.camera
+                            : Icons.photo,
                         size: 16,
                         color: AppColors.primaryGreen,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'Hasil foto dari $_imageSourceType:',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -670,7 +754,9 @@ class _DevicePermissionsDebugScreenState
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               icon: _isLoadingLocation
                   ? const SizedBox(
@@ -713,13 +799,24 @@ class _DevicePermissionsDebugScreenState
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text('Latitude: ${_currentPosition!.latitude}',
-                      style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
-                  Text('Longitude: ${_currentPosition!.longitude}',
-                      style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
                   Text(
-                      'Akurasi: ±${_currentPosition!.accuracy.toStringAsFixed(1)} meter',
-                      style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                    'Latitude: ${_currentPosition!.latitude}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  Text(
+                    'Longitude: ${_currentPosition!.longitude}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  Text(
+                    'Akurasi: ±${_currentPosition!.accuracy.toStringAsFixed(1)} meter',
+                    style: const TextStyle(fontSize: 11, color: Colors.black54),
+                  ),
                 ],
               ),
             ),

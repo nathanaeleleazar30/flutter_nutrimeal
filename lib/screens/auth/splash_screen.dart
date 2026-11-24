@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
 import '../../widgets/food_doodle_background.dart';
 import '../../widgets/nutri_meal_logo.dart';
 
 class SplashScreen extends StatefulWidget {
   final bool autoNavigate;
 
-  const SplashScreen({
-    super.key,
-    this.autoNavigate = true,
-  });
+  const SplashScreen({super.key, this.autoNavigate = true});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -22,9 +21,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     if (widget.autoNavigate) {
-      _timer = Timer(const Duration(milliseconds: 2500), () {
+      _timer = Timer(const Duration(milliseconds: 2200), () {
         if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/login');
+          _navigateNext();
         }
       });
     }
@@ -36,23 +35,27 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
-  void _goToLogin() {
+  void _navigateNext() {
     _timer?.cancel();
-    Navigator.of(context).pushReplacementNamed('/login');
+    if (!mounted) return;
+    final auth = context.read<AuthController>();
+    if (auth.isLoggedIn) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onTap: _goToLogin,
+        onTap: _navigateNext,
         behavior: HitTestBehavior.opaque,
         child: Stack(
           children: [
             // Full-screen food doodle background
-            const Positioned.fill(
-              child: FoodDoodleBackground(fillFull: true),
-            ),
+            const Positioned.fill(child: FoodDoodleBackground(fillFull: true)),
 
             // Centered Nutri Meal Logo with App Icon
             Center(
@@ -80,10 +83,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const NutriMealLogo(
-                    fontSize: 34,
-                    hasShadow: true,
-                  ),
+                  const NutriMealLogo(fontSize: 34, hasShadow: true),
                 ],
               ),
             ),

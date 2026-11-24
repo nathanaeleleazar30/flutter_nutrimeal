@@ -7,15 +7,13 @@ import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../payment_status_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final Map<String, dynamic>? subscriptionPackage;
 
-  const CheckoutScreen({
-    super.key,
-    this.subscriptionPackage,
-  });
+  const CheckoutScreen({super.key, this.subscriptionPackage});
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -85,12 +83,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             // Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Card 1: Total Pembayaran & Batas Waktu
                     _buildPaymentHeaderCard(amountText),
+                    const SizedBox(height: 16),
+
+                    // Card Info Pengiriman & Kontak Penerima
+                    _buildDeliveryContactCard(context),
                     const SizedBox(height: 16),
 
                     // Card 2: QRIS Card
@@ -121,9 +126,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFC3E7C4),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFC3E7C4)),
       child: Row(
         children: [
           GestureDetector(
@@ -223,13 +226,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: () {
-                      Clipboard.setData(ClipboardData(text: amountText.replaceAll('Rp', '').replaceAll('.', '')));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Nominal disalin ke clipboard'),
-                          behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 2),
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: amountText
+                              .replaceAll('Rp', '')
+                              .replaceAll('.', ''),
                         ),
+                      );
+                      CenterFeedbackToast.showSuccess(
+                        context,
+                        message: 'Nominal disalin ke clipboard',
                       );
                     },
                     child: const Icon(
@@ -248,7 +254,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.access_time_rounded, size: 12, color: Color(0xFF166534)),
+                    const Icon(
+                      Icons.access_time_rounded,
+                      size: 12,
+                      color: Color(0xFF166534),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '23 : 58 : 55',
@@ -293,6 +303,455 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Widget _buildDeliveryContactCard(BuildContext context) {
+    final auth = context.watch<AuthController>();
+    final menuController = context.watch<NutriMealMenuController>();
+
+    final customerName = (auth.customerName?.isNotEmpty == true)
+        ? auth.customerName!
+        : (auth.currentUserEmail?.split('@').first ?? 'Pelanggan NutriMeal');
+
+    final phone = (auth.customerPhone?.isNotEmpty == true)
+        ? auth.customerPhone!
+        : (menuController.deliveryAddress.phoneNumber.trim().isNotEmpty
+              ? menuController.deliveryAddress.phoneNumber.trim()
+              : '');
+
+    final address =
+        (menuController.deliveryAddress.fullAddress.trim().isNotEmpty &&
+            !menuController.deliveryAddress.fullAddress.contains(
+              'Belum ada alamat',
+            ))
+        ? menuController.deliveryAddress.fullAddress.trim()
+        : (auth.customerAddress?.trim().isNotEmpty == true
+              ? auth.customerAddress!.trim()
+              : '');
+
+    final isPhoneMissing = phone.isEmpty;
+    final isAddressMissing = address.isEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (isPhoneMissing || isAddressMissing)
+              ? const Color(0xFFFCA5A5)
+              : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.location_on_rounded,
+                    size: 18,
+                    color: Color(0xFF0F8A50),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'PENGIRIMAN & PENERIMA',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF64748B),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () => _showRequireDataCompletionModal(context),
+                child: Text(
+                  (isPhoneMissing || isAddressMissing)
+                      ? 'Lengkapi Data'
+                      : 'Ubah Data',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F8A50),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 10),
+
+          // Nama Penerima & WhatsApp
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      customerName,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      !isPhoneMissing
+                          ? phone
+                          : 'Nomor WhatsApp belum diisi (Wajib)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: isPhoneMissing
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isPhoneMissing
+                            ? const Color(0xFFDC2626)
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Alamat Pengiriman
+          Text(
+            !isAddressMissing
+                ? address
+                : 'Alamat pengiriman belum diisi (Wajib untuk pengantaran katering)',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: isAddressMissing ? FontWeight.w700 : FontWeight.w500,
+              color: isAddressMissing
+                  ? const Color(0xFFDC2626)
+                  : const Color(0xFF475569),
+              height: 1.35,
+            ),
+          ),
+
+          if (isPhoneMissing || isAddressMissing) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => _showRequireDataCompletionModal(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFECACA)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: Color(0xFFDC2626),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Data belum lengkap. Klik di sini untuk melengkapi.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFDC2626),
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFFDC2626),
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _showRequireDataCompletionModal(BuildContext context) {
+    final auth = context.read<AuthController>();
+    final menuController = context.read<NutriMealMenuController>();
+
+    final initialPhone = (auth.customerPhone?.isNotEmpty == true)
+        ? auth.customerPhone!
+        : (menuController.deliveryAddress.phoneNumber.isNotEmpty
+              ? menuController.deliveryAddress.phoneNumber
+              : '');
+    final initialAddress =
+        (menuController.deliveryAddress.fullAddress.isNotEmpty &&
+            !menuController.deliveryAddress.fullAddress.contains(
+              'Belum ada alamat',
+            ))
+        ? menuController.deliveryAddress.fullAddress
+        : (auth.customerAddress?.isNotEmpty == true
+              ? auth.customerAddress!
+              : '');
+
+    final phoneCtrl = TextEditingController(text: initialPhone);
+    final addressCtrl = TextEditingController(text: initialAddress);
+    final formKey = GlobalKey<FormState>();
+
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDCFCE7),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.assignment_turned_in_rounded,
+                              color: Color(0xFF0F8A50),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Lengkapi Data Pengiriman',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 20,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, false),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Mohon lengkapi nomor WhatsApp aktif & alamat pengantaran agar pesanan katering Anda dapat diproses dan diantar tepat waktu.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: const Color(0xFF64748B),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Input WhatsApp
+                  Text(
+                    'Nomor WhatsApp Aktif *',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Contoh: 081234567890',
+                      prefixIcon: const Icon(
+                        Icons.phone_rounded,
+                        color: Color(0xFF0F8A50),
+                        size: 18,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF0F8A50),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    validator: (v) {
+                      final val = v?.trim() ?? '';
+                      if (val.isEmpty) return 'Nomor WhatsApp wajib diisi';
+                      if (val.length < 9)
+                        return 'Nomor WhatsApp minimal 9 digit';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Input Alamat
+                  Text(
+                    'Alamat Lengkap Pengantaran *',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: addressCtrl,
+                    maxLines: 3,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: InputDecoration(
+                      hintText:
+                          'Nama jalan, nomor rumah/kantor, RT/RW, kelurahan, kota/kabupaten',
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(bottom: 36),
+                        child: Icon(
+                          Icons.location_on_rounded,
+                          color: Color(0xFF0F8A50),
+                          size: 18,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF0F8A50),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    validator: (v) {
+                      final val = v?.trim() ?? '';
+                      if (val.isEmpty) return 'Alamat pengiriman wajib diisi';
+                      if (val.length < 8)
+                        return 'Alamat terlalu singkat (minimal 8 karakter)';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Button Simpan
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (formKey.currentState?.validate() ?? false) {
+                          final newPhone = phoneCtrl.text.trim();
+                          final newAddress = addressCtrl.text.trim();
+
+                          // Simpan ke auth controller & sync backend MySQL
+                          await auth.updateCustomerProfile(
+                            phone: newPhone,
+                            address: newAddress,
+                          );
+
+                          // Simpan ke delivery address menuController
+                          menuController.updateDeliveryAddress(
+                            DeliveryAddress(
+                              id: 'addr_${DateTime.now().millisecondsSinceEpoch}',
+                              label: 'Alamat Utama',
+                              recipientName:
+                                  (auth.customerName?.isNotEmpty == true)
+                                  ? auth.customerName!
+                                  : 'Pelanggan NutriMeal',
+                              phoneNumber: newPhone,
+                              area: '',
+                              fullAddress: newAddress,
+                              deliveryNote: '',
+                              addressType: 'Rumah',
+                              isDefault: true,
+                            ),
+                          );
+
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx, true);
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F8A50),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Simpan & Lanjutkan Pembelian',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildQrisCard() {
     return Container(
       width: double.infinity,
@@ -330,11 +789,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   Text(
                     'QR Code Standar',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.black),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
                   ),
                   Text(
                     'Pembayaran Nasional',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.black),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
                   ),
                 ],
               ),
@@ -387,25 +854,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final instructions = [
       {
         'title': 'Simpan atau screenshot Kode QR',
-        'body': 'Gunakan tombol "Simpan Kode QR" di bawah layar atau tangkap layar secara manual.',
+        'body':
+            'Gunakan tombol "Simpan Kode QR" di bawah layar atau tangkap layar secara manual.',
         'highlight': '"Simpan Kode QR"',
       },
       {
         'title': 'Buka aplikasi pembayaran favorit Anda',
-        'body': 'Buka BCA mobile, GoPay, ShopeePay, DANA, OVO, Livin\' by Mandiri, atau m-Banking pilihan Anda.',
+        'body':
+            'Buka BCA mobile, GoPay, ShopeePay, DANA, OVO, Livin\' by Mandiri, atau m-Banking pilihan Anda.',
       },
       {
         'title': 'Pilih menu Scan QR & upload gambar',
-        'body': 'Ketuk ikon QR/Bayar di aplikasi Anda, lalu pilih opsi ambil gambar dari galeri foto perangkat.',
+        'body':
+            'Ketuk ikon QR/Bayar di aplikasi Anda, lalu pilih opsi ambil gambar dari galeri foto perangkat.',
       },
       {
         'title': 'Periksa detail & konfirmasi nominal',
-        'body': 'Pastikan nama penerima adalah NutriMeal Official Catering dengan jumlah tepat.',
+        'body':
+            'Pastikan nama penerima adalah NutriMeal Official Catering dengan jumlah tepat.',
         'highlight': 'NutriMeal Official Catering',
       },
       {
         'title': 'Masukkan PIN transaksi Anda',
-        'body': 'Pesanan katering sehat Anda akan diverifikasi otomatis oleh sistem dalam 10-30 detik.',
+        'body':
+            'Pesanan katering sehat Anda akan diverifikasi otomatis oleh sistem dalam 10-30 detik.',
       },
     ];
 
@@ -480,7 +952,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildBottomButtons(
-      BuildContext context, String amountText, int totalAmountInt) {
+    BuildContext context,
+    String amountText,
+    int totalAmountInt,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -502,16 +977,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             height: 48,
             child: ElevatedButton.icon(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Kode QR berhasil disimpan ke Galeri!'),
-                    backgroundColor: Color(0xFF16A34A),
-                    behavior: SnackBarBehavior.floating,
-                    duration: Duration(seconds: 2),
-                  ),
+                CenterFeedbackToast.showSuccess(
+                  context,
+                  message: 'Kode QR berhasil disimpan ke Galeri!',
                 );
               },
-              icon: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
+              icon: const Icon(
+                Icons.download_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
               label: Text(
                 'Simpan Kode QR',
                 style: GoogleFonts.plusJakartaSans(
@@ -523,7 +998,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F8A50),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
             ),
           ),
@@ -538,27 +1015,56 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ? null
                   : () async {
                       final nav = Navigator.of(context);
-                      final messenger = ScaffoldMessenger.of(context);
                       setState(() => _isSubmittingOrder = true);
                       try {
                         final auth = context.read<AuthController>();
-                        final menuController = context.read<NutriMealMenuController>();
+                        final menuController = context
+                            .read<NutriMealMenuController>();
 
-                        final subPkg = widget.subscriptionPackage ?? menuController.selectedSubscriptionPackage;
+                        final subPkg =
+                            widget.subscriptionPackage ??
+                            menuController.selectedSubscriptionPackage;
                         final isSubscription = subPkg != null;
 
                         final customerId = auth.customerId ?? 'cst-guest';
-                        final customerName = (auth.customerName?.isNotEmpty == true)
+                        final customerName =
+                            (auth.customerName?.isNotEmpty == true)
                             ? auth.customerName!
-                            : 'Customer NutriMeal';
-                        final customerPhone = (auth.customerPhone?.isNotEmpty == true)
+                            : (auth.currentUserEmail?.split('@').first ??
+                                  'Pelanggan NutriMeal');
+                        final customerPhone =
+                            (auth.customerPhone?.isNotEmpty == true)
                             ? auth.customerPhone!
-                            : '08123456789';
-                        final customerAddress = menuController.deliveryAddress.fullAddress.isNotEmpty
-                            ? menuController.deliveryAddress.fullAddress
-                            : (auth.customerAddress?.isNotEmpty == true
-                                ? auth.customerAddress!
-                                : 'Malang');
+                            : (menuController.deliveryAddress.phoneNumber
+                                      .trim()
+                                      .isNotEmpty
+                                  ? menuController.deliveryAddress.phoneNumber
+                                        .trim()
+                                  : '');
+                        final customerAddress =
+                            (menuController.deliveryAddress.fullAddress
+                                    .trim()
+                                    .isNotEmpty &&
+                                !menuController.deliveryAddress.fullAddress
+                                    .contains('Belum ada alamat'))
+                            ? menuController.deliveryAddress.fullAddress.trim()
+                            : (auth.customerAddress?.trim().isNotEmpty == true
+                                  ? auth.customerAddress!.trim()
+                                  : '');
+
+                        // Wajib lengkapi data jika nomor telepon atau alamat masih kosong
+                        if (customerPhone.isEmpty ||
+                            customerAddress.isEmpty ||
+                            customerAddress.contains('Belum ada alamat')) {
+                          setState(() => _isSubmittingOrder = false);
+                          final completed =
+                              await _showRequireDataCompletionModal(context);
+                          if (completed != true) {
+                            return;
+                          }
+                          setState(() {});
+                          return;
+                        }
 
                         String packageSummary;
                         String firstMealName;
@@ -566,21 +1072,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         int portionsCount;
 
                         if (isSubscription) {
-                          packageSummary = subPkg['name']?.toString() ?? 'Paket 5 Hari Meal Prep (10 Box)';
+                          packageSummary =
+                              subPkg['name']?.toString() ??
+                              'Paket 5 Hari Meal Prep (10 Box)';
                           firstMealName = 'Ayam Bakar Madu & Quinoa Hijau';
-                          firstMealImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop';
+                          firstMealImage =
+                              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop';
                           portionsCount = 10;
                         } else if (menuController.cartItems.isNotEmpty) {
                           packageSummary = menuController.cartItems
                               .map((c) => '${c.quantity}x ${c.item.name}')
                               .join(', ');
-                          firstMealName = menuController.cartItems.first.item.name;
-                          firstMealImage = menuController.cartItems.first.item.imageUrl;
+                          firstMealName =
+                              menuController.cartItems.first.item.name;
+                          firstMealImage =
+                              menuController.cartItems.first.item.imageUrl;
                           portionsCount = menuController.totalItems;
                         } else {
                           packageSummary = 'Menu Sehat NutriMeal';
                           firstMealName = 'Grilled Chicken';
-                          firstMealImage = 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=800&auto=format&fit=crop';
+                          firstMealImage =
+                              'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=800&auto=format&fit=crop';
                           portionsCount = 1;
                         }
 
@@ -598,21 +1110,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           'payment_status': 'Lunas',
                         });
 
-                        final generatedOrderId = res != null && res['data'] != null
+                        final generatedOrderId =
+                            res != null && res['data'] != null
                             ? res['data']['id']?.toString() ??
-                                'ORD-${DateTime.now().millisecondsSinceEpoch % 100000}'
+                                  'ORD-${DateTime.now().millisecondsSinceEpoch % 100000}'
                             : 'ORD-${DateTime.now().millisecondsSinceEpoch % 100000}';
 
-                        // Integrasi ke Notifikasi dengan Estimasi Menit Sampai (30 Menit)
+                        // Integrasi ke Notifikasi sesuai jenis pesanan (Langganan vs Katering Harian)
                         const estimatedMinutes = 30;
-                        await NotificationService.instance.addOrderNotification(
-                          title: 'Pembayaran Berhasil! (#$generatedOrderId)',
-                          body: 'Pesanan $packageSummary sedang disiapkan oleh dapur NutriMeal. Estimasi tiba dalam $estimatedMinutes menit.',
-                          orderId: generatedOrderId,
-                          packageName: packageSummary,
-                          estimatedMinutes: estimatedMinutes,
-                          customerId: customerId,
-                        );
+                        if (isSubscription) {
+                          await NotificationService.instance
+                              .addSubscriptionNotification(
+                                orderId: generatedOrderId,
+                                packageName: packageSummary,
+                                schedule:
+                                    'Senin, 11:30 WIB (Makan Siang & Malam)',
+                                customerId: customerId,
+                              );
+                        } else {
+                          await NotificationService.instance.addOrderNotification(
+                            title: 'Pesanan Diterima! (#$generatedOrderId)',
+                            body:
+                                'Pesanan $packageSummary sedang disiapkan oleh dapur NutriMeal. Estimasi tiba dalam $estimatedMinutes menit.',
+                            orderId: generatedOrderId,
+                            packageName: packageSummary,
+                            estimatedMinutes: estimatedMinutes,
+                            customerId: customerId,
+                            route: '/order-tracking',
+                          );
+                        }
 
                         menuController.clearCart();
                         menuController.clearSubscriptionPackage();
@@ -627,20 +1153,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               paymentMethod: 'QRIS',
                               firstMealName: firstMealName,
                               firstMealImage: firstMealImage,
-                              deliveryTime: isSubscription ? 'Senin, 11:30 WIB' : 'Hari Ini, 12:00 WIB',
+                              deliveryTime: isSubscription
+                                  ? 'Senin, 11:30 WIB'
+                                  : 'Hari Ini, 12:00 WIB',
                               estimatedMinutes: estimatedMinutes,
                               isSubscription: isSubscription,
+                              customerAddress: customerAddress,
                             ),
                           ),
                         );
                       } catch (e) {
-                        if (mounted) {
-                          setState(() => _isSubmittingOrder = false);
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text('Terjadi kendala saat memproses pesanan: $e'),
-                              backgroundColor: const Color(0xFFEF4444),
-                            ),
+                        if (!mounted) return;
+                        setState(() => _isSubmittingOrder = false);
+                        if (context.mounted) {
+                          CenterFeedbackToast.showError(
+                            context,
+                            message:
+                                'Terjadi kendala saat memproses pesanan: $e',
                           );
                         }
                       }
@@ -649,11 +1178,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textDark),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.textDark,
+                      ),
                     )
-                  : const Icon(Icons.sync_rounded, color: AppColors.textDark, size: 18),
+                  : const Icon(
+                      Icons.sync_rounded,
+                      color: AppColors.textDark,
+                      size: 18,
+                    ),
               label: Text(
-                _isSubmittingOrder ? 'Memproses Pesanan...' : 'Cek Status Pembayaran',
+                _isSubmittingOrder
+                    ? 'Memproses Pesanan...'
+                    : 'Cek Status Pembayaran',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
@@ -663,7 +1201,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF1F5F9),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
             ),
           ),
@@ -692,7 +1232,10 @@ class _QrisPainter extends CustomPainter {
     void drawFinderPattern(double x, double y, double s, Paint innerPaint) {
       // Outer box
       canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(x, y, s, s), const Radius.circular(8)),
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, y, s, s),
+          const Radius.circular(8),
+        ),
         paintDark,
       );
       // Inner clear
@@ -700,12 +1243,18 @@ class _QrisPainter extends CustomPainter {
         ..color = Colors.white
         ..style = PaintingStyle.fill;
       canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(x + s * 0.15, y + s * 0.15, s * 0.7, s * 0.7), const Radius.circular(5)),
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x + s * 0.15, y + s * 0.15, s * 0.7, s * 0.7),
+          const Radius.circular(5),
+        ),
         innerClearPaint,
       );
       // Inner dot
       canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(x + s * 0.3, y + s * 0.3, s * 0.4, s * 0.4), const Radius.circular(3)),
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x + s * 0.3, y + s * 0.3, s * 0.4, s * 0.4),
+          const Radius.circular(3),
+        ),
         innerPaint,
       );
     }
@@ -723,7 +1272,8 @@ class _QrisPainter extends CustomPainter {
     for (int r = 0; r < 21; r++) {
       for (int c = 0; c < 21; c++) {
         // Skip finder areas
-        if ((r < 7 && c < 7) || (r < 7 && c > 13) || (r > 13 && c < 7)) continue;
+        if ((r < 7 && c < 7) || (r < 7 && c > 13) || (r > 13 && c < 7))
+          continue;
         // Skip center area
         if (r >= 8 && r <= 12 && c >= 8 && c <= 12) continue;
 
@@ -732,7 +1282,10 @@ class _QrisPainter extends CustomPainter {
           final px = c * (w / 21);
           final py = r * (h / 21);
           canvas.drawRRect(
-            RRect.fromRectAndRadius(Rect.fromLTWH(px, py, dotSize, dotSize), const Radius.circular(1.5)),
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(px, py, dotSize, dotSize),
+              const Radius.circular(1.5),
+            ),
             paintDark,
           );
         }

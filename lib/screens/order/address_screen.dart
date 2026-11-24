@@ -1,10 +1,17 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/center_feedback_toast.dart';
+import 'location_picker_screen.dart';
 
 enum AddressFormMode { add, edit }
 
@@ -30,8 +37,8 @@ class _AddressScreenState extends State<AddressScreen> {
         _selectedAddressId = controller.deliveryAddress.id.isNotEmpty
             ? controller.deliveryAddress.id
             : (controller.savedAddresses.isNotEmpty
-                ? controller.savedAddresses.first.id
-                : 'addr_1');
+                  ? controller.savedAddresses.first.id
+                  : 'addr_1');
       });
     });
   }
@@ -39,11 +46,9 @@ class _AddressScreenState extends State<AddressScreen> {
   void _confirmSelection(NutriMealMenuController controller) {
     final list = controller.savedAddresses;
     if (list.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Silakan tambahkan alamat pengiriman terlebih dahulu.'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      CenterFeedbackToast.showInfo(
+        context,
+        message: 'Silakan tambahkan alamat pengiriman terlebih dahulu.',
       );
       return;
     }
@@ -60,16 +65,10 @@ class _AddressScreenState extends State<AddressScreen> {
       auth.updateCustomerProfile(address: chosen.fullAddress);
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
+    CenterFeedbackToast.showSuccess(
+      context,
+      message:
           'Alamat ${chosen.recipientName} (${chosen.addressType}) aktif digunakan!',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: const Color(0xFF0F8A50),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
     );
 
     Navigator.pop(context, chosen);
@@ -127,7 +126,10 @@ class _AddressScreenState extends State<AddressScreen> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -164,7 +166,9 @@ class _AddressScreenState extends State<AddressScreen> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
                             ),
                             child: Column(
                               children: [
@@ -225,7 +229,10 @@ class _AddressScreenState extends State<AddressScreen> {
 
                         // Green Info Card (Thermal Box Steril)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFECFDF5),
                             borderRadius: BorderRadius.circular(14),
@@ -290,20 +297,10 @@ class _AddressScreenState extends State<AddressScreen> {
                         child: OutlinedButton(
                           onPressed: () {
                             if (controller.savedAddresses.length >= 5) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
+                              CenterFeedbackToast.showError(
+                                context,
+                                message:
                                     'Maksimal 5 alamat pengiriman telah tercapai.',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  backgroundColor: const Color(0xFFDC2626),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
                               );
                               return;
                             }
@@ -329,8 +326,11 @@ class _AddressScreenState extends State<AddressScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.add_rounded,
-                                  color: Color(0xFF0F8A50), size: 18),
+                              const Icon(
+                                Icons.add_rounded,
+                                color: Color(0xFF0F8A50),
+                                size: 18,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 'Tambah Alamat Baru',
@@ -409,7 +409,9 @@ class _AddressScreenState extends State<AddressScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? const Color(0xFF0F8A50)
+                : const Color(0xFFE2E8F0),
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: [
@@ -521,7 +523,10 @@ class _AddressScreenState extends State<AddressScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 30),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(10),
@@ -531,8 +536,11 @@ class _AddressScreenState extends State<AddressScreen> {
                     children: [
                       const Padding(
                         padding: EdgeInsets.only(top: 1.5),
-                        child: Icon(Icons.info_rounded,
-                            size: 13, color: Color(0xFF0F8A50)),
+                        child: Icon(
+                          Icons.info_rounded,
+                          size: 13,
+                          color: Color(0xFF0F8A50),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -564,7 +572,9 @@ class _AddressScreenState extends State<AddressScreen> {
                   if (address.isDefault) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0F8A50),
                         borderRadius: BorderRadius.circular(6),
@@ -582,7 +592,9 @@ class _AddressScreenState extends State<AddressScreen> {
                   ],
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(6),
@@ -615,11 +627,7 @@ class AddressFormScreen extends StatefulWidget {
   final AddressFormMode mode;
   final DeliveryAddress? address;
 
-  const AddressFormScreen({
-    super.key,
-    required this.mode,
-    this.address,
-  });
+  const AddressFormScreen({super.key, required this.mode, this.address});
 
   @override
   State<AddressFormScreen> createState() => _AddressFormScreenState();
@@ -636,43 +644,181 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
   String _selectedCategory = 'Rumah';
   bool _isDefaultAddress = true;
+  double? _selectedLat;
+  double? _selectedLng;
+  bool _isLoadingGps = false;
 
   @override
   void initState() {
     super.initState();
     final addr = widget.address;
     if (widget.mode == AddressFormMode.edit && addr != null) {
+      _selectedLat = addr.latitude ?? -7.9826;
+      _selectedLng = addr.longitude ?? 112.6308;
       _nameController = TextEditingController(text: addr.recipientName);
       _phoneController = TextEditingController(text: addr.phoneNumber);
-      final rawCoords = addr.fullAddress.isNotEmpty
+      final rawCoords =
+          addr.fullAddress.isNotEmpty &&
+              !addr.fullAddress.contains('Belum ada alamat')
           ? addr.fullAddress
-          : 'Jl. Senopati, Kebayoran Baru, Jakarta Selatan, 12190';
+          : '';
       _coordinatesController = TextEditingController(
-          text: rawCoords.length > 100 ? rawCoords.substring(0, 100) : rawCoords);
-      _areaController = TextEditingController(
-          text: addr.area.isNotEmpty
-              ? addr.area
-              : 'Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190');
-      final rawDetail = addr.deliveryNote.isNotEmpty
-          ? addr.deliveryNote
-          : 'Rumah pagar hitam samping Alfamart / Titipkan pos security';
+        text: rawCoords.length > 100 ? rawCoords.substring(0, 100) : rawCoords,
+      );
+      _areaController = TextEditingController(text: addr.area);
+      final rawDetail = addr.deliveryNote;
       _detailController = TextEditingController(
-          text: rawDetail.length > 100 ? rawDetail.substring(0, 100) : rawDetail);
-      _selectedCategory = addr.addressType.isNotEmpty ? addr.addressType : 'Rumah';
+        text: rawDetail.length > 100 ? rawDetail.substring(0, 100) : rawDetail,
+      );
+      _selectedCategory = addr.addressType.isNotEmpty
+          ? addr.addressType
+          : 'Rumah';
       _isDefaultAddress = addr.isDefault;
     } else {
-      // Default initial values matching screenshot (Image 1 bottom left)
-      _nameController = TextEditingController(text: 'Nadia Salsabila');
-      _phoneController = TextEditingController(text: '+62 812-8890-1234');
+      // Default ke koordinat Malang atau akun
+      _selectedLat = -7.9826;
+      _selectedLng = 112.6308;
+      final auth = context.read<AuthController>();
+      _nameController = TextEditingController(text: auth.currentUserName ?? '');
+      _phoneController = TextEditingController(text: auth.customerPhone ?? '');
       _coordinatesController = TextEditingController(
-          text: 'Jl. Senopati, Kebayoran Baru, Jakarta Selatan, 12190');
-      _areaController = TextEditingController(
-          text: 'Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190');
-      _detailController = TextEditingController(
-          text: 'Rumah pagar hitam samping Alfamart / Titipkan pos security');
+        text: auth.customerAddress ?? '',
+      );
+      _areaController = TextEditingController(text: '');
+      _detailController = TextEditingController(text: '');
       _selectedCategory = 'Rumah';
       _isDefaultAddress = true;
     }
+  }
+
+  Future<void> _openLocationPicker() async {
+    final result = await Navigator.push<LocationPinResult>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialPosition: _selectedLat != null && _selectedLng != null
+              ? LatLng(_selectedLat!, _selectedLng!)
+              : null,
+          initialAddress: _coordinatesController.text,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedLat = result.point.latitude;
+        _selectedLng = result.point.longitude;
+        _coordinatesController.text = result.fullAddress;
+        if (result.area.isNotEmpty) {
+          _areaController.text = result.area;
+        }
+      });
+      if (mounted) {
+        CenterFeedbackToast.showSuccess(
+          context,
+          message: 'Titik lokasi Google Maps berhasil diperbarui!',
+        );
+      }
+    }
+  }
+
+  Future<void> _getCurrentGpsLocation() async {
+    setState(() => _isLoadingGps = true);
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          CenterFeedbackToast.showError(
+            context,
+            message: 'GPS / Layanan lokasi belum aktif.',
+          );
+        }
+        setState(() => _isLoadingGps = false);
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            CenterFeedbackToast.showError(
+              context,
+              message: 'Izin akses lokasi perangkat ditolak.',
+            );
+          }
+          setState(() => _isLoadingGps = false);
+          return;
+        }
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _selectedLat = position.latitude;
+        _selectedLng = position.longitude;
+        _isLoadingGps = false;
+      });
+
+      _reverseGeocodePoint(LatLng(position.latitude, position.longitude));
+
+      CenterFeedbackToast.showSuccess(
+        context,
+        message:
+            'Titik GPS berhasil dideteksi: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingGps = false);
+        CenterFeedbackToast.showError(
+          context,
+          message: 'Gagal mendapatkan GPS: $e',
+        );
+      }
+    }
+  }
+
+  Future<void> _reverseGeocodePoint(LatLng point) async {
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=${point.latitude}&lon=${point.longitude}&zoom=18&addressdetails=1',
+      );
+      final response = await http
+          .get(
+            url,
+            headers: {'User-Agent': 'NutriMealApp/1.0 (flutter.nutrimeal)'},
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final displayName = data['display_name']?.toString() ?? '';
+        final address = data['address'] as Map<String, dynamic>? ?? {};
+
+        final areaParts = [
+          address['suburb'] ?? address['village'] ?? address['city_district'],
+          address['city'] ?? address['town'] ?? address['county'],
+        ].where((e) => e != null && e.toString().isNotEmpty).toList();
+
+        final area = areaParts.isNotEmpty ? areaParts.join(', ') : '';
+
+        if (mounted) {
+          setState(() {
+            if (displayName.isNotEmpty) {
+              _coordinatesController.text = displayName;
+            }
+            if (area.isNotEmpty) {
+              _areaController.text = area;
+            }
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -696,7 +842,8 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
       final saved = DeliveryAddress(
         id: addressId,
-        label: '$_selectedCategory (${_nameController.text.trim().split(' ').first})',
+        label:
+            '$_selectedCategory (${_nameController.text.trim().split(' ').first})',
         recipientName: _nameController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         area: _areaController.text.trim(),
@@ -704,40 +851,37 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         deliveryNote: _detailController.text.trim(),
         addressType: _selectedCategory,
         isDefault: _isDefaultAddress,
+        latitude: _selectedLat,
+        longitude: _selectedLng,
       );
 
       if (isEdit) {
         controller.updateSavedAddress(saved);
       } else {
         if (controller.savedAddresses.length >= 5) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Maksimal 5 alamat pengiriman telah tercapai.',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-              ),
-              backgroundColor: const Color(0xFFDC2626),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
+          CenterFeedbackToast.showError(
+            context,
+            message: 'Maksimal 5 alamat pengiriman telah tercapai.',
           );
           return;
         }
         controller.addSavedAddress(saved);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isEdit
-                ? 'Alamat pengiriman berhasil disimpan!'
-                : 'Alamat baru berhasil ditambahkan!',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-          ),
-          backgroundColor: const Color(0xFF0F8A50),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      // Sinkronkan ke profil customer backend MySQL
+      try {
+        final auth = context.read<AuthController>();
+        auth.updateCustomerProfile(
+          phone: _phoneController.text.trim(),
+          address: _coordinatesController.text.trim(),
+        );
+      } catch (_) {}
+
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: isEdit
+            ? 'Alamat pengiriman berhasil disimpan!'
+            : 'Alamat baru berhasil ditambahkan!',
       );
 
       Navigator.pop(context);
@@ -755,7 +899,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Text(
             'Hapus Alamat?',
             style: GoogleFonts.plusJakartaSans(
@@ -784,27 +930,22 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                context.read<NutriMealMenuController>().removeSavedAddress(addr.id);
+                context.read<NutriMealMenuController>().removeSavedAddress(
+                  addr.id,
+                );
                 Navigator.pop(ctx);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Alamat berhasil dihapus.',
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-                    ),
-                    backgroundColor: const Color(0xFFEF4444),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
+                CenterFeedbackToast.showSuccess(
+                  context,
+                  message: 'Alamat berhasil dihapus.',
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFEF4444),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
                 'Ya, Hapus',
@@ -927,23 +1068,19 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 3. Alamat Lengkap Pengiriman (Expandable & Max 100 Karakter)
+                      // 3. Alamat Lengkap Pengiriman (Expandable)
                       _buildFieldLabel('Alamat Lengkap Pengiriman'),
                       const SizedBox(height: 6),
                       _buildFormField(
                         controller: _coordinatesController,
                         icon: Icons.location_on_outlined,
-                        hint: 'Tuliskan nama jalan, no. rumah, RT/RW, dsb.',
+                        hint:
+                            'Tuliskan nama jalan, no. rumah, RT/RW, kelurahan, dsb.',
                         minLines: 2,
                         maxLines: 5,
-                        maxLength: 100,
-                        showCounter: true,
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
                             return 'Alamat pengiriman wajib diisi';
-                          }
-                          if (v.trim().length > 100) {
-                            return 'Alamat maksimal 100 karakter';
                           }
                           return null;
                         },
@@ -957,14 +1094,13 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                         controller: _areaController,
                         icon: Icons.location_city_outlined,
                         hint: 'Kecamatan, Kota, Provinsi, Kode Pos',
-                        maxLength: 100,
                         validator: (v) => (v == null || v.trim().isEmpty)
                             ? 'Wilayah & kode pos wajib diisi'
                             : null,
                       ),
                       const SizedBox(height: 12),
 
-                      // 5. Detail & Patokan Domisili (Expandable & Max 100 Karakter)
+                      // 5. Detail & Patokan Domisili (Opsional)
                       _buildFieldLabel('Detail & Patokan Domisili (Opsional)'),
                       const SizedBox(height: 6),
                       _buildFormField(
@@ -973,8 +1109,6 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                         hint: 'Cth: Pagar hitam samping Alfamart / Pos satpam',
                         minLines: 2,
                         maxLines: 4,
-                        maxLength: 100,
-                        showCounter: true,
                       ),
                       const SizedBox(height: 16),
 
@@ -1059,70 +1193,94 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
                 const SizedBox(height: 20),
 
-                // Bottom Buttons Row: [Hapus Alamat] & [Simpan Alamat]
-                Row(
-                  children: [
-                    // Hapus Alamat Button (Red outline pill)
-                    Expanded(
-                      flex: 1,
-                      child: SizedBox(
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: _deleteAddress,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Color(0xFFEF4444),
-                              width: 1.2,
+                // Bottom Buttons:
+                if (isEdit && widget.address != null)
+                  Row(
+                    children: [
+                      // Hapus Alamat Button (Red outline pill)
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: _deleteAddress,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Color(0xFFEF4444),
+                                width: 1.2,
+                              ),
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            child: Text(
+                              'Hapus Alamat',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFEF4444),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          child: Text(
-                            'Hapus Alamat',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFFEF4444),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
+                      const SizedBox(width: 12),
 
-                    // Simpan Alamat Button (Solid Green pill)
-                    Expanded(
-                      flex: 1,
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _saveAddress,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F8A50),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      // Simpan Perubahan Button
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: _saveAddress,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F8A50),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            'Simpan Alamat',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                            child: Text(
+                              'Simpan Perubahan',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
+                    ],
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _saveAddress,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F8A50),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Simpan Alamat',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ],
-                ),
+                  ),
                 const SizedBox(height: 20),
               ],
             ),
@@ -1187,8 +1345,13 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               );
             }
           : (maxLength != null && !showCounter
-              ? (_, {required currentLength, required isFocused, maxLength}) => null
-              : null),
+                ? (
+                    _, {
+                    required currentLength,
+                    required isFocused,
+                    maxLength,
+                  }) => null
+                : null),
       decoration: InputDecoration(
         prefixIcon: isMultiLine
             ? Padding(
@@ -1209,8 +1372,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         ),
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -1228,6 +1393,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   }
 
   Widget _buildPinpointMapCard() {
+    final lat = _selectedLat ?? -7.9826;
+    final lng = _selectedLng ?? 112.6308;
+    final centerPoint = LatLng(lat, lng);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1235,39 +1404,32 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.gps_fixed_rounded,
-                  color: Color(0xFF0F8A50),
-                  size: 16,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Titik Lokasi Presisi',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
+            Expanded(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.gps_fixed_rounded,
+                    color: Color(0xFF0F8A50),
+                    size: 16,
                   ),
-                ),
-              ],
-            ),
-            GestureDetector(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Pin lokasi berhasil disesuaikan secara presisi!',
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Titik Lokasi Presisi',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    backgroundColor: const Color(0xFF0F8A50),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
                   ),
-                );
-              },
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: _openLocationPicker,
               child: Text(
                 'Geser Pin',
                 style: GoogleFonts.plusJakartaSans(
@@ -1281,60 +1443,237 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         ),
         const SizedBox(height: 8),
 
-        // Map Preview Box
-        Container(
-          height: 105,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: const Color(0xFFE2E8F0),
-            border: Border.all(color: const Color(0xFFCBD5E1)),
-          ),
-          child: Stack(
-            children: [
-              // Map background grid
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _MapGridPainter(),
+        // Interactive Map Preview Box (Google Maps Roadmap Tiles)
+        GestureDetector(
+          onTap: _openLocationPicker,
+          child: Container(
+            height: 135,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFE2E8F0),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-
-              // Center Green Pin with White Dot inside (matching Image 1 bottom-left)
-              Center(
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F8A50),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0F8A50).withValues(alpha: 0.35),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                // Live Google Maps Roadmap Layer
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: FlutterMap(
+                      key: ValueKey('preview_map_${lat}_$lng'),
+                      options: MapOptions(
+                        initialCenter: centerPoint,
+                        initialZoom: 16.0,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.none,
+                        ),
                       ),
-                    ],
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+                          userAgentPackageName: 'com.nutrimeal.app',
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Center(
+                ),
+
+                // Center Pin Icon
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
                     child: Container(
-                      width: 9,
-                      height: 9,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F8A50),
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF0F8A50,
+                            ).withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: Colors.white,
+                        size: 22,
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+
+                // Top Badge: "Ketuk untuk Membuka Peta Interaktif"
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.touch_app_rounded,
+                          size: 12,
+                          color: Color(0xFF0F8A50),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Buka Peta Penuh',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF0F8A50),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Bottom Left Coordinates Badge
+                Positioned(
+                  left: 8,
+                  bottom: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '📍 ${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+        ),
+        const SizedBox(height: 10),
+
+        // Action Buttons Row: Tombol Buka Peta & Tombol GPS Saat Ini
+        Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: SizedBox(
+                height: 38,
+                child: OutlinedButton.icon(
+                  onPressed: _openLocationPicker,
+                  icon: const Icon(
+                    Icons.pin_drop_rounded,
+                    size: 15,
+                    color: Color(0xFF0F8A50),
+                  ),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Pilih di Peta Google',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F8A50),
+                      ),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                      color: Color(0xFF0F8A50),
+                      width: 1.2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 1,
+              child: SizedBox(
+                height: 38,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoadingGps ? null : _getCurrentGpsLocation,
+                  icon: _isLoadingGps
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.my_location_rounded,
+                          size: 15,
+                          color: Colors.white,
+                        ),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'GPS Realtime',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F8A50),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
 
         // Caption Note under map
         Text(
-          'Titik akurat pengantaran katering kamu',
+          'Titik koordinat akurat memudahkan kurir mengantar pesanan langsung ke depan pintu Anda.',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 10.5,
             color: const Color(0xFF64748B),
@@ -1357,7 +1696,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           color: isSelected ? const Color(0xFFE8F5E9) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFFCBD5E1),
+            color: isSelected
+                ? const Color(0xFF0F8A50)
+                : const Color(0xFFCBD5E1),
             width: isSelected ? 1.4 : 1,
           ),
         ),
@@ -1377,7 +1718,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFF64748B),
+                color: isSelected
+                    ? const Color(0xFF0F8A50)
+                    : const Color(0xFF64748B),
               ),
             ),
           ],
@@ -1385,56 +1728,4 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       ),
     );
   }
-}
-
-/// Custom painter for stylized map streets and contours
-class _MapGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final roadPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.7)
-      ..strokeWidth = 3.5
-      ..style = PaintingStyle.stroke;
-
-    final roadSecondary = Paint()
-      ..color = const Color(0xFFCBD5E1).withValues(alpha: 0.9)
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    final waterPaint = Paint()
-      ..color = const Color(0xFFBFDBFE).withValues(alpha: 0.45)
-      ..strokeWidth = 7.0
-      ..style = PaintingStyle.stroke;
-
-    // Curved river path
-    final riverPath = Path()
-      ..moveTo(0, size.height * 0.25)
-      ..cubicTo(size.width * 0.4, size.height * 0.4, size.width * 0.6,
-          size.height * 0.1, size.width, size.height * 0.35);
-    canvas.drawPath(riverPath, waterPaint);
-
-    // Main street
-    canvas.drawLine(
-      Offset(0, size.height * 0.65),
-      Offset(size.width, size.height * 0.45),
-      roadPaint,
-    );
-
-    // Cross street
-    canvas.drawLine(
-      Offset(size.width * 0.35, 0),
-      Offset(size.width * 0.55, size.height),
-      roadPaint,
-    );
-
-    // Secondary diagonal road
-    canvas.drawLine(
-      Offset(size.width * 0.1, size.height),
-      Offset(size.width * 0.85, 0),
-      roadSecondary,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

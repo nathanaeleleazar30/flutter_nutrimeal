@@ -45,15 +45,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
+    final bool hasError =
+        widget.errorText != null && widget.errorText!.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: AppTextStyles.inputLabel,
-        ),
+        Text(widget.label, style: AppTextStyles.inputLabel),
         const SizedBox(height: 7),
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -90,7 +88,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                       border: InputBorder.none,
                       hintText: widget.hintText,
                       hintStyle: AppTextStyles.inputHint,
-                      suffixIcon: widget.enablePasswordToggle && widget.obscureText
+                      suffixIcon:
+                          widget.enablePasswordToggle && widget.obscureText
                           ? IconButton(
                               icon: Icon(
                                 _obscured
@@ -117,10 +116,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           const SizedBox(height: 5),
           Padding(
             padding: const EdgeInsets.only(left: 4),
-            child: Text(
-              widget.errorText!,
-              style: AppTextStyles.errorText,
-            ),
+            child: Text(widget.errorText!, style: AppTextStyles.errorText),
           ),
         ],
       ],

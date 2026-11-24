@@ -62,13 +62,7 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     setState(() {
-      _messages.add(
-        ChatMessage(
-          isUser: true,
-          text: text,
-          time: timeStr,
-        ),
-      );
+      _messages.add(ChatMessage(isUser: true, text: text, time: timeStr));
     });
 
     if (customText == null) {
@@ -91,13 +85,7 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
       }
 
       setState(() {
-        _messages.add(
-          ChatMessage(
-            isUser: false,
-            text: reply,
-            time: timeStr,
-          ),
-        );
+        _messages.add(ChatMessage(isUser: false, text: reply, time: timeStr));
       });
       _scrollToBottom();
     });
@@ -156,9 +144,7 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
                   clipBehavior: Clip.antiAlias,
                   child: Image.asset(
                     'assets/images/nutribot_avatar.png',
@@ -208,11 +194,19 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.phone_outlined, color: Color(0xFF64748B), size: 22),
+            icon: const Icon(
+              Icons.phone_outlined,
+              color: Color(0xFF64748B),
+              size: 22,
+            ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF64748B), size: 22),
+            icon: const Icon(
+              Icons.more_vert_rounded,
+              color: Color(0xFF64748B),
+              size: 22,
+            ),
             onPressed: () {},
           ),
           Padding(
@@ -226,7 +220,11 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                   color: Color(0xFFDCFCE7),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.person_rounded, color: AppColors.primaryGreen, size: 18),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 18,
+                ),
               ),
             ),
           ),
@@ -287,9 +285,9 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: const Color(0xFF15803D),
-            borderRadius: BorderRadius.circular(18).copyWith(
-              bottomRight: const Radius.circular(4),
-            ),
+            borderRadius: BorderRadius.circular(
+              18,
+            ).copyWith(bottomRight: const Radius.circular(4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -311,9 +309,16 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                     style: const TextStyle(fontSize: 10, color: Colors.white70),
                   ),
                   const SizedBox(width: 4),
-                  const Text('• Dibaca', style: TextStyle(fontSize: 10, color: Colors.white70)),
+                  const Text(
+                    '• Dibaca',
+                    style: TextStyle(fontSize: 10, color: Colors.white70),
+                  ),
                   const SizedBox(width: 3),
-                  const Icon(Icons.done_all_rounded, size: 12, color: Color(0xFF86EFAC)),
+                  const Icon(
+                    Icons.done_all_rounded,
+                    size: 12,
+                    color: Color(0xFF86EFAC),
+                  ),
                 ],
               ),
             ],
@@ -333,9 +338,7 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(shape: BoxShape.circle),
               clipBehavior: Clip.antiAlias,
               child: Image.asset(
                 'assets/images/nutribot_avatar.png',
@@ -351,9 +354,9 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(18).copyWith(
-                        topLeft: const Radius.circular(4),
-                      ),
+                      borderRadius: BorderRadius.circular(
+                        18,
+                      ).copyWith(topLeft: const Radius.circular(4)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.04),
@@ -389,7 +392,10 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                         const SizedBox(height: 6),
                         Text(
                           message.time,
-                          style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.textMuted),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ],
                     ),
@@ -405,11 +411,16 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                         return GestureDetector(
                           onTap: () => _sendMessage(chip),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.02),
@@ -455,7 +466,11 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.pie_chart_rounded, size: 16, color: AppColors.primaryGreen),
+                  const Icon(
+                    Icons.pie_chart_rounded,
+                    size: 16,
+                    color: AppColors.primaryGreen,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Total Kalori',
@@ -494,11 +509,26 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          _buildMacroRow('Protein', '38g (Pemulihan otot)', 0.75, AppColors.primaryGreen),
+          _buildMacroRow(
+            'Protein',
+            '38g (Pemulihan otot)',
+            0.75,
+            AppColors.primaryGreen,
+          ),
           const SizedBox(height: 6),
-          _buildMacroRow('Karbohidrat Kompleks', '42g (GI rendah)', 0.65, const Color(0xFF0284C7)),
+          _buildMacroRow(
+            'Karbohidrat Kompleks',
+            '42g (GI rendah)',
+            0.65,
+            const Color(0xFF0284C7),
+          ),
           const SizedBox(height: 6),
-          _buildMacroRow('Lemak Baik (Omega-3)', '14g (Alpukat & Salmon)', 0.40, const Color(0xFFE11D48)),
+          _buildMacroRow(
+            'Lemak Baik (Omega-3)',
+            '14g (Alpukat & Salmon)',
+            0.40,
+            const Color(0xFFE11D48),
+          ),
           const SizedBox(height: 6),
           _buildMacroRow('Serat Pangan', '6g', 0.50, const Color(0xFF9333EA)),
         ],
@@ -506,7 +536,12 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
     );
   }
 
-  Widget _buildMacroRow(String label, String value, double progress, Color color) {
+  Widget _buildMacroRow(
+    String label,
+    String value,
+    double progress,
+    Color color,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -515,11 +550,18 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
           children: [
             Text(
               label,
-              style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF475569)),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                color: const Color(0xFF475569),
+              ),
             ),
             Text(
               value,
-              style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
           ],
         ),
@@ -576,7 +618,10 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: const Color(0xFFDCFCE7),
-                      child: const Icon(Icons.lunch_dining_rounded, color: AppColors.primaryGreen),
+                      child: const Icon(
+                        Icons.lunch_dining_rounded,
+                        color: AppColors.primaryGreen,
+                      ),
                     ),
                   ),
                 ),
@@ -596,7 +641,10 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                     ),
                     Text(
                       'Segar, Quinoa & Kaya Omega-3',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textMuted),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -634,7 +682,11 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.bolt_rounded, size: 14, color: AppColors.primaryGreen),
+              const Icon(
+                Icons.bolt_rounded,
+                size: 14,
+                color: AppColors.primaryGreen,
+              ),
               const SizedBox(width: 4),
               Text(
                 'Saran pertanyaan cepat:',
@@ -658,7 +710,9 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                     onPressed: () => _sendMessage(sug),
                     backgroundColor: Colors.white,
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     labelStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -701,11 +755,20 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                 child: TextField(
                   controller: _textController,
                   onSubmitted: (val) => _sendMessage(),
-                  style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.textDark),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: AppColors.textDark,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Tanya kalori, menu, atau diet...',
-                    hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12.5, color: AppColors.textMuted),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    hintStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      color: AppColors.textMuted,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     border: InputBorder.none,
                   ),
                 ),
@@ -722,7 +785,11 @@ class _NutriBotChatScreenState extends State<NutriBotChatScreen> {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                child: const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ),
           ],

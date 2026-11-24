@@ -71,7 +71,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 20,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -87,7 +90,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryGreen.withValues(alpha: 0.35),
+                                color: AppColors.primaryGreen.withValues(
+                                  alpha: 0.35,
+                                ),
                                 blurRadius: 18,
                                 offset: const Offset(0, 6),
                               ),

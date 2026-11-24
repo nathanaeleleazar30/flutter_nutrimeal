@@ -3,12 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Jenis izin perangkat yang didukung secara terpusat di NutriMeal
-enum AppPermissionType {
-  notification,
-  camera,
-  gallery,
-  location,
-}
+enum AppPermissionType { notification, camera, gallery, location }
 
 extension AppPermissionTypeExtension on AppPermissionType {
   String get displayName {
@@ -76,7 +71,9 @@ class PermissionService {
     var status = await permission.status;
 
     // Khusus Android versi lama yang belum mendukung Permission.photos
-    if (type == AppPermissionType.gallery && Platform.isAndroid && status.isDenied) {
+    if (type == AppPermissionType.gallery &&
+        Platform.isAndroid &&
+        status.isDenied) {
       final storageStatus = await Permission.storage.status;
       if (storageStatus.isGranted || storageStatus.isLimited) {
         return storageStatus;
@@ -96,7 +93,9 @@ class PermissionService {
     var status = await permission.request();
 
     // Fallback storage untuk galeri pada Android < 13
-    if (type == AppPermissionType.gallery && Platform.isAndroid && !status.isGranted) {
+    if (type == AppPermissionType.gallery &&
+        Platform.isAndroid &&
+        !status.isGranted) {
       final storageStatus = await Permission.storage.request();
       if (storageStatus.isGranted || storageStatus.isLimited) {
         status = storageStatus;
@@ -104,7 +103,9 @@ class PermissionService {
     }
 
     // Jika ditolak permanen, tawarkan buka pengaturan HP
-    if (status.isPermanentlyDenied && showDialogIfPermanentlyDenied && context.mounted) {
+    if (status.isPermanentlyDenied &&
+        showDialogIfPermanentlyDenied &&
+        context.mounted) {
       await showPermanentlyDeniedDialog(context, type);
     }
 
@@ -124,9 +125,14 @@ class PermissionService {
       barrierDismissible: true,
       builder: (dialogCtx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 10,
+          ),
           actionsPadding: const EdgeInsets.all(16),
           title: Row(
             children: [
@@ -136,13 +142,20 @@ class PermissionService {
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(type.icon, color: theme.colorScheme.primary, size: 24),
+                child: Icon(
+                  type.icon,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Izin ${type.displayName}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -153,7 +166,11 @@ class PermissionService {
             children: [
               Text(
                 customReason ?? type.defaultReason,
-                style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 12),
               Container(
@@ -165,7 +182,11 @@ class PermissionService {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.amber.shade800, size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.amber.shade800,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
@@ -187,7 +208,9 @@ class PermissionService {
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: () async {
                 Navigator.of(dialogCtx).pop();

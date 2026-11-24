@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../../widgets/custom_button.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
@@ -17,8 +18,10 @@ class VerifyEmailScreen extends StatefulWidget {
 }
 
 class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   bool _isLoading = false;
 
@@ -36,16 +39,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   void _handleConfirm() {
     final otp = _controllers.map((c) => c.text).join();
     if (otp.length < 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Harap masukkan 4 digit kode verifikasi',
-            style: AppTextStyles.inputText.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.errorRed,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      CenterFeedbackToast.showError(
+        context,
+        message: 'Harap masukkan 4 digit kode verifikasi',
       );
       return;
     }
@@ -60,16 +56,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Verifikasi Berhasil! Silakan buat password baru.',
-            style: AppTextStyles.inputText.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.primaryGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: 'Verifikasi Berhasil! Silakan buat password baru.',
       );
 
       Navigator.popUntil(context, (route) => route.isFirst);
@@ -89,7 +78,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 20,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -105,7 +97,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryGreen.withValues(alpha: 0.35),
+                                color: AppColors.primaryGreen.withValues(
+                                  alpha: 0.35,
+                                ),
                                 blurRadius: 18,
                                 offset: const Offset(0, 6),
                               ),

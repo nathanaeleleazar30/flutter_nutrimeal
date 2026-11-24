@@ -11,9 +11,7 @@ class SecureStorageService {
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
   static const String _keyAccessToken = 'sec_access_token';
@@ -48,7 +46,8 @@ class SecureStorageService {
     String? refreshToken,
   }) async {
     if (token != null) await _storage.write(key: _keyAccessToken, value: token);
-    if (refreshToken != null) await _storage.write(key: _keyRefreshToken, value: refreshToken);
+    if (refreshToken != null)
+      await _storage.write(key: _keyRefreshToken, value: refreshToken);
     if (userId != null) await _storage.write(key: _keyUserId, value: userId);
     if (email != null) await _storage.write(key: _keyUserEmail, value: email);
     if (name != null) await _storage.write(key: _keyUserName, value: name);

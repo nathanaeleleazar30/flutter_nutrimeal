@@ -5,6 +5,7 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/food_doodle_background.dart';
@@ -14,10 +15,7 @@ import '../../widgets/nutri_meal_logo.dart';
 class RegisterScreen extends StatefulWidget {
   final bool initialShowErrors;
 
-  const RegisterScreen({
-    super.key,
-    this.initialShowErrors = false,
-  });
+  const RegisterScreen({super.key, this.initialShowErrors = false});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -71,17 +69,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      CenterFeedbackToast.showSuccess(
+        context,
+        message:
             'Pendaftaran berhasil! Silakan masuk menggunakan akun baru Anda.',
-            style: AppTextStyles.inputText.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.primaryGreen,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
       );
       // Kembali ke halaman awal (login)
       if (Navigator.canPop(context)) {
@@ -92,14 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else {
       final err = authController.generalError;
       if (err != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        CenterFeedbackToast.showError(context, message: err);
       }
     }
   }
@@ -113,29 +97,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (success) {
       final user = authController.selectedGoogleAccount;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Berhasil mendaftar dengan ${user?.name}',
-            style: AppTextStyles.inputText.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.primaryGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: 'Berhasil mendaftar dengan ${user?.name}',
       );
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       final err = authController.generalError;
       if (err != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        CenterFeedbackToast.showError(context, message: err);
       }
     }
   }
@@ -151,9 +121,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Stack(
         children: [
           // Background Doodle Pattern
-          const Positioned.fill(
-            child: FoodDoodleBackground(fillFull: true),
-          ),
+          const Positioned.fill(child: FoodDoodleBackground(fillFull: true)),
 
           // Main Layout using CustomScrollView
           SafeArea(
@@ -300,7 +268,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: Row(
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.only(left: 16, right: 8),
+                                    padding: const EdgeInsets.only(
+                                      left: 16,
+                                      right: 8,
+                                    ),
                                     child: Text(
                                       '+62  |',
                                       style: AppTextStyles.inputText.copyWith(
@@ -322,7 +293,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       decoration: InputDecoration(
                                         isDense: true,
                                         contentPadding:
-                                            const EdgeInsets.symmetric(vertical: 14),
+                                            const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
                                         border: InputBorder.none,
                                         hintText: '',
                                         hintStyle: AppTextStyles.inputHint,

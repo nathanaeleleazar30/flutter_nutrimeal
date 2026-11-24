@@ -5,16 +5,13 @@ import '../../controllers/menu_controller.dart';
 import '../beranda_screen.dart';
 import '../galeri_menu_screen.dart';
 import '../jadwal_screen.dart';
-import '../pesan_hub_screen.dart';
+import '../ai_planner/ai_planner_screen.dart';
 import '../profile_screen.dart';
 
 class MainNavigationShell extends StatefulWidget {
   final int initialIndex;
 
-  const MainNavigationShell({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const MainNavigationShell({super.key, this.initialIndex = 0});
 
   @override
   State<MainNavigationShell> createState() => _MainNavigationShellState();
@@ -45,24 +42,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         onNavigateToChat: () => _onTabTapped(2),
       ),
       const GaleriMenuScreen(),
-      const PesanHubScreen(),
+      const AiPlannerScreen(showBackButton: false),
       const JadwalScreen(),
       const ProfileScreen(showBottomNav: true),
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           border: const Border(
-            top: BorderSide(
-              color: Color(0xFFF1F5F9),
-              width: 1.0,
-            ),
+            top: BorderSide(color: Color(0xFFF1F5F9), width: 1.0),
           ),
           boxShadow: [
             BoxShadow(
@@ -97,14 +88,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
 
                 // 3. Center Floating Mascot Button: Pesan
-                Expanded(
-                  child: _buildCenterMascotItem(),
-                ),
+                Expanded(child: _buildCenterMascotItem()),
 
                 // 4. Jadwal (Calendar with Clock)
-                Expanded(
-                  child: _buildJadwalNavItem(index: 3),
-                ),
+                Expanded(child: _buildJadwalNavItem(index: 3)),
 
                 // 5. Profil
                 Expanded(
@@ -138,11 +125,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 23,
-            color: isSelected ? activeColor : inactiveColor,
-          ),
+          Icon(icon, size: 23, color: isSelected ? activeColor : inactiveColor),
           const SizedBox(height: 3),
           Text(
             label,
@@ -186,11 +169,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 20,
-                  color: itemColor,
-                ),
+                Icon(Icons.calendar_today_outlined, size: 20, color: itemColor),
                 Positioned(
                   right: 0,
                   bottom: 0,
@@ -248,31 +227,44 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Elevated Circular Button with white border & Mascot Image
+              // Elevated Circular Button with white border & AI Sparkle Icon
               Container(
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: mascotGreen,
+                  gradient: isSelected
+                      ? const LinearGradient(
+                          colors: [Color(0xFF16A34A), Color(0xFF22C55E)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : const LinearGradient(
+                          colors: [Color(0xFF1E6B43), Color(0xFF166534)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3.5),
                   boxShadow: [
                     BoxShadow(
-                      color: mascotGreen.withValues(alpha: 0.30),
+                      color:
+                          (isSelected ? const Color(0xFF16A34A) : mascotGreen)
+                              .withValues(alpha: 0.35),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset(
-                  'assets/images/nutribot_avatar.png',
-                  fit: BoxFit.cover,
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
-                'Pesan',
+                'Nutribot',
                 maxLines: 1,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 10.5,

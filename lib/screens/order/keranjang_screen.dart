@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../address_screen.dart';
 import '../admin_chat_screen.dart';
 import '../checkout_screen.dart';
@@ -123,7 +125,9 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                     child: savedAddresses.isEmpty
                         ? Center(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -157,185 +161,209 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                         : SingleChildScrollView(
                             child: Column(
                               children: [
-                                ...List.generate(savedAddresses.length, (index) {
+                                ...List.generate(savedAddresses.length, (
+                                  index,
+                                ) {
                                   final addr = savedAddresses[index];
-                                  final isSelected = _selectedAddressIndex == index;
+                                  final isSelected =
+                                      _selectedAddressIndex == index;
 
                                   return GestureDetector(
                                     onTap: () {
                                       setModalState(
                                         () => _selectedAddressIndex = index,
                                       );
-                                      setState(() => _selectedAddressIndex = index);
+                                      setState(
+                                        () => _selectedAddressIndex = index,
+                                      );
                                     },
                                     child: Container(
                                       margin: const EdgeInsets.only(bottom: 12),
                                       padding: const EdgeInsets.all(14),
                                       decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? const Color(0xFF22C55E)
-                                        : const Color(0xFFE2E8F0),
-                                    width: isSelected ? 1.8 : 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 2),
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
                                           color: isSelected
-                                              ? const Color(0xFF16A34A)
-                                              : const Color(0xFFCBD5E1),
-                                          width: isSelected ? 6 : 2,
+                                              ? const Color(0xFF22C55E)
+                                              : const Color(0xFFE2E8F0),
+                                          width: isSelected ? 1.8 : 1,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
+                                      child: Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                '${addr.label} • ${addr.recipientName}',
-                                                style:
-                                                    GoogleFonts.plusJakartaSans(
-                                                      fontSize: 13.5,
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                      color: AppColors.textDark,
-                                                    ),
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                              top: 2,
+                                            ),
+                                            width: 20,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: isSelected
+                                                    ? const Color(0xFF16A34A)
+                                                    : const Color(0xFFCBD5E1),
+                                                width: isSelected ? 6 : 2,
                                               ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  Navigator.pop(ctx);
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (_) =>
-                                                          const AddressScreen(),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      '${addr.label} • ${addr.recipientName}',
+                                                      style:
+                                                          GoogleFonts.plusJakartaSans(
+                                                            fontSize: 13.5,
+                                                            fontWeight:
+                                                                FontWeight.w800,
+                                                            color: AppColors
+                                                                .textDark,
+                                                          ),
                                                     ),
-                                                  );
-                                                },
-                                                child: Text(
-                                                  'Ubah',
+                                                    GestureDetector(
+                                                      onTap: () {
+                                                        Navigator.pop(ctx);
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (_) =>
+                                                                const AddressScreen(),
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: Text(
+                                                        'Ubah',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF16A34A,
+                                                                  ),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 3),
+                                                Text(
+                                                  addr.phoneNumber,
                                                   style:
                                                       GoogleFonts.plusJakartaSans(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w800,
+                                                        fontSize: 11.5,
                                                         color: const Color(
-                                                          0xFF16A34A,
+                                                          0xFF64748B,
                                                         ),
                                                       ),
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 3),
-                                          Text(
-                                            addr.phoneNumber,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 11.5,
-                                              color: const Color(0xFF64748B),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            addr.fullAddress,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 11.5,
-                                              color: const Color(0xFF475569),
-                                            ),
-                                          ),
-                                          if (addr.deliveryNote.isNotEmpty) ...[
-                                            const SizedBox(height: 6),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF0FDF4),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                addr.deliveryNote,
-                                                style:
-                                                    GoogleFonts.plusJakartaSans(
-                                                      fontSize: 10.5,
-                                                      color: const Color(
-                                                        0xFF166534,
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  addr.fullAddress,
+                                                  style:
+                                                      GoogleFonts.plusJakartaSans(
+                                                        fontSize: 11.5,
+                                                        color: const Color(
+                                                          0xFF475569,
+                                                        ),
                                                       ),
+                                                ),
+                                                if (addr
+                                                    .deliveryNote
+                                                    .isNotEmpty) ...[
+                                                  const SizedBox(height: 6),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 4,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(
+                                                        0xFFF0FDF4,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
+                                                          ),
                                                     ),
-                                              ),
+                                                    child: Text(
+                                                      addr.deliveryNote,
+                                                      style:
+                                                          GoogleFonts.plusJakartaSans(
+                                                            fontSize: 10.5,
+                                                            color: const Color(
+                                                              0xFF166534,
+                                                            ),
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
                                             ),
-                                          ],
+                                          ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }),
-                          const SizedBox(height: 10),
+                                  );
+                                }),
+                                const SizedBox(height: 10),
 
-                          // Tambah Alamat Baru Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 46,
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const AddressScreen(),
+                                // Tambah Alamat Baru Button
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 46,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const AddressScreen(),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.add_rounded,
+                                      color: Color(0xFF16A34A),
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      'Tambah Alamat Baru',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF16A34A),
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Color(0xFF86EFAC),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
                                   ),
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.add_rounded,
-                                color: Color(0xFF16A34A),
-                                size: 18,
-                              ),
-                              label: Text(
-                                'Tambah Alamat Baru',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF16A34A),
                                 ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                  color: Color(0xFF86EFAC),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
+                                const SizedBox(height: 10),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 10),
-                        ],
-                      ),
-                    ),
                   ),
 
                   // Bottom Action Button
@@ -973,7 +1001,7 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                 children: [
                   // QRIS Logo box
                   Container(
-                    width: 48,
+                    width: 62,
                     height: 28,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 4,
@@ -985,32 +1013,35 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                       border: Border.all(color: const Color(0xFFCBD5E1)),
                     ),
                     alignment: Alignment.center,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          color: Colors.black,
-                          child: const Center(
-                            child: Icon(
-                              Icons.qr_code,
-                              color: Colors.white,
-                              size: 8,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            color: Colors.black,
+                            child: const Center(
+                              child: Icon(
+                                Icons.qr_code,
+                                color: Colors.white,
+                                size: 8,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          'QRIS',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black,
-                            letterSpacing: -0.3,
+                          const SizedBox(width: 3),
+                          Text(
+                            'QRIS',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black,
+                              letterSpacing: -0.3,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1190,6 +1221,26 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
             height: 48,
             child: ElevatedButton(
               onPressed: () {
+                final auth = context.read<AuthController>();
+                final hasAddress =
+                    controller.hasValidDeliveryAddress ||
+                    (auth.customerAddress?.trim().isNotEmpty == true &&
+                        !auth.customerAddress!.contains('Belum ada alamat'));
+                final hasPhone =
+                    (auth.customerPhone?.trim().isNotEmpty == true) ||
+                    controller.deliveryAddress.phoneNumber.trim().isNotEmpty;
+
+                if (!hasAddress || !hasPhone) {
+                  _showSelectAddressBottomSheet();
+                  CenterFeedbackToast.showError(
+                    context,
+                    message: !hasAddress
+                        ? 'Mohon lengkapi atau pilih alamat pengiriman Anda terlebih dahulu.'
+                        : 'Mohon lengkapi nomor WhatsApp untuk pengantaran katering.',
+                  );
+                  return;
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const CheckoutScreen()),

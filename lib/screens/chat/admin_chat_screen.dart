@@ -1,21 +1,31 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../services/api_service.dart';
 
 class AdminChatMessage {
+  final String? id;
   final bool isUser;
   final String text;
   final String time;
   final bool hasTicketCard;
+  final Map<String, dynamic>? ticket;
   final List<String>? chips;
+  final bool isRead;
 
   const AdminChatMessage({
+    this.id,
     required this.isUser,
     required this.text,
     required this.time,
     this.hasTicketCard = false,
+    this.ticket,
     this.chips,
+    this.isRead = true,
   });
 }
 
@@ -31,6 +41,15 @@ class AdminChatScreen extends StatefulWidget {
 class _AdminChatScreenState extends State<AdminChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  Timer? _pollTimer;
+  String _conversationId = 'conv-cst-1';
+  String _customerId = 'cst-1';
+  String _customerName = 'Andi Pratama';
+  String _customerPhone = '+62 812-4491-0021';
 
   final List<AdminChatMessage> _messages = [
     const AdminChatMessage(
@@ -52,6 +71,107 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
     '📄 Minta invoice langganan',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initChatSession();
+    });
+  }
+
+  void _initChatSession() {
+    if (!mounted) return;
+    final auth = context.read<AuthController>();
+    final authCustId = auth.customerId;
+    if (authCustId != null && authCustId.isNotEmpty) {
+      _customerId = authCustId;
+    } else {
+      _customerId = 'cst-1';
+    }
+    _customerName = auth.currentUserName ?? 'Andi Pratama';
+    _customerPhone = auth.customerPhone ?? '+62 812-4491-0021';
+    _conversationId = 'conv-$_customerId';
+
+    _fetchConversation(isInitial: true);
+
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _fetchConversation();
+    });
+  }
+
+  Future<void> _fetchConversation({bool isInitial = false}) async {
+    try {
+      final data = await ApiService.instance.fetchChatConversation(
+        _customerId,
+        customerName: _customerName,
+        customerPhone: _customerPhone,
+      );
+
+      if (data != null && mounted) {
+        if (data['id'] != null) {
+          _conversationId = data['id'].toString();
+        }
+
+        final rawMessages = data['messages'];
+        if (rawMessages is List && rawMessages.isNotEmpty) {
+          final newMsgList = <AdminChatMessage>[];
+
+          for (int i = 0; i < rawMessages.length; i++) {
+            final raw = rawMessages[i];
+            if (raw is! Map) continue;
+            final isUser = raw['sender'] == 'customer';
+            final text = raw['text']?.toString() ?? '';
+            final time = raw['time']?.toString() ?? '08:00';
+            final ticket = raw['ticket'] is Map<String, dynamic>
+                ? raw['ticket'] as Map<String, dynamic>
+                : (raw['ticket'] is Map
+                      ? Map<String, dynamic>.from(raw['ticket'] as Map)
+                      : null);
+            final isRead = raw['read'] == true;
+
+            // Beri chips bantuan pada pesan sambutan pertama CS
+            List<String>? chips;
+            if (!isUser && i == 0) {
+              chips = const [
+                '📍 Ubah Alamat Pengiriman',
+                '⚡ Ganti Jadwal Makan Siang',
+                '📋 Konsultasi Alergi Menu',
+              ];
+            }
+
+            newMsgList.add(
+              AdminChatMessage(
+                id: raw['id']?.toString(),
+                isUser: isUser,
+                text: text,
+                time: time,
+                hasTicketCard: ticket != null,
+                ticket: ticket,
+                chips: chips,
+                isRead: isRead,
+              ),
+            );
+          }
+
+          final previousCount = _messages.length;
+          setState(() {
+            _messages
+              ..clear()
+              ..addAll(newMsgList);
+          });
+
+          if (isInitial || newMsgList.length > previousCount) {
+            _scrollToBottom();
+          }
+
+          // Tandai pesan terbaca
+          ApiService.instance.markChatAsRead(_conversationId);
+        }
+      }
+    } catch (_) {}
+  }
+
   void _sendMessage([String? customText]) {
     final text = customText ?? _textController.text.trim();
     if (text.isEmpty) return;
@@ -61,7 +181,14 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     setState(() {
-      _messages.add(AdminChatMessage(isUser: true, text: text, time: timeStr));
+      _messages.add(
+        AdminChatMessage(
+          isUser: true,
+          text: text,
+          time: timeStr,
+          isRead: false,
+        ),
+      );
     });
 
     if (customText == null) {
@@ -70,20 +197,18 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
 
     _scrollToBottom();
 
-    // CS Admin auto-reply simulation
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (!mounted) return;
-      setState(() {
-        _messages.add(
-          AdminChatMessage(
-            isUser: false,
-            text: 'Terima kasih pesannya Kak Andi! Permintaan Anda sedang kami tindak lanjuti bersama tim katering kami.',
-            time: timeStr,
-          ),
-        );
-      });
-      _scrollToBottom();
-    });
+    // Kirim pesan ke REST API Backend (tersinkronisasi langsung ke Web Admin)
+    ApiService.instance
+        .sendChatMessage(
+          conversationId: _conversationId,
+          customerId: _customerId,
+          text: text,
+          customerName: _customerName,
+          customerPhone: _customerPhone,
+        )
+        .then((_) {
+          _fetchConversation();
+        });
   }
 
   void _scrollToBottom() {
@@ -100,13 +225,21 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _textController.dispose();
+    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final displayedMessages = _searchQuery.isEmpty
+        ? _messages
+        : _messages
+              .where((m) => m.text.toLowerCase().contains(_searchQuery))
+              .toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -117,9 +250,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
             ? Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: GestureDetector(
-                  onTap: () =>
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil('/home', (route) => false),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/home', (route) => false),
                   child: Container(
                     width: 36,
                     height: 36,
@@ -181,124 +314,146 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   if (Navigator.of(context).canPop()) {
                     Navigator.pop(context);
                   } else {
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil('/home', (route) => false);
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/home', (route) => false);
                   }
                 },
               ),
         titleSpacing: widget.isTab ? 4 : 0,
-        title: Row(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(shape: BoxShape.circle),
-                  clipBehavior: Clip.antiAlias,
-                  child: Image.network(
-                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: const Color(0xFFDCFCE7),
-                      child: const Icon(
-                        Icons.support_agent_rounded,
-                        color: AppColors.primaryGreen,
-                      ),
-                    ),
-                  ),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGreen,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
+                decoration: InputDecoration(
+                  hintText: 'Cari pesan riwayat chat...',
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: const Color(0xFF94A3B8),
                   ),
+                  border: InputBorder.none,
                 ),
-              ],
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val.trim().toLowerCase();
+                  });
+                },
+              )
+            : Row(
                 children: [
-                  Text(
-                    'Admin NutriCare',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  Row(
+                  Stack(
                     children: [
-                      Flexible(
-                        child: Text(
-                          'Customer Care & Ahli Gizi • ',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(shape: BoxShape.circle),
+                        clipBehavior: Clip.antiAlias,
+                        child: Image.network(
+                          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: const Color(0xFFDCFCE7),
+                                child: const Icon(
+                                  Icons.support_agent_rounded,
+                                  color: AppColors.primaryGreen,
+                                ),
+                              ),
                         ),
                       ),
-                      Text(
-                        'Online',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryGreen,
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryGreen,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Admin NutriCare',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'Customer Care & Ahli Gizi • ',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              'Online',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.phone_outlined,
-              color: Color(0xFF64748B),
-              size: 22,
-            ),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.more_vert_rounded,
-              color: Color(0xFF64748B),
-              size: 22,
-            ),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).pushNamed('/profile'),
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFDCFCE7),
-                  shape: BoxShape.circle,
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(
+                Icons.close_rounded,
+                color: Color(0xFF64748B),
+                size: 22,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchQuery = '';
+                  _searchController.clear();
+                });
+              },
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                tooltip: 'Cari Pesan',
+                icon: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF64748B),
+                  size: 24,
                 ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: AppColors.primaryGreen,
-                  size: 18,
-                ),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = true;
+                  });
+                },
               ),
             ),
-          ),
         ],
       ),
       body: Column(
@@ -326,15 +481,44 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
 
           // Messages List
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageItem(message);
-              },
-            ),
+            child: displayedMessages.isEmpty && _searchQuery.isNotEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.search_off_rounded,
+                            size: 48,
+                            color: Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Tidak ada pesan yang cocok dengan "$_searchQuery"',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    itemCount: displayedMessages.length,
+                    itemBuilder: (context, index) {
+                      final message = displayedMessages[index];
+                      return _buildMessageItem(message);
+                    },
+                  ),
           ),
 
           // Quick Suggestion Chips
@@ -356,8 +540,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: const Color(0xFF15803D),
-            borderRadius: BorderRadius.circular(18)
-                .copyWith(bottomRight: const Radius.circular(4)),
+            borderRadius: BorderRadius.circular(
+              18,
+            ).copyWith(bottomRight: const Radius.circular(4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -432,8 +617,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(18)
-                          .copyWith(topLeft: const Radius.circular(4)),
+                      borderRadius: BorderRadius.circular(
+                        18,
+                      ).copyWith(topLeft: const Radius.circular(4)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.04),
@@ -457,7 +643,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                         // Embedded Delivery Ticket Card
                         if (message.hasTicketCard) ...[
                           const SizedBox(height: 12),
-                          _buildDeliveryTicketCard(),
+                          _buildDeliveryTicketCard(message.ticket),
                         ],
 
                         const SizedBox(height: 6),
@@ -521,7 +707,14 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
     );
   }
 
-  Widget _buildDeliveryTicketCard() {
+  Widget _buildDeliveryTicketCard([Map<String, dynamic>? ticket]) {
+    final ticketId = ticket?['id']?.toString() ?? '#TIK-8492';
+    final ticketTitle =
+        ticket?['title']?.toString() ??
+        'Berhasil Diperbarui di Sistem Pengiriman';
+    final ticketDetails = ticket?['details']?.toString();
+    final ticketCategory = ticket?['category']?.toString() ?? 'Ubah Alamat';
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
@@ -545,7 +738,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    'Status Tiket Permintaan',
+                    'Status Tiket ($ticketCategory)',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -561,7 +754,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '#TIK-8492',
+                  ticketId,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -591,7 +784,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Berhasil Diperbarui di Sistem Pengiriman',
+                    ticketTitle,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
@@ -605,6 +798,10 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           const SizedBox(height: 10),
 
           // Ticket Info Rows
+          if (ticketDetails != null && ticketDetails.isNotEmpty) ...[
+            _buildTicketRow('Detail Info', ticketDetails),
+            const SizedBox(height: 5),
+          ],
           _buildTicketRow('Paket Katering', 'Healthy Diet 14 Hari (#NM-8492)'),
           const SizedBox(height: 5),
           _buildTicketRow('Pengiriman', 'Makan Siang (Besok, 25 Okt 2024)'),

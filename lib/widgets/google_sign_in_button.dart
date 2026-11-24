@@ -38,11 +38,7 @@ class GoogleSignInButton extends StatelessWidget {
             ],
           ),
           child: Center(
-            child: SvgPicture.string(
-              _googleSvg,
-              width: 26,
-              height: 26,
-            ),
+            child: SvgPicture.string(_googleSvg, width: 26, height: 26),
           ),
         ),
       ),

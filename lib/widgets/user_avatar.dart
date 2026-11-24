@@ -22,7 +22,8 @@ class UserAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF334155),
         shape: BoxShape.circle,
-        border: border ?? Border.all(color: const Color(0xFF334155), width: 1.5),
+        border:
+            border ?? Border.all(color: const Color(0xFF334155), width: 1.5),
         boxShadow: boxShadow,
       ),
       clipBehavior: Clip.antiAlias,
@@ -47,10 +48,7 @@ class UserAvatar extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: avatar,
-      );
+      return GestureDetector(onTap: onTap, child: avatar);
     }
     return avatar;
   }

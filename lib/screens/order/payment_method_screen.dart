@@ -7,10 +7,7 @@ import '../../core/constants/app_colors.dart';
 class PaymentMethodScreen extends StatefulWidget {
   final bool showBottomBar;
 
-  const PaymentMethodScreen({
-    super.key,
-    this.showBottomBar = true,
-  });
+  const PaymentMethodScreen({super.key, this.showBottomBar = true});
 
   @override
   State<PaymentMethodScreen> createState() => _PaymentMethodScreenState();
@@ -54,7 +51,10 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
             // Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -97,9 +97,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFC3E7C4),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFC3E7C4)),
       child: Row(
         children: [
           GestureDetector(
@@ -155,7 +153,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF22C55E) : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? const Color(0xFF22C55E)
+                : const Color(0xFFE2E8F0),
             width: isSelected ? 2.0 : 1.0,
           ),
           boxShadow: [
@@ -317,7 +317,10 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, NutriMealMenuController controller) {
+  Widget _buildBottomBar(
+    BuildContext context,
+    NutriMealMenuController controller,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -355,7 +358,11 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                       ),
                     ),
                     TextSpan(
-                      text: _formatRupiah(controller.grandTotal > 0 ? controller.grandTotal : 95000),
+                      text: _formatRupiah(
+                        controller.grandTotal > 0
+                            ? controller.grandTotal
+                            : 95000,
+                      ),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
@@ -379,7 +386,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF16A34A),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -393,7 +402,11 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ],
               ),
             ),
@@ -402,7 +415,11 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_rounded, size: 12, color: Color(0xFF94A3B8)),
+              const Icon(
+                Icons.lock_rounded,
+                size: 12,
+                color: Color(0xFF94A3B8),
+              ),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
