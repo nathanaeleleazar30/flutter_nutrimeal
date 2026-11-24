@@ -45,7 +45,8 @@ class AiPlannerService {
 
         if (kDebugMode) {
           debugPrint(
-              '[AiPlannerService] Respons status: ${response.statusCode}');
+            '[AiPlannerService] Respons status: ${response.statusCode}',
+          );
         }
 
         final decoded = jsonDecode(response.body) as Map<String, dynamic>;
@@ -56,27 +57,24 @@ class AiPlannerService {
 
           final baseUrl = url.replaceAll('/api/ai-planner/generate', '');
           final packages = rawPackages
-              .map((pkg) => AiPlannedPackage.fromJson(
-                    pkg as Map<String, dynamic>,
-                    baseUrl: baseUrl,
-                    totalBudget: request.budget,
-                    pax: request.pax,
-                  ))
+              .map(
+                (pkg) => AiPlannedPackage.fromJson(
+                  pkg as Map<String, dynamic>,
+                  baseUrl: baseUrl,
+                  totalBudget: request.budget,
+                  pax: request.pax,
+                ),
+              )
               .toList();
 
-          return AiPlannerResult(
-            success: true,
-            packages: packages,
-          );
+          return AiPlannerResult(success: true, packages: packages);
         } else {
-          lastErrorMessage = decoded['message']?.toString() ??
+          lastErrorMessage =
+              decoded['message']?.toString() ??
               'Gagal menghasilkan rencana paket katering.';
           // If status is 400 or 422 (validation / infeasible), don't retry other URLs as error is from server logic
           if (response.statusCode == 400 || response.statusCode == 422) {
-            return AiPlannerResult(
-              success: false,
-              message: lastErrorMessage,
-            );
+            return AiPlannerResult(success: false, message: lastErrorMessage);
           }
         }
       } catch (e) {
@@ -89,7 +87,8 @@ class AiPlannerService {
 
     return AiPlannerResult(
       success: false,
-      message: lastErrorMessage ?? 'Tidak dapat terhubung ke server AI Planner.',
+      message:
+          lastErrorMessage ?? 'Tidak dapat terhubung ke server AI Planner.',
     );
   }
 }

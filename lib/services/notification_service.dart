@@ -29,16 +29,20 @@ class NotificationService {
   static final NotificationService instance = NotificationService._internal();
 
   /// Global Navigator Key untuk navigasi rute saat notifikasi diklik
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   /// Plugin notifikasi lokal
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   /// Android High Importance Notification Channel
-  static const AndroidNotificationChannel _highImportanceChannel = AndroidNotificationChannel(
+  static const AndroidNotificationChannel
+  _highImportanceChannel = AndroidNotificationChannel(
     'high_importance_channel',
     'Notifikasi Penting NutriMeal',
-    description: 'Kanal untuk notifikasi status pesanan, catering, dan promo NutriMeal.',
+    description:
+        'Kanal untuk notifikasi status pesanan, catering, dan promo NutriMeal.',
     importance: Importance.max,
     playSound: true,
     enableVibration: true,
@@ -70,8 +74,14 @@ class NotificationService {
     String? packageName,
     int estimatedMinutes = 30,
     String? customerId,
+    String? route,
+    String? deliverySchedule,
   }) async {
     final now = DateTime.now();
+    final effectiveRoute =
+        route ??
+        (type == 'subscription' ? '/langganan-saya' : '/order-tracking');
+
     final notifItem = {
       'id': now.millisecondsSinceEpoch,
       'title': title,
@@ -80,6 +90,8 @@ class NotificationService {
       'order_id': orderId,
       'package_name': packageName,
       'estimated_minutes': estimatedMinutes,
+      'delivery_schedule': deliverySchedule,
+      'route': effectiveRoute,
       'created_at': now.toIso8601String(),
       'is_read': false,
       'customer_id': customerId,
@@ -91,7 +103,27 @@ class NotificationService {
     await showInstantNotification(
       title: title,
       body: body,
-      payload: '/notifikasi',
+      payload: effectiveRoute,
+    );
+  }
+
+  /// Khusus Notifikasi Pembelian Paket Langganan Katering
+  Future<void> addSubscriptionNotification({
+    required String orderId,
+    required String packageName,
+    String schedule = 'Mulai Senin, 11:30 WIB (Makan Siang & Malam)',
+    String? customerId,
+  }) async {
+    await addOrderNotification(
+      title: 'Langganan Katering Aktif! (#$orderId)',
+      body:
+          'Paket $packageName Anda berhasil diaktifkan. Pengiriman katering perdana dijadwalkan $schedule.',
+      type: 'subscription',
+      orderId: orderId,
+      packageName: packageName,
+      deliverySchedule: schedule,
+      route: '/langganan-saya',
+      customerId: customerId,
     );
   }
 
@@ -104,7 +136,9 @@ class NotificationService {
   /// 1. Inisialisasi flutter_local_notifications (Lokal tanpa server)
   Future<void> _initLocalNotifications() async {
     try {
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
       const darwinSettings = DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -121,7 +155,9 @@ class NotificationService {
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           final payload = response.payload;
           if (kDebugMode) {
-            print('[Local Notification] 🔔 Notifikasi diklik! Payload: $payload');
+            print(
+              '[Local Notification] 🔔 Notifikasi diklik! Payload: $payload',
+            );
           }
           if (payload != null && payload.isNotEmpty) {
             _handleNavigation(payload);
@@ -131,7 +167,9 @@ class NotificationService {
 
       // Buat notification channel di Android
       final androidPlugin = _localNotifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidPlugin != null) {
         await androidPlugin.createNotificationChannel(_highImportanceChannel);
       }
@@ -142,7 +180,9 @@ class NotificationService {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('[NotificationService] ⚠️ Gagal inisialisasi Local Notifications: $e');
+        print(
+          '[NotificationService] ⚠️ Gagal inisialisasi Local Notifications: $e',
+        );
       }
     }
   }
@@ -156,7 +196,9 @@ class NotificationService {
           await Firebase.initializeApp();
         } catch (e) {
           if (kDebugMode) {
-            print('[NotificationService] ℹ️ Firebase.initializeApp() belum dikonfigurasi / google-services.json belum dimasukkan: $e');
+            print(
+              '[NotificationService] ℹ️ Firebase.initializeApp() belum dikonfigurasi / google-services.json belum dimasukkan: $e',
+            );
           }
           return;
         }
@@ -166,7 +208,9 @@ class NotificationService {
       final messaging = FirebaseMessaging.instance;
 
       // Daftarkan background handler
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
 
       // Setup presentasi notifikasi saat foreground di iOS
       await messaging.setForegroundNotificationPresentationOptions(
@@ -191,7 +235,9 @@ class NotificationService {
       // Listener 1: Foreground Message (Aplikasi sedang dibuka)
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         if (kDebugMode) {
-          print('[NotificationService] 📩 Pesan Foreground diterima: ${message.notification?.title}');
+          print(
+            '[NotificationService] 📩 Pesan Foreground diterima: ${message.notification?.title}',
+          );
         }
         _showForegroundNotification(message);
       });
@@ -199,7 +245,9 @@ class NotificationService {
       // Listener 2: Notifikasi di-tap dari status background
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         if (kDebugMode) {
-          print('[NotificationService] 📲 Notifikasi di-tap dari background: ${message.data}');
+          print(
+            '[NotificationService] 📲 Notifikasi di-tap dari background: ${message.data}',
+          );
         }
         _handleRemoteMessageNavigation(message);
       });
@@ -208,7 +256,9 @@ class NotificationService {
       final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) {
         if (kDebugMode) {
-          print('[NotificationService] 🚀 App dibuka dari terminated lewat notifikasi: ${initialMessage.data}');
+          print(
+            '[NotificationService] 🚀 App dibuka dari terminated lewat notifikasi: ${initialMessage.data}',
+          );
         }
         // Delay sedikit agar MaterialApp & navigatorKey sudah terpasang
         Future.delayed(const Duration(milliseconds: 500), () {
@@ -217,11 +267,15 @@ class NotificationService {
       }
 
       if (kDebugMode) {
-        print('[NotificationService] ✅ Firebase Messaging berhasil diinisialisasi.');
+        print(
+          '[NotificationService] ✅ Firebase Messaging berhasil diinisialisasi.',
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        print('[NotificationService] ℹ️ Catatan: Firebase Messaging belum aktif (abaikan jika google-services.json belum diatur): $e');
+        print(
+          '[NotificationService] ℹ️ Catatan: Firebase Messaging belum aktif (abaikan jika google-services.json belum diatur): $e',
+        );
       }
     }
   }
@@ -241,7 +295,9 @@ class NotificationService {
         sound: true,
       );
       if (kDebugMode) {
-        print('[NotificationService] Status izin notifikasi: ${settings.authorizationStatus}');
+        print(
+          '[NotificationService] Status izin notifikasi: ${settings.authorizationStatus}',
+        );
       }
       return settings;
     } catch (e) {
@@ -296,7 +352,9 @@ class NotificationService {
 
       if (targetCustomerId == null || targetCustomerId.isEmpty) {
         if (kDebugMode) {
-          print('[NotificationService] ℹ️ Customer ID belum ada, token tersimpan di lokal.');
+          print(
+            '[NotificationService] ℹ️ Customer ID belum ada, token tersimpan di lokal.',
+          );
         }
         return false;
       }
@@ -320,7 +378,9 @@ class NotificationService {
 
           if (response.statusCode == 200) {
             if (kDebugMode) {
-              print('[NotificationService] ✅ FCM token berhasil disinkronkan ke backend: $urlStr');
+              print(
+                '[NotificationService] ✅ FCM token berhasil disinkronkan ke backend: $urlStr',
+              );
             }
             return true;
           }
@@ -328,7 +388,9 @@ class NotificationService {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('[NotificationService] ⚠️ Gagal mengirim FCM token ke backend: $e');
+        print(
+          '[NotificationService] ⚠️ Gagal mengirim FCM token ke backend: $e',
+        );
       }
     }
     return false;
@@ -339,7 +401,8 @@ class NotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
-    final route = message.data['route'] ?? message.data['screen'] ?? '/notifikasi';
+    final route =
+        message.data['route'] ?? message.data['screen'] ?? '/notifikasi';
 
     await _localNotifications.show(
       message.hashCode,
@@ -429,7 +492,9 @@ class NotificationService {
       }
 
       if (kDebugMode) {
-        print('[NotificationService] 🧭 Melakukan navigasi ke route: $targetRoute');
+        print(
+          '[NotificationService] 🧭 Melakukan navigasi ke route: $targetRoute',
+        );
       }
 
       navigatorKey.currentState?.pushNamed(targetRoute);

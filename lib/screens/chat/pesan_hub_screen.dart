@@ -3,36 +3,21 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../widgets/main_top_bar.dart';
 import '../admin_chat_screen.dart';
-import '../nutribot_chat_screen.dart';
 
 class PesanHubScreen extends StatefulWidget {
   final VoidCallback? onCartTap;
   final VoidCallback? onNotificationTap;
 
-  const PesanHubScreen({
-    super.key,
-    this.onCartTap,
-    this.onNotificationTap,
-  });
+  const PesanHubScreen({super.key, this.onCartTap, this.onNotificationTap});
 
   @override
   State<PesanHubScreen> createState() => _PesanHubScreenState();
 }
 
 class _PesanHubScreenState extends State<PesanHubScreen> {
-  void _openNutriBotChat() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const NutriBotChatScreen(isTab: false),
-      ),
-    );
-  }
-
   void _openAdminChat() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const AdminChatScreen(isTab: false),
-      ),
+      MaterialPageRoute(builder: (_) => const AdminChatScreen(isTab: false)),
     );
   }
 
@@ -88,174 +73,20 @@ class _PesanHubScreenState extends State<PesanHubScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Chat Channel 1: NutriBot AI
-                    _buildNutriBotChannelItem(),
-                    const SizedBox(height: 12),
-                    const Divider(
-                      height: 1,
-                      thickness: 0.8,
-                      color: Color(0xFFF1F5F9),
+                    Text(
+                      'Pusat Bantuan & Konsultasi',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
 
-                    // Chat Channel 2: Admin NutriCare (Tirtuy, S.Gz)
+                    // Chat Channel: Admin NutriCare (Customer Care & Ahli Gizi)
                     _buildAdminChannelItem(),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Channel Item: NutriBot AI
-  // ---------------------------------------------------------------------------
-  Widget _buildNutriBotChannelItem() {
-    return InkWell(
-      onTap: _openNutriBotChat,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Circular Mascot Avatar
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF1B6B46).withValues(alpha: 0.20),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                'assets/images/nutribot_avatar.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title, Verified Checkmark, and Timestamp
-                  Row(
-                    children: [
-                      Text(
-                        'NutriBot AI',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        color: Color(0xFF16A34A),
-                        size: 15.5,
-                      ),
-                      const Spacer(),
-                      Text(
-                        '18:45',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF16A34A),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-
-                  // Subtitle & Unread Badge
-                  Row(
-                    children: [
-                      Container(
-                        width: 6.5,
-                        height: 6.5,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF22C55E),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Sedang menganalisis kalori menu malam...',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF16A34A),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 19,
-                        height: 19,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF16A34A),
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          '1',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            height: 1.0,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Pill Tag
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.eco_outlined,
-                          size: 12.5,
-                          color: Color(0xFF16A34A),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Konsultasi Nutrisi & Kalori',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF475569),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
@@ -373,8 +204,10 @@ class _PesanHubScreenState extends State<PesanHubScreen> {
 
                   // Pill Tag
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),

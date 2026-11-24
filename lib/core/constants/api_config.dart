@@ -10,10 +10,17 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '10.200.144.150';
+  static const String hostLanIp = '10.255.191.102';
+
+  /// URL Produksi Backend (bisa disetel via build flag: --dart-define=API_URL=https://api.domain.com)
+  static const String productionApiUrl = String.fromEnvironment('API_URL');
 
   /// Mendeteksi base URL backend secara dinamis
   static String get baseUrl {
+    if (productionApiUrl.isNotEmpty) {
+      return productionApiUrl.replaceAll(RegExp(r'/api/?$'), '');
+    }
+
     if (kIsWeb) {
       return 'http://localhost:5000';
     }
@@ -38,6 +45,14 @@ class ApiConfig {
   static String get aiPlannerUrl => '$baseUrl/api/ai-planner/generate';
 
   static List<String> _buildCandidates(String path) {
+    if (productionApiUrl.isNotEmpty) {
+      final cleanBase = productionApiUrl.replaceAll(RegExp(r'/api/?$'), '');
+      return [
+        '$cleanBase$path',
+        'http://$hostLanIp:5000$path',
+        'http://localhost:5000$path',
+      ];
+    }
     if (kIsWeb) {
       return ['http://localhost:5000$path'];
     }
@@ -83,8 +98,7 @@ class ApiConfig {
       _buildCandidates('/api/auth/login');
 
   /// Daftar URL alternatif backend untuk Meals (Menu Makanan)
-  static List<String> get candidateMealsUrls =>
-      _buildCandidates('/api/meals');
+  static List<String> get candidateMealsUrls => _buildCandidates('/api/meals');
 
   /// Daftar URL alternatif backend untuk Customer API (/api/customers)
   static List<String> get candidateCustomerUrls =>
@@ -115,8 +129,15 @@ class ApiConfig {
       _buildCandidates('/api/vouchers');
 
   /// Daftar URL alternatif backend untuk FAQs (/api/faqs)
-  static List<String> get candidateFaqsUrls =>
-      _buildCandidates('/api/faqs');
+  static List<String> get candidateFaqsUrls => _buildCandidates('/api/faqs');
+
+  /// Daftar URL alternatif backend untuk Percakapan Chat (/api/chat/conversations)
+  static List<String> get candidateChatConversationsUrls =>
+      _buildCandidates('/api/chat/conversations');
+
+  /// Daftar URL alternatif backend untuk Kirim Pesan Chat (/api/chat/messages)
+  static List<String> get candidateChatMessagesUrls =>
+      _buildCandidates('/api/chat/messages');
 
   /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
   static String resolveImageUrl(String? rawUrl, {String? activeBaseUrl}) {

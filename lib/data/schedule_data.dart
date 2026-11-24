@@ -154,10 +154,14 @@ const List<DaySchedule> dummySchedules = [
 
 /// Helper untuk menghasilkan jadwal katering Senin s/d Jumat secara REAL-TIME
 /// dengan tanggal kalender yang otomatis mengikuti minggu berjalan.
-List<DaySchedule> buildRealtimeCateringSchedules({List<dynamic>? dynamicMeals}) {
+List<DaySchedule> buildRealtimeCateringSchedules({
+  List<dynamic>? dynamicMeals,
+}) {
   final now = DateTime.now();
   // Jika hari Sabtu (6) atau Minggu (7), ambil Senin minggu berikutnya
-  final int offsetToMonday = (now.weekday <= 5) ? (1 - now.weekday) : (8 - now.weekday);
+  final int offsetToMonday = (now.weekday <= 5)
+      ? (1 - now.weekday)
+      : (8 - now.weekday);
   final mondayDate = now.add(Duration(days: offsetToMonday));
 
   final weekDays = [
@@ -186,14 +190,18 @@ List<DaySchedule> buildRealtimeCateringSchedules({List<dynamic>? dynamicMeals}) 
         final rawTags = m.tags is List
             ? (m.tags as List).map((e) => e.toString()).toList()
             : <String>[];
-        scheduledMeals.add(ScheduledMeal(
-          slotType: i == 0 ? 'Makan Siang' : 'Makan Malam',
-          title: m.name ?? 'Menu Sehat',
-          imageUrl: m.imageUrl ?? '',
-          tags: rawTags.isNotEmpty ? rawTags : [m.category ?? 'Sehat', '${m.calories} kkal'],
-          deliveryTime: i == 0 ? '12:00 - 13:00 WIB' : '18:30 - 19:30 WIB',
-          calories: m.calories ?? 400,
-        ));
+        scheduledMeals.add(
+          ScheduledMeal(
+            slotType: i == 0 ? 'Makan Siang' : 'Makan Malam',
+            title: m.name ?? 'Menu Sehat',
+            imageUrl: m.imageUrl ?? '',
+            tags: rawTags.isNotEmpty
+                ? rawTags
+                : [m.category ?? 'Sehat', '${m.calories} kkal'],
+            deliveryTime: i == 0 ? '12:00 - 13:00 WIB' : '18:30 - 19:30 WIB',
+            calories: m.calories ?? 400,
+          ),
+        );
       }
     }
 

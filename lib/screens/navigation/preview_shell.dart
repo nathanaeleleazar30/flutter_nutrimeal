@@ -58,9 +58,7 @@ class _PreviewShellState extends State<PreviewShell> {
       body: Stack(
         children: [
           // Content based on selected mode
-          Positioned.fill(
-            child: _buildCurrentView(),
-          ),
+          Positioned.fill(child: _buildCurrentView()),
 
           // Floating Mode Switcher at bottom
           Positioned(
@@ -285,10 +283,7 @@ class _PreviewShellState extends State<PreviewShell> {
         'title': '3. Admin NutriCare Chat (Frame Pesan)',
         'widget': const AdminChatScreen(),
       },
-      {
-        'title': '4. Profil Saya (Frame 36)',
-        'widget': const ProfileScreen(),
-      },
+      {'title': '4. Profil Saya (Frame 36)', 'widget': const ProfileScreen()},
       {
         'title': '5. Detail Data Profil (Frame 29)',
         'widget': const ProfileDetailScreen(),
@@ -317,14 +312,8 @@ class _PreviewShellState extends State<PreviewShell> {
         'title': '11. Checkout & Konfirmasi Pesanan',
         'widget': const CheckoutScreen(),
       },
-      {
-        'title': '12. Beranda (Home)',
-        'widget': const BerandaScreen(),
-      },
-      {
-        'title': '13. Galeri Menu',
-        'widget': const GaleriMenuScreen(),
-      },
+      {'title': '12. Beranda (Home)', 'widget': const BerandaScreen()},
+      {'title': '13. Galeri Menu', 'widget': const GaleriMenuScreen()},
       {
         'title': '14. Detail Menu (Grilled Chicken)',
         'widget': MenuDetailScreen(item: menuController.allMenuItems[0]),

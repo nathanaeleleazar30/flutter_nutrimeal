@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/food_doodle_background.dart';
@@ -44,30 +45,16 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Login berhasil! Selamat datang di NutriMeal.',
-            style: AppTextStyles.inputText.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.primaryGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: 'Login berhasil! Selamat datang di NutriMeal.',
       );
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       // Error sudah ditampilkan via authController.generalError / field errors
       final err = authController.generalError;
       if (err != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        CenterFeedbackToast.showError(context, message: err);
       }
     }
   }
@@ -81,29 +68,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       final user = authController.selectedGoogleAccount;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Berhasil masuk sebagai ${user?.name}',
-            style: AppTextStyles.inputText.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.primaryGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: 'Berhasil masuk sebagai ${user?.name}',
       );
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       final err = authController.generalError;
       if (err != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(err, style: AppTextStyles.inputText.copyWith(color: Colors.white)),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        CenterFeedbackToast.showError(context, message: err);
       }
     }
   }
@@ -138,9 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         children: [
           // Background Doodle Pattern
-          const Positioned.fill(
-            child: FoodDoodleBackground(fillFull: true),
-          ),
+          const Positioned.fill(child: FoodDoodleBackground(fillFull: true)),
 
           // Main Scrollable Area using CustomScrollView
           SafeArea(
@@ -179,10 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            const NutriMealLogo(
-                              fontSize: 32,
-                              hasShadow: true,
-                            ),
+                            const NutriMealLogo(fontSize: 32, hasShadow: true),
                           ],
                         ),
                       ),
@@ -302,9 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Google Sign In
                         Center(
-                          child: GoogleSignInButton(
-                            onTap: _handleGoogleLogin,
-                          ),
+                          child: GoogleSignInButton(onTap: _handleGoogleLogin),
                         ),
 
                         // Bottom spacing

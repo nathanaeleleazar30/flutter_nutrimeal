@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../core/constants/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../address_screen.dart';
 import '../bantuan_faq_screen.dart';
 
@@ -21,7 +24,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   String _email = '';
   String _phone = '';
   String? _avatarUrl;
-  bool _twoFactorAuth = true;
+  File? _localImageFile;
   bool _isSaving = false;
 
   // Physical & Nutrition Data — akun baru kosongan
@@ -56,7 +59,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       _age = auth.customerAge;
       _selectedAllergies = List.from(auth.customerAllergies);
       _dietGoal = auth.customerDietGoal;
-      _twoFactorAuth = auth.customerTwoFactorAuth;
       _nutritionPercent = (_heightCm > 0 && _weightKg > 0) ? 0.85 : 0.0;
     });
   }
@@ -91,7 +93,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
           decoration: InputDecoration(
             hintText: 'Masukkan nama lengkap',
             filled: true,
@@ -102,7 +107,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF0F8A50), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF0F8A50),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -111,7 +119,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Batal',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B)),
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF64748B),
+              ),
             ),
           ),
           ElevatedButton(
@@ -123,7 +134,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 final auth = context.read<AuthController>();
                 final ok = await auth.updateCustomerProfile(name: newName);
                 if (ok) {
-                  _showSuccessToast('Nama profil berhasil disimpan ke backend MySQL!');
+                  _showSuccessToast(
+                    'Nama profil berhasil disimpan ke backend MySQL!',
+                  );
                 } else {
                   _showSuccessToast('Nama diperbarui secara lokal');
                 }
@@ -132,9 +145,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0F8A50),
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Simpan',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -144,18 +165,46 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Future<void> _pickAndUploadImage(ImageSource source) async {
     final auth = context.read<AuthController>();
     try {
+      // 1. Minta izin akses kamera jika mengambil foto langsung dari Kamera
+      if (source == ImageSource.camera) {
+        final cameraStatus = await Permission.camera.request();
+        if (cameraStatus.isPermanentlyDenied) {
+          _showErrorToast(
+            'Izin kamera ditolak permanen. Buka pengaturan aplikasi untuk mengaktifkan izin.',
+          );
+          await openAppSettings();
+          return;
+        } else if (!cameraStatus.isGranted) {
+          _showErrorToast(
+            'Izin kamera diperlukan untuk mengambil foto profil.',
+          );
+          return;
+        }
+      }
+
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
         source: source,
         maxWidth: 1024,
         maxHeight: 1024,
-        imageQuality: 85,
+        imageQuality: 88,
+        preferredCameraDevice: CameraDevice.front,
       );
 
       if (pickedFile == null) return;
 
+      final localFile = File(pickedFile.path);
       if (!mounted) return;
-      setState(() => _isSaving = true);
+
+      // Tampilkan konfirmasi pratinjau lingkaran 1:1 sebelum upload
+      final confirmed = await _showPhotoConfirmModal(localFile);
+      if (!confirmed) return;
+
+      if (!mounted) return;
+      setState(() {
+        _localImageFile = localFile;
+        _isSaving = true;
+      });
       _showSuccessToast('Mengunggah foto profil dari perangkat ke server...');
 
       final uploadedUrl = await auth.uploadProfileImage(pickedFile);
@@ -168,20 +217,154 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         final ok = await auth.updateCustomerProfile(avatarUrl: uploadedUrl);
         if (!mounted) return;
         if (ok) {
-          _showSuccessToast('Foto profil baru berhasil diunggah & disimpan ke MySQL!');
+          _showSuccessToast(
+            'Foto profil baru berhasil diunggah & disimpan ke MySQL!',
+          );
         } else {
           _showSuccessToast('Foto profil berhasil diunggah!');
         }
       } else {
         if (!mounted) return;
-        _showErrorToast('Gagal mengunggah foto ke backend server. Periksa koneksi.');
+        _showErrorToast(
+          'Gagal mengunggah foto ke backend server. Periksa koneksi.',
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      _showErrorToast('Gagal memilih foto: $e');
+      _showErrorToast('Gagal memproses foto: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<bool> _showPhotoConfirmModal(File imageFile) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Pratinjau Foto Profil',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Foto akan dipotong rapi menjadi lingkaran 1:1 di profil Anda',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              // Big 1:1 Circular Avatar Preview Frame
+              Container(
+                width: 156,
+                height: 156,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFDCFCE7),
+                  border: Border.all(color: const Color(0xFF86EFAC), width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F8A50).withValues(alpha: 0.15),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(4),
+                child: ClipOval(
+                  child: Image.file(
+                    imageFile,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    width: 148,
+                    height: 148,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 26),
+
+              // Action Buttons
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  icon: const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  label: Text(
+                    'Gunakan Foto Ini',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F8A50),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  child: Text(
+                    'Pilih / Ambil Ulang',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result == true;
   }
 
   void _showAvatarPickerSheet() {
@@ -210,39 +393,65 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                      color: Color(0xFF64748B),
+                    ),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
               ),
               const SizedBox(height: 6),
               Text(
-                'Pilih foto langsung dari galeri atau kamera perangkat Anda:',
-                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF64748B)),
+                'Pilih foto langsung dari kamera atau galeri perangkat Anda:',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: const Color(0xFF64748B),
+                ),
               ),
               const SizedBox(height: 16),
 
               // Opsi 1: Kamera HP / Perangkat
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 4,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                   side: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
                 leading: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(color: Color(0xFFDCFCE7), shape: BoxShape.circle),
-                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF16A34A), size: 22),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDCFCE7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Color(0xFF16A34A),
+                    size: 22,
+                  ),
                 ),
                 title: Text(
                   'Ambil Foto dari Kamera',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13.5),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                  ),
                 ),
                 subtitle: Text(
                   'Gunakan kamera perangkat untuk memotret',
-                  style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: const Color(0xFF94A3B8),
+                  ),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF94A3B8),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickAndUploadImage(ImageSource.camera);
@@ -252,30 +461,101 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
               // Opsi 2: Galeri / File Explorer Perangkat
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 4,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                   side: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
                 leading: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(color: Color(0xFFE0F2FE), shape: BoxShape.circle),
-                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF0284C7), size: 22),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE0F2FE),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.photo_library_rounded,
+                    color: Color(0xFF0284C7),
+                    size: 22,
+                  ),
                 ),
                 title: Text(
                   'Pilih dari Galeri Perangkat',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13.5),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                  ),
                 ),
                 subtitle: Text(
                   'Buka galeri foto atau penyimpanan perangkat',
-                  style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: const Color(0xFF94A3B8),
+                  ),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF94A3B8),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickAndUploadImage(ImageSource.gallery);
                 },
               ),
+              const SizedBox(height: 10),
+
+              // Opsi 3: Hapus Foto Profil (Jika ada foto aktif)
+              if ((_avatarUrl != null && _avatarUrl!.trim().isNotEmpty) ||
+                  _localImageFile != null)
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(color: Color(0xFFFEE2E2)),
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFEE2E2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Color(0xFFDC2626),
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    'Hapus Foto Profil',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                      color: const Color(0xFFDC2626),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Gunakan inisial nama sebagai avatar',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _localImageFile = null;
+                      _avatarUrl = null;
+                    });
+                    final auth = context.read<AuthController>();
+                    await auth.updateCustomerProfile(avatarUrl: '');
+                    _showSuccessToast('Foto profil dihapus');
+                  },
+                ),
               const SizedBox(height: 12),
             ],
           ),
@@ -291,8 +571,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     List<String> tempAllergies = List.from(_selectedAllergies);
     String tempDietGoal = _dietGoal;
 
-    final allAllergies = ['Kacang', 'Seafood', 'Gluten', 'Susu Sapi', 'Telur', 'Rendah Gula', 'Tidak Ada Alergi'];
-    final allGoals = ['Defisit Kalori', 'Maintenance', 'Tinggi Protein', 'Rendah Karbo'];
+    final allAllergies = [
+      'Kacang',
+      'Seafood',
+      'Gluten',
+      'Susu Sapi',
+      'Telur',
+      'Rendah Gula',
+      'Tidak Ada Alergi',
+    ];
+    final allGoals = [
+      'Defisit Kalori',
+      'Maintenance',
+      'Tinggi Protein',
+      'Rendah Karbo',
+    ];
 
     showModalBottomSheet(
       context: context,
@@ -304,7 +597,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            final bmiVal = tempWeight / ((tempHeight / 100) * (tempHeight / 100));
+            final bmiVal =
+                tempWeight / ((tempHeight / 100) * (tempHeight / 100));
             return SafeArea(
               child: Padding(
                 padding: EdgeInsets.only(
@@ -326,8 +620,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(color: Color(0xFFDCFCE7), shape: BoxShape.circle),
-                                child: const Icon(Icons.fitness_center_rounded, color: Color(0xFF16A34A), size: 18),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFDCFCE7),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.fitness_center_rounded,
+                                  color: Color(0xFF16A34A),
+                                  size: 18,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -357,27 +658,58 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Tinggi Badan', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B))),
+                                  Text(
+                                    'Tinggi Badan',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text('${tempHeight.toInt()} cm', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800)),
+                                      Text(
+                                        '${tempHeight.toInt()} cm',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
                                       Row(
                                         children: [
                                           InkWell(
-                                            onTap: () => setSheetState(() => tempHeight = (tempHeight - 1).clamp(120, 220)),
-                                            child: const Icon(Icons.remove_circle_outline, size: 20, color: Color(0xFF64748B)),
+                                            onTap: () => setSheetState(
+                                              () =>
+                                                  tempHeight = (tempHeight - 1)
+                                                      .clamp(120, 220),
+                                            ),
+                                            child: const Icon(
+                                              Icons.remove_circle_outline,
+                                              size: 20,
+                                              color: Color(0xFF64748B),
+                                            ),
                                           ),
                                           const SizedBox(width: 4),
                                           InkWell(
-                                            onTap: () => setSheetState(() => tempHeight = (tempHeight + 1).clamp(120, 220)),
-                                            child: const Icon(Icons.add_circle_outline, size: 20, color: Color(0xFF0F8A50)),
+                                            onTap: () => setSheetState(
+                                              () =>
+                                                  tempHeight = (tempHeight + 1)
+                                                      .clamp(120, 220),
+                                            ),
+                                            child: const Icon(
+                                              Icons.add_circle_outline,
+                                              size: 20,
+                                              color: Color(0xFF0F8A50),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -394,27 +726,62 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Berat Badan', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B))),
+                                  Text(
+                                    'Berat Badan',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text('${tempWeight.toStringAsFixed(1)} kg', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800)),
+                                      Text(
+                                        '${tempWeight.toStringAsFixed(1)} kg',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
                                       Row(
                                         children: [
                                           InkWell(
-                                            onTap: () => setSheetState(() => tempWeight = (tempWeight - 0.5).clamp(30, 180)),
-                                            child: const Icon(Icons.remove_circle_outline, size: 20, color: Color(0xFF64748B)),
+                                            onTap: () => setSheetState(
+                                              () => tempWeight =
+                                                  (tempWeight - 0.5).clamp(
+                                                    30,
+                                                    180,
+                                                  ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.remove_circle_outline,
+                                              size: 20,
+                                              color: Color(0xFF64748B),
+                                            ),
                                           ),
                                           const SizedBox(width: 4),
                                           InkWell(
-                                            onTap: () => setSheetState(() => tempWeight = (tempWeight + 0.5).clamp(30, 180)),
-                                            child: const Icon(Icons.add_circle_outline, size: 20, color: Color(0xFF0F8A50)),
+                                            onTap: () => setSheetState(
+                                              () => tempWeight =
+                                                  (tempWeight + 0.5).clamp(
+                                                    30,
+                                                    180,
+                                                  ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.add_circle_outline,
+                                              size: 20,
+                                              color: Color(0xFF0F8A50),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -430,7 +797,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
                       // BMI Live Preview Card
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFECFDF5),
                           borderRadius: BorderRadius.circular(10),
@@ -438,11 +808,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.health_and_safety_rounded, color: Color(0xFF047857), size: 16),
+                            const Icon(
+                              Icons.health_and_safety_rounded,
+                              color: Color(0xFF047857),
+                              size: 16,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'BMI: ${bmiVal.toStringAsFixed(1)} (${bmiVal < 18.5 ? "Underweight" : bmiVal < 25 ? "Ideal & Normal" : "Overweight"}) • Usia $tempAge th',
+                                'BMI: ${bmiVal.toStringAsFixed(1)} (${bmiVal < 18.5
+                                    ? "Underweight"
+                                    : bmiVal < 25
+                                    ? "Ideal & Normal"
+                                    : "Overweight"}) • Usia $tempAge th',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w700,
@@ -458,7 +836,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       // Riwayat Alergi
                       Text(
                         'Riwayat Alergi / Pantangan Makan',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Wrap(
@@ -473,13 +855,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             checkmarkColor: const Color(0xFF0F8A50),
                             labelStyle: GoogleFonts.plusJakartaSans(
                               fontSize: 11.5,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFF475569),
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                              color: isSelected
+                                  ? const Color(0xFF0F8A50)
+                                  : const Color(0xFF475569),
                             ),
                             backgroundColor: const Color(0xFFF1F5F9),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFFE2E8F0)),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? const Color(0xFF0F8A50)
+                                    : const Color(0xFFE2E8F0),
+                              ),
                             ),
                             onSelected: (val) {
                               setSheetState(() {
@@ -503,7 +893,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       // Target Pola Makan
                       Text(
                         'Target Katering Harian',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Wrap(
@@ -517,13 +911,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             selectedColor: const Color(0xFF0F8A50),
                             labelStyle: GoogleFonts.plusJakartaSans(
                               fontSize: 11.5,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isSelected ? Colors.white : const Color(0xFF475569),
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF475569),
                             ),
                             backgroundColor: const Color(0xFFF1F5F9),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: isSelected ? const Color(0xFF0F8A50) : const Color(0xFFE2E8F0)),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? const Color(0xFF0F8A50)
+                                    : const Color(0xFFE2E8F0),
+                              ),
                             ),
                             onSelected: (val) {
                               if (val) setSheetState(() => tempDietGoal = goal);
@@ -545,7 +947,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               _age = tempAge;
                               _selectedAllergies = tempAllergies;
                               _dietGoal = tempDietGoal;
-                              _nutritionPercent = tempAllergies.isNotEmpty ? 1.0 : 0.85;
+                              _nutritionPercent = tempAllergies.isNotEmpty
+                                  ? 1.0
+                                  : 0.85;
                             });
                             Navigator.pop(ctx);
                             final auth = context.read<AuthController>();
@@ -557,19 +961,29 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               dietaryGoals: tempDietGoal,
                             );
                             if (ok) {
-                              _showSuccessToast('Data nutrisi & fisik tersimpan di database MySQL!');
+                              _showSuccessToast(
+                                'Data nutrisi & fisik tersimpan di database MySQL!',
+                              );
                             } else {
-                              _showSuccessToast('Data nutrisi disimpan secara lokal');
+                              _showSuccessToast(
+                                'Data nutrisi disimpan secara lokal',
+                              );
                             }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0F8A50),
                             elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: Text(
                             'Simpan Data Nutrisi',
-                            style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w800, color: Colors.white),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -602,9 +1016,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.emailAddress,
-          style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
+          ),
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B), size: 18),
+            prefixIcon: const Icon(
+              Icons.mail_outline_rounded,
+              color: Color(0xFF64748B),
+              size: 18,
+            ),
             hintText: 'nama@email.com',
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
@@ -614,14 +1035,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF0F8A50), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF0F8A50),
+                width: 1.5,
+              ),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF64748B),
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -632,7 +1062,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 final auth = context.read<AuthController>();
                 final ok = await auth.updateCustomerProfile(email: newEmail);
                 if (ok) {
-                  _showSuccessToast('Alamat email berhasil disimpan ke backend MySQL!');
+                  _showSuccessToast(
+                    'Alamat email berhasil disimpan ke backend MySQL!',
+                  );
                 } else {
                   _showSuccessToast('Email diperbarui secara lokal');
                 }
@@ -641,9 +1073,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0F8A50),
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Simpan',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -668,9 +1108,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.phone,
-          style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
+          ),
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF64748B), size: 18),
+            prefixIcon: const Icon(
+              Icons.chat_bubble_outline_rounded,
+              color: Color(0xFF64748B),
+              size: 18,
+            ),
             hintText: '+62 8xx-xxxx-xxxx',
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
@@ -680,14 +1127,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF0F8A50), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF0F8A50),
+                width: 1.5,
+              ),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF64748B),
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -698,7 +1154,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 final auth = context.read<AuthController>();
                 final ok = await auth.updateCustomerProfile(phone: newPhone);
                 if (ok) {
-                  _showSuccessToast('Nomor WhatsApp berhasil disimpan ke backend MySQL!');
+                  _showSuccessToast(
+                    'Nomor WhatsApp berhasil disimpan ke backend MySQL!',
+                  );
                 } else {
                   _showSuccessToast('Nomor diperbarui secara lokal');
                 }
@@ -707,9 +1165,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0F8A50),
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Simpan',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -730,10 +1196,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               title: Text(
                 'Ubah Kata Sandi',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.textDark),
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: AppColors.textDark,
+                ),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -745,8 +1217,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       decoration: InputDecoration(
                         labelText: 'Kata Sandi Saat Ini',
                         suffixIcon: IconButton(
-                          icon: Icon(obscureOld ? Icons.visibility_off : Icons.visibility, size: 18),
-                          onPressed: () => setDialogState(() => obscureOld = !obscureOld),
+                          icon: Icon(
+                            obscureOld
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            size: 18,
+                          ),
+                          onPressed: () =>
+                              setDialogState(() => obscureOld = !obscureOld),
                         ),
                         isDense: true,
                       ),
@@ -758,8 +1236,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       decoration: InputDecoration(
                         labelText: 'Kata Sandi Baru',
                         suffixIcon: IconButton(
-                          icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, size: 18),
-                          onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                          icon: Icon(
+                            obscureNew
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            size: 18,
+                          ),
+                          onPressed: () =>
+                              setDialogState(() => obscureNew = !obscureNew),
                         ),
                         isDense: true,
                       ),
@@ -779,7 +1263,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                  child: Text(
+                    'Batal',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -798,17 +1288,30 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       newPassword: newPassController.text.trim(),
                     );
                     if (res['success'] == true) {
-                      _showSuccessToast(res['message'] ?? 'Kata sandi berhasil diperbarui di database MySQL!');
+                      _showSuccessToast(
+                        res['message'] ??
+                            'Kata sandi berhasil diperbarui di database MySQL!',
+                      );
                     } else {
-                      _showErrorToast(res['message'] ?? 'Kata sandi saat ini tidak cocok.');
+                      _showErrorToast(
+                        res['message'] ?? 'Kata sandi saat ini tidak cocok.',
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0F8A50),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  child: const Text('Perbarui', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Perbarui',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -820,26 +1323,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   void _showSuccessToast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-        backgroundColor: const Color(0xFF0F8A50),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    CenterFeedbackToast.showSuccess(context, message: message);
   }
 
   void _showErrorToast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-        backgroundColor: const Color(0xFFEF4444),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    CenterFeedbackToast.showError(context, message: message);
   }
 
   @override
@@ -856,7 +1345,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             // Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 child: Column(
                   children: [
                     // 1. Avatar & Name (Interactive edit)
@@ -896,9 +1388,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFC3E7C4),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFC3E7C4)),
       child: Row(
         children: [
           GestureDetector(
@@ -947,46 +1437,73 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       children: [
         GestureDetector(
           onTap: _showAvatarPickerSheet,
-          child: Stack(
-            children: [
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: (_avatarUrl != null && _avatarUrl!.trim().isNotEmpty)
-                    ? Image.network(
-                        ApiConfig.resolveImageUrl(_avatarUrl),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _buildAvatarPlaceholder(),
-                      )
-                    : _buildAvatarPlaceholder(),
-              ),
-              Positioned(
-                bottom: 2,
-                right: 4,
-                child: Container(
-                  width: 26,
-                  height: 26,
+          child: SizedBox(
+            width: 110,
+            height: 110,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                // 1. Soft mint green aura glow
+                Container(
+                  width: 110,
+                  height: 110,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F8A50),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    color: const Color(0xFFDCFCE7).withValues(alpha: 0.75),
                   ),
-                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 13),
                 ),
-              ),
-            ],
+                // 2. Pure white circular frame + razor-sharp circular avatar
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(3.5),
+                  child: ClipOval(
+                    child: Container(
+                      color: const Color(0xFFF1F5F9),
+                      child: _buildAvatarImageContent(),
+                    ),
+                  ),
+                ),
+                // 3. Camera badge button anchored cleanly at bottom-right
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F8A50),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.18),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -1004,7 +1521,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 ),
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.edit_outlined, color: Color(0xFF0F8A50), size: 16),
+              const Icon(
+                Icons.edit_outlined,
+                color: Color(0xFF0F8A50),
+                size: 16,
+              ),
             ],
           ),
         ),
@@ -1012,8 +1533,54 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
+  Widget _buildAvatarImageContent() {
+    // 1. Tampilkan file lokal segera setelah kamera/galeri memilih foto
+    if (_localImageFile != null && _localImageFile!.existsSync()) {
+      return Image.file(
+        _localImageFile!,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        width: double.infinity,
+        height: double.infinity,
+      );
+    }
+
+    // 2. Tampilkan URL foto dari server jika tersedia
+    if (_avatarUrl != null && _avatarUrl!.trim().isNotEmpty) {
+      final resolvedUrl = ApiConfig.resolveImageUrl(_avatarUrl);
+      return Image.network(
+        resolvedUrl,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        width: double.infinity,
+        height: double.infinity,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: const Color(0xFFDCFCE7),
+            alignment: Alignment.center,
+            child: const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF0F8A50),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => _buildAvatarPlaceholder(),
+      );
+    }
+
+    // 3. Fallback jika belum ada foto
+    return _buildAvatarPlaceholder();
+  }
+
   Widget _buildAvatarPlaceholder() {
-    final initial = _name.trim().isNotEmpty ? _name.trim()[0].toUpperCase() : '';
+    final initial = _name.trim().isNotEmpty
+        ? _name.trim()[0].toUpperCase()
+        : '';
     return Container(
       color: const Color(0xFFDCFCE7),
       alignment: Alignment.center,
@@ -1026,7 +1593,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 color: const Color(0xFF0F8A50),
               ),
             )
-          : const Icon(Icons.person_rounded, color: Color(0xFF16A34A), size: 44),
+          : const Icon(
+              Icons.person_rounded,
+              color: Color(0xFF16A34A),
+              size: 44,
+            ),
     );
   }
 
@@ -1048,7 +1619,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.verified_outlined, color: Color(0xFF0F8A50), size: 16),
+                    const Icon(
+                      Icons.verified_outlined,
+                      color: Color(0xFF0F8A50),
+                      size: 16,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Kelengkapan Data Nutrisi',
@@ -1071,7 +1646,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF0F8A50), size: 18),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFF0F8A50),
+                      size: 18,
+                    ),
                   ],
                 ),
               ],
@@ -1082,7 +1661,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               child: LinearProgressIndicator(
                 value: _nutritionPercent,
                 backgroundColor: const Color(0xFFE2E8F0),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F8A50)),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  Color(0xFF0F8A50),
+                ),
                 minHeight: 5,
               ),
             ),
@@ -1130,7 +1711,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   color: Color(0xFF0F8A50),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.account_box_rounded, color: Colors.white, size: 16),
+                child: const Icon(
+                  Icons.account_box_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 10),
               Text(
@@ -1182,7 +1767,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  const Icon(
+                    Icons.mail_outline_rounded,
+                    color: Color(0xFF64748B),
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -1196,14 +1785,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDCFCE7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.check_rounded, color: Color(0xFF166534), size: 12),
+                        const Icon(
+                          Icons.check_rounded,
+                          color: Color(0xFF166534),
+                          size: 12,
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           'Terverifikasi',
@@ -1243,20 +1839,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: Color(0xFF64748B),
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      _phone,
+                      _phone.isNotEmpty
+                          ? _phone
+                          : 'Belum diisi (Wajib untuk katering)',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
+                        color: _phone.isNotEmpty
+                            ? AppColors.textDark
+                            : const Color(0xFF94A3B8),
                       ),
                     ),
                   ),
                   Text(
-                    'Ganti',
+                    _phone.isNotEmpty ? 'Ganti' : 'Isi Nomor',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -1331,35 +1935,67 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.location_on_outlined, color: Color(0xFF0F8A50), size: 18),
+                      const Icon(
+                        Icons.location_on_outlined,
+                        color: Color(0xFF0F8A50),
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              addr.label.isNotEmpty ? addr.label : 'Rumah (Senopati)',
+                              (addr.label.isNotEmpty &&
+                                      !addr.label.contains('Senopati'))
+                                  ? addr.label
+                                  : (addr.fullAddress.isNotEmpty &&
+                                            !addr.fullAddress.contains(
+                                              'Belum ada alamat',
+                                            )
+                                        ? 'Alamat Pengiriman'
+                                        : 'Belum Ada Alamat Pengiriman'),
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.textDark,
+                                color:
+                                    (addr.fullAddress.isNotEmpty &&
+                                        !addr.fullAddress.contains(
+                                          'Belum ada alamat',
+                                        ))
+                                    ? AppColors.textDark
+                                    : const Color(0xFF94A3B8),
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              addr.fullAddress.isNotEmpty
+                              addr.fullAddress.isNotEmpty &&
+                                      !addr.fullAddress.contains('Senopati')
                                   ? addr.fullAddress
-                                  : 'Jl. Senopati No. 42, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12190',
+                                  : 'Belum ada alamat pengiriman. Silakan tambah alamat Anda.',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11.5,
-                                color: const Color(0xFF64748B),
+                                color:
+                                    (addr.fullAddress.isNotEmpty &&
+                                        !addr.fullAddress.contains(
+                                          'Senopati',
+                                        ) &&
+                                        !addr.fullAddress.contains(
+                                          'Belum ada alamat',
+                                        ))
+                                    ? const Color(0xFF64748B)
+                                    : const Color(0xFF94A3B8),
                                 height: 1.35,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 18),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFF94A3B8),
+                        size: 18,
+                      ),
                     ],
                   ),
                 ),
@@ -1398,7 +2034,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   color: Color(0xFF0F8A50),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.security_rounded, color: Colors.white, size: 16),
+                child: const Icon(
+                  Icons.security_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 10),
               Text(
@@ -1425,7 +2065,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.lock_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Color(0xFF64748B),
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -1433,17 +2077,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       children: [
                         Text(
                           'Kata Sandi',
-                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
                         ),
                         Text(
                           '••••••••••••',
-                          style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B), letterSpacing: 1.5),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            color: const Color(0xFF64748B),
+                            letterSpacing: 1.5,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -1460,60 +2115,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Autentikasi 2 Langkah (Interactive toggle)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.verified_user_outlined, color: Color(0xFF0F8A50), size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Autentikasi 2 Langkah',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
-                      ),
-                      Text(
-                        _twoFactorAuth ? 'Aktif via SMS / WhatsApp' : 'Nonaktif',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          color: _twoFactorAuth ? const Color(0xFF0F8A50) : const Color(0xFF94A3B8),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: _twoFactorAuth,
-                    activeThumbColor: Colors.white,
-                    activeTrackColor: const Color(0xFF0F8A50),
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: const Color(0xFFCBD5E1),
-                    onChanged: (val) async {
-                      setState(() => _twoFactorAuth = val);
-                      final auth = context.read<AuthController>();
-                      await auth.updateCustomerProfile(twoFactorAuth: val);
-                      _showSuccessToast(
-                        val ? 'Autentikasi 2 Langkah diaktifkan & disimpan ke backend' : 'Autentikasi 2 Langkah dinonaktifkan',
-                      );
-                    },
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -1544,40 +2145,41 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       age: _age,
                       allergies: _selectedAllergies,
                       dietaryGoals: _dietGoal,
-                      twoFactorAuth: _twoFactorAuth,
                     );
                     if (!context.mounted) return;
                     setState(() => _isSaving = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          ok
-                              ? 'Semua informasi pribadi berhasil disimpan ke Database MySQL!'
-                              : 'Perubahan informasi pribadi tersimpan secara lokal.',
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                        ),
-                        backgroundColor: const Color(0xFF0F8A50),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
+                    CenterFeedbackToast.showSuccess(
+                      context,
+                      message: ok
+                          ? 'Semua informasi pribadi berhasil disimpan ke Database MySQL!'
+                          : 'Perubahan informasi pribadi tersimpan secara lokal.',
                     );
                     Navigator.pop(context);
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0F8A50),
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
             ),
             child: _isSaving
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                      const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Simpan Perubahan',
@@ -1607,12 +2209,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: Color(0xFFE2E8F0)),
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.help_outline_rounded, size: 16, color: Color(0xFF475569)),
+                const Icon(
+                  Icons.help_outline_rounded,
+                  size: 16,
+                  color: Color(0xFF475569),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Pusat Bantuan & FAQ',
@@ -1623,7 +2231,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF475569)),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: Color(0xFF475569),
+                ),
               ],
             ),
           ),
@@ -1640,16 +2252,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: const Text('Keluar dari Akun?'),
-                    content: const Text('Apakah Anda yakin ingin keluar dari sesi aplikasi?'),
+                    content: const Text(
+                      'Apakah Anda yakin ingin keluar dari sesi aplikasi?',
+                    ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Batal'),
+                      ),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                          Navigator.of(
+                            context,
+                          ).pushNamedAndRemoveUntil('/login', (route) => false);
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
-                        child: const Text('Keluar', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEF4444),
+                        ),
+                        child: const Text(
+                          'Keluar',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -1657,7 +2281,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               },
               child: Row(
                 children: [
-                  const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 14),
+                  const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFEF4444),
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Keluar dari Akun',
@@ -1687,13 +2315,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: const Text('Hapus Akun'),
-                    content: const Text('Akun dan seluruh riwayat langganan Anda akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.'),
+                    content: const Text(
+                      'Akun dan seluruh riwayat langganan Anda akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.',
+                    ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Batal'),
+                      ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(ctx),
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
-                        child: const Text('Hapus Akun', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEF4444),
+                        ),
+                        child: const Text(
+                          'Hapus Akun',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),

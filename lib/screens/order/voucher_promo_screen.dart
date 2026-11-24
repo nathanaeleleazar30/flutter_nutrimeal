@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 
 class VoucherPromoScreen extends StatefulWidget {
   const VoucherPromoScreen({super.key});
@@ -28,7 +29,9 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
     setState(() => _isLoading = true);
     try {
       final list = await ApiService.instance.fetchVouchers();
-      final activeList = list.where((v) => v['is_active'] == 1 || v['is_active'] == true).toList();
+      final activeList = list
+          .where((v) => v['is_active'] == 1 || v['is_active'] == true)
+          .toList();
       if (mounted) {
         setState(() {
           _vouchers = activeList;
@@ -59,20 +62,14 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
           _vouchers.insert(0, voucher);
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Kode voucher "${code.toUpperCase()}" berhasil diterapkan!'),
-          backgroundColor: const Color(0xFF16A34A),
-          behavior: SnackBarBehavior.floating,
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: 'Kode voucher "${code.toUpperCase()}" berhasil diterapkan!',
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Kode voucher "$code" tidak ditemukan atau sudah tidak aktif.'),
-          backgroundColor: const Color(0xFFEF4444),
-          behavior: SnackBarBehavior.floating,
-        ),
+      CenterFeedbackToast.showError(
+        context,
+        message: 'Kode voucher "$code" tidak ditemukan atau sudah tidak aktif.',
       );
     }
   }
@@ -111,7 +108,10 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                 color: AppColors.primaryGreen,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -134,7 +134,9 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 40),
                           child: Center(
-                            child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryGreen,
+                            ),
                           ),
                         )
                       else if (_vouchers.isEmpty)
@@ -144,10 +146,12 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _vouchers.length,
-                          separatorBuilder: (_, index) => const SizedBox(height: 12),
+                          separatorBuilder: (_, index) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (ctx, idx) {
                             final v = _vouchers[idx];
-                            final isSel = _selectedVoucher?['code'] == v['code'];
+                            final isSel =
+                                _selectedVoucher?['code'] == v['code'];
                             return _buildDynamicVoucherCard(v, isSel);
                           },
                         ),
@@ -220,7 +224,9 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
     final minSpend = int.tryParse('${v['min_spend']}') ?? 0;
     final title = v['title'] ?? 'Promo NutriMeal';
     final code = (v['code'] ?? '').toString().toUpperCase();
-    final validUntil = v['valid_until'] != null ? v['valid_until'].toString() : '';
+    final validUntil = v['valid_until'] != null
+        ? v['valid_until'].toString()
+        : '';
 
     String leftTitle = 'DISKON';
     String leftSubtitle = 'NUTRI-DEAL';
@@ -258,7 +264,9 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? const Color(0xFF16A34A) : const Color(0xFFE2E8F0),
+              color: isSelected
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFE2E8F0),
               width: isSelected ? 1.5 : 1,
             ),
             boxShadow: [
@@ -278,9 +286,14 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                   width: 82,
                   decoration: BoxDecoration(
                     color: leftColor,
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(15),
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 12,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -333,7 +346,10 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFDCFCE7),
                                       borderRadius: BorderRadius.circular(4),
@@ -365,21 +381,31 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                               margin: const EdgeInsets.only(left: 6),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected ? const Color(0xFF16A34A) : Colors.transparent,
+                                color: isSelected
+                                    ? const Color(0xFF16A34A)
+                                    : Colors.transparent,
                                 border: Border.all(
-                                  color: isSelected ? const Color(0xFF16A34A) : const Color(0xFFCBD5E1),
+                                  color: isSelected
+                                      ? const Color(0xFF16A34A)
+                                      : const Color(0xFFCBD5E1),
                                   width: 1.6,
                                 ),
                               ),
                               child: isSelected
-                                  ? const Icon(Icons.check_rounded, color: Colors.white, size: 13)
+                                  ? const Icon(
+                                      Icons.check_rounded,
+                                      color: Colors.white,
+                                      size: 13,
+                                    )
                                   : null,
                             ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          minSpend > 0 ? 'Min. Belanja ${_formatCurrency(minSpend)}' : 'Tanpa minimum belanja',
+                          minSpend > 0
+                              ? 'Min. Belanja ${_formatCurrency(minSpend)}'
+                              : 'Tanpa minimum belanja',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             color: const Color(0xFF64748B),
@@ -416,9 +442,7 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFC3E7C4),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFC3E7C4)),
       child: Row(
         children: [
           GestureDetector(
@@ -479,7 +503,11 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.confirmation_number_outlined, color: Color(0xFF94A3B8), size: 20),
+          const Icon(
+            Icons.confirmation_number_outlined,
+            color: Color(0xFF94A3B8),
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -557,7 +585,11 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 14),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFF16A34A),
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Voucher Dipilih:',
@@ -590,20 +622,16 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                   final applied = controller.applyVoucherData(v);
                   if (applied) {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Voucher $code berhasil diterapkan ke keranjang!'),
-                        backgroundColor: const Color(0xFF16A34A),
-                        behavior: SnackBarBehavior.floating,
-                      ),
+                    CenterFeedbackToast.showSuccess(
+                      context,
+                      message:
+                          'Voucher $code berhasil diterapkan ke keranjang!',
                     );
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Subtotal belanja belum memenuhi syarat minimum voucher.'),
-                        backgroundColor: Color(0xFFEF4444),
-                        behavior: SnackBarBehavior.floating,
-                      ),
+                    CenterFeedbackToast.showError(
+                      context,
+                      message:
+                          'Subtotal belanja belum memenuhi syarat minimum voucher.',
                     );
                   }
                 }
@@ -611,7 +639,9 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF16A34A),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -625,7 +655,11 @@ class _VoucherPromoScreenState extends State<VoucherPromoScreen> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ],
               ),
             ),

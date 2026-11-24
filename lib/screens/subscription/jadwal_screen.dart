@@ -21,127 +21,16 @@ class JadwalScreen extends StatefulWidget {
 class _JadwalScreenState extends State<JadwalScreen> {
   int _selectedDayIndex = 0;
 
-  void _showChangeMenuDialog(ScheduledMeal meal, List<MenuItem> availableMeals) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Ubah Menu ${meal.slotType}',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Menu saat ini: ${meal.title}',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'PILIHAN MENU DARI RESTO',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ...availableMeals.take(4).map(
-                    (m) => _buildAlternativeOption(ctx, '${m.name} (${m.calories} kkal)'),
-                  ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAlternativeOption(BuildContext ctx, String name) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(
-          color: Color(0xFFDCFCE7),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.restaurant_menu_rounded,
-          color: AppColors.primaryGreen,
-          size: 18,
-        ),
-      ),
-      title: Text(
-        name,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 13.5,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textDark,
-        ),
-      ),
-      trailing: ElevatedButton(
-        onPressed: () {
-          Navigator.pop(ctx);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Menu berhasil diganti ke $name'),
-              backgroundColor: AppColors.primaryGreen,
-            ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryGreen,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        ),
-        child: const Text(
-          'Pilih',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final menuController = context.watch<NutriMealMenuController>();
     // Sinkron 100% dengan Beranda: 5 hari (Senin s/d Jumat) & tanggal real-time
     final schedules = menuController.cateringSchedules;
-    final safeIndex = _selectedDayIndex < schedules.length ? _selectedDayIndex : 0;
-    final currentSchedule = schedules[safeIndex];
+    final safeIndex =
+        (schedules.isNotEmpty && _selectedDayIndex < schedules.length)
+        ? _selectedDayIndex
+        : 0;
+    final currentSchedule = schedules.isNotEmpty ? schedules[safeIndex] : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -224,16 +113,33 @@ class _JadwalScreenState extends State<JadwalScreen> {
 
             // Meal Schedule Cards
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
-                children: [
-                  ...currentSchedule.meals.map((meal) => _buildMealCard(meal, menuController.allMeals)),
-                  const SizedBox(height: 20),
-                ],
-              ),
+              child: currentSchedule == null || currentSchedule.meals.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          'Belum ada jadwal menu untuk hari ini',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            color: const Color(0xFF64748B),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      children: [
+                        ...currentSchedule.meals.map(
+                          (meal) =>
+                              _buildMealCard(meal, menuController.allMeals),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
             ),
           ],
         ),
@@ -396,22 +302,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
                           ),
                         ),
                       ],
-                    ),
-                    TextButton(
-                      onPressed: () => _showChangeMenuDialog(meal, allMeals),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Text(
-                        'Ubah Menu',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F8A50),
-                        ),
-                      ),
                     ),
                   ],
                 ),

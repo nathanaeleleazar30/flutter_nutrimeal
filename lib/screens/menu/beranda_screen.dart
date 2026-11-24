@@ -135,7 +135,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                     menuController.setSearchQuery('');
                                   },
                                   child: const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
                                     child: Icon(
                                       Icons.close_rounded,
                                       size: 18,
@@ -200,7 +202,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: GestureDetector(
-                          onTap: () => Navigator.of(context).pushNamed('/langganan-katalog'),
+                          onTap: () => Navigator.of(
+                            context,
+                          ).pushNamed('/langganan-katalog'),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 18,
@@ -211,7 +215,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
                               borderRadius: BorderRadius.circular(22),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF064E3B).withValues(alpha: 0.25),
+                                  color: const Color(
+                                    0xFF064E3B,
+                                  ).withValues(alpha: 0.25),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -221,7 +227,8 @@ class _BerandaScreenState extends State<BerandaScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       // Flash / Discount Pill Tag
                                       Container(
@@ -231,7 +238,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFF14532D),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -244,12 +253,15 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                             const SizedBox(width: 3),
                                             Text(
                                               'HEMAT S.D 25%',
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 9.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: const Color(0xFFFDE68A),
-                                                letterSpacing: 0.3,
-                                              ),
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: const Color(
+                                                      0xFFFDE68A,
+                                                    ),
+                                                    letterSpacing: 0.3,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -278,12 +290,18 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                             const TextSpan(text: 'Mulai '),
                                             TextSpan(
                                               text: 'Rp28.000',
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontWeight: FontWeight.w800,
-                                                color: const Color(0xFFFBBF24),
-                                              ),
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    fontWeight: FontWeight.w800,
+                                                    color: const Color(
+                                                      0xFFFBBF24,
+                                                    ),
+                                                  ),
                                             ),
-                                            const TextSpan(text: ' /porsi · Bebas Pilih\nPaket'),
+                                            const TextSpan(
+                                              text:
+                                                  ' /porsi · Bebas Pilih\nPaket',
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -303,7 +321,9 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                        color: const Color(
+                                          0xFFF59E0B,
+                                        ).withValues(alpha: 0.3),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
@@ -325,131 +345,6 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                         Icons.arrow_forward_rounded,
                                         size: 14,
                                         color: Color(0xFF1E293B),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // AI Planner Banner (NutriMeal AI Planner)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: GestureDetector(
-                          onTap: () => Navigator.of(context).pushNamed('/ai-planner'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 15,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(22),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF1D4ED8).withValues(alpha: 0.28),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3.5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.auto_awesome,
-                                              size: 13,
-                                              color: Color(0xFFFDE047),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'OPTIMISASI AI OTOMATIS',
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 9.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: const Color(0xFFFEF08A),
-                                                letterSpacing: 0.3,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'NutriMeal AI Planner ✨',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 14.5,
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Paket katering hemat & seimbang sesuai tamu & budget',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 10.5,
-                                          color: const Color(0xFFDBEAFE),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 9,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.1),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Coba AI',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                          color: const Color(0xFF1D4ED8),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Icon(
-                                        Icons.arrow_forward_rounded,
-                                        size: 14,
-                                        color: Color(0xFF1D4ED8),
                                       ),
                                     ],
                                   ),
@@ -525,84 +420,81 @@ class _BerandaScreenState extends State<BerandaScreen> {
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Row(
-                          children: List.generate(
-                            cateringList.length,
-                            (index) {
-                              final schedule = cateringList[index];
-                              final isSelected =
-                                  menuController.selectedCateringDayIndex ==
-                                  index;
+                          children: List.generate(cateringList.length, (index) {
+                            final schedule = cateringList[index];
+                            final isSelected =
+                                menuController.selectedCateringDayIndex ==
+                                index;
 
-                              return Expanded(
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      menuController.selectCateringDay(index),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 180),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? const Color(0xFF16A34A)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(14),
-                                      boxShadow: isSelected
-                                          ? [
-                                              BoxShadow(
-                                                color: const Color(
-                                                  0xFF16A34A,
-                                                ).withValues(alpha: 0.25),
-                                                blurRadius: 6,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          schedule.dayName.toUpperCase(),
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w800,
-                                            color: isSelected
+                            return Expanded(
+                              child: GestureDetector(
+                                onTap: () =>
+                                    menuController.selectCateringDay(index),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? const Color(0xFF16A34A)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: const Color(
+                                                0xFF16A34A,
+                                              ).withValues(alpha: 0.25),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        schedule.dayName.toUpperCase(),
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: isSelected
                                               ? Colors.white
                                               : const Color(0xFF64748B),
-                                          ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '${schedule.dayNumber}',
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11,
-                                            fontWeight: isSelected
-                                                ? FontWeight.w800
-                                                : FontWeight.w600,
-                                            color: isSelected
-                                                ? Colors.white
-                                                : const Color(0xFF475569),
-                                          ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${schedule.dayNumber}',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w800
+                                              : FontWeight.w600,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : const Color(0xFF475569),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Container(
-                                          width: 4,
-                                          height: 4,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? Colors.white
-                                                : const Color(0xFFCBD5E1),
-                                            shape: BoxShape.circle,
-                                          ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Container(
+                                        width: 4,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : const Color(0xFFCBD5E1),
+                                          shape: BoxShape.circle,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          }),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -610,29 +502,44 @@ class _BerandaScreenState extends State<BerandaScreen> {
                       // Active Catering Delivery Cards (Meals corresponding to selected day)
                       Builder(
                         builder: (context) {
-                          final selectedIdx = (menuController.selectedCateringDayIndex >= 0 &&
-                                  menuController.selectedCateringDayIndex < cateringList.length)
+                          final selectedIdx =
+                              (menuController.selectedCateringDayIndex >= 0 &&
+                                  menuController.selectedCateringDayIndex <
+                                      cateringList.length)
                               ? menuController.selectedCateringDayIndex
                               : 0;
-                          final currentDay = cateringList.isNotEmpty ? cateringList[selectedIdx] : dummySchedules[0];
+                          final currentDay = cateringList.isNotEmpty
+                              ? cateringList[selectedIdx]
+                              : dummySchedules[0];
 
                           return Column(
                             children: currentDay.meals.map((meal) {
                               final isLunch = meal.slotType == 'Makan Siang';
 
                               return GestureDetector(
-                                onTap: widget.onNavigateToSchedule ??
-                                    () => Navigator.of(context).pushNamed('/jadwal'),
+                                onTap:
+                                    widget.onNavigateToSchedule ??
+                                    () => Navigator.of(
+                                      context,
+                                    ).pushNamed('/jadwal'),
                                 child: Container(
                                   margin: const EdgeInsets.only(bottom: 10),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+                                    border: Border.all(
+                                      color: const Color(0xFFF1F5F9),
+                                      width: 1.5,
+                                    ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.025),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.025,
+                                        ),
                                         blurRadius: 10,
                                         offset: const Offset(0, 3),
                                       ),
@@ -657,52 +564,73 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                       // Title, Slot & Time
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             Row(
                                               children: [
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: 7,
-                                                    vertical: 2.5,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 7,
+                                                        vertical: 2.5,
+                                                      ),
                                                   decoration: BoxDecoration(
                                                     color: isLunch
-                                                        ? const Color(0xFFDCFCE7)
-                                                        : const Color(0xFFEEF2FF),
-                                                    borderRadius: BorderRadius.circular(6),
+                                                        ? const Color(
+                                                            0xFFDCFCE7,
+                                                          )
+                                                        : const Color(
+                                                            0xFFEEF2FF,
+                                                          ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
                                                   ),
                                                   child: Text(
                                                     meal.slotType,
-                                                    style: GoogleFonts.plusJakartaSans(
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: isLunch
-                                                          ? const Color(0xFF16A34A)
-                                                          : const Color(0xFF4F46E5),
-                                                    ),
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: isLunch
+                                                              ? const Color(
+                                                                  0xFF16A34A,
+                                                                )
+                                                              : const Color(
+                                                                  0xFF4F46E5,
+                                                                ),
+                                                        ),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
                                                   '${meal.calories} kkal',
-                                                  style: GoogleFonts.plusJakartaSans(
-                                                    fontSize: 10.5,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFF64748B),
-                                                  ),
+                                                  style:
+                                                      GoogleFonts.plusJakartaSans(
+                                                        fontSize: 10.5,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: const Color(
+                                                          0xFF64748B,
+                                                        ),
+                                                      ),
                                                 ),
                                               ],
                                             ),
                                             const SizedBox(height: 5),
                                             Text(
                                               meal.title,
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 13.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: AppColors.textDark,
-                                              ),
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    fontSize: 13.5,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: AppColors.textDark,
+                                                  ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -717,11 +645,15 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   meal.deliveryTime,
-                                                  style: GoogleFonts.plusJakartaSans(
-                                                    fontSize: 11.5,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: const Color(0xFF64748B),
-                                                  ),
+                                                  style:
+                                                      GoogleFonts.plusJakartaSans(
+                                                        fontSize: 11.5,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: const Color(
+                                                          0xFF64748B,
+                                                        ),
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -781,7 +713,10 @@ class _BerandaScreenState extends State<BerandaScreen> {
                       if (isSearching && filteredItems.isEmpty)
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 32,
+                            horizontal: 16,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF8FAFC),
                             borderRadius: BorderRadius.circular(16),

@@ -65,7 +65,8 @@ class MenuItem {
           .map((e) => e.toString().trim())
           .where((e) => e.isNotEmpty)
           .toList();
-    } else if (json['tags'] is String && (json['tags'] as String).trim().isNotEmpty) {
+    } else if (json['tags'] is String &&
+        (json['tags'] as String).trim().isNotEmpty) {
       parsedTags = (json['tags'] as String)
           .split(',')
           .map((e) => e.trim())
@@ -74,7 +75,10 @@ class MenuItem {
     }
 
     final rawImg = (json['image_url'] ?? json['imageUrl'])?.toString();
-    final resolvedImg = ApiConfig.resolveImageUrl(rawImg, activeBaseUrl: baseUrl);
+    final resolvedImg = ApiConfig.resolveImageUrl(
+      rawImg,
+      activeBaseUrl: baseUrl,
+    );
 
     final cal = int.tryParse(json['calories']?.toString() ?? '0') ?? 0;
     final prc = int.tryParse(json['price']?.toString() ?? '0') ?? 0;
@@ -82,17 +86,22 @@ class MenuItem {
     final disc = int.tryParse(rawDiscount?.toString() ?? '0') ?? 0;
 
     return MenuItem(
-      id: json['id']?.toString() ?? 'item-${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          json['id']?.toString() ??
+          'item-${DateTime.now().millisecondsSinceEpoch}',
       name: json['name']?.toString() ?? 'Menu Sehat',
       category: json['category']?.toString() ?? 'Lainnya',
       calories: cal,
       price: prc,
       discountPercent: disc > 0 ? disc : null,
       imageUrl: resolvedImg,
-      description: json['description']?.toString() ?? 'Menu lezat bergizi seimbang dari NutriMeal.',
+      description:
+          json['description']?.toString() ??
+          'Menu lezat bergizi seimbang dari NutriMeal.',
       tags: parsedTags,
       schedule: json['schedule']?.toString() ?? 'Setiap Hari',
-      deliveryTime: json['delivery_time']?.toString() ??
+      deliveryTime:
+          json['delivery_time']?.toString() ??
           json['deliveryTime']?.toString() ??
           '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
@@ -110,11 +119,7 @@ class CartItem {
   int quantity;
   final String? note;
 
-  CartItem({
-    required this.item,
-    this.quantity = 1,
-    this.note,
-  });
+  CartItem({required this.item, this.quantity = 1, this.note});
 
   int get totalPrice => item.price * quantity;
 }
@@ -129,6 +134,8 @@ class DeliveryAddress {
   final String deliveryNote;
   final String addressType;
   final bool isDefault;
+  final double? latitude;
+  final double? longitude;
 
   const DeliveryAddress({
     this.id = '',
@@ -140,6 +147,8 @@ class DeliveryAddress {
     required this.deliveryNote,
     this.addressType = 'Rumah',
     this.isDefault = true,
+    this.latitude,
+    this.longitude,
   });
 
   DeliveryAddress copyWith({
@@ -152,6 +161,8 @@ class DeliveryAddress {
     String? deliveryNote,
     String? addressType,
     bool? isDefault,
+    double? latitude,
+    double? longitude,
   }) {
     return DeliveryAddress(
       id: id ?? this.id,
@@ -163,6 +174,8 @@ class DeliveryAddress {
       deliveryNote: deliveryNote ?? this.deliveryNote,
       addressType: addressType ?? this.addressType,
       isDefault: isDefault ?? this.isDefault,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 }
@@ -187,10 +200,7 @@ class CateringDayItem {
   final String dayShort;
   final String subtitle;
 
-  const CateringDayItem({
-    required this.dayShort,
-    required this.subtitle,
-  });
+  const CateringDayItem({required this.dayShort, required this.subtitle});
 }
 
 class NutriMealMenuController extends ChangeNotifier {
@@ -259,7 +269,9 @@ class NutriMealMenuController extends ChangeNotifier {
         _syncDynamicCategories(localMeals);
         _menuLoadedFromApi = true;
         notifyListeners();
-        debugPrint('[MenuController] 📦 Berhasil memuat ${localMeals.length} menu dari Drift DB lokal.');
+        debugPrint(
+          '[MenuController] 📦 Berhasil memuat ${localMeals.length} menu dari Drift DB lokal.',
+        );
       }
     } catch (e) {
       debugPrint('[MenuController] Error loading local Drift DB: $e');
@@ -275,7 +287,9 @@ class NutriMealMenuController extends ChangeNotifier {
         _syncDynamicCategories(meals);
         _menuLoadedFromApi = true;
         notifyListeners();
-        debugPrint('[MenuController] 🔄 Drift Stream .watch() memicu pembaruan UI: ${meals.length} menu.');
+        debugPrint(
+          '[MenuController] 🔄 Drift Stream .watch() memicu pembaruan UI: ${meals.length} menu.',
+        );
       }
     });
 
@@ -300,7 +314,8 @@ class NutriMealMenuController extends ChangeNotifier {
         _menuError = null;
       } else {
         if (_menuItems.isEmpty) {
-          _menuError = 'Tidak dapat terhubung ke server. Menampilkan menu offline.';
+          _menuError =
+              'Tidak dapat terhubung ke server. Menampilkan menu offline.';
         }
       }
     } catch (e) {
@@ -463,7 +478,13 @@ class NutriMealMenuController extends ChangeNotifier {
           'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
       description:
           'Pepes ikan tongkol bumbu rempah kuning kaya antioksidan dan omega-3 disajikan hangat.',
-      tags: ['Ikan Tongkol Segar', 'Kemangi', 'Kunyit', 'Cabai Merah', 'Nasi Merah'],
+      tags: [
+        'Ikan Tongkol Segar',
+        'Kemangi',
+        'Kunyit',
+        'Cabai Merah',
+        'Nasi Merah',
+      ],
       schedule: 'Setiap Hari Selasa',
       deliveryTime: '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
@@ -503,7 +524,12 @@ class NutriMealMenuController extends ChangeNotifier {
           'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800&auto=format&fit=crop',
       description:
           'Tumis potongan daging sapi empuk dipadu dengan kuntum brokoli segar bernutrisi tinggi.',
-      tags: ['Daging Sapi Lean', 'Brokoli Segar', 'Bawang Putih', 'Saus Tiram Rendah Garam'],
+      tags: [
+        'Daging Sapi Lean',
+        'Brokoli Segar',
+        'Bawang Putih',
+        'Saus Tiram Rendah Garam',
+      ],
       schedule: 'Setiap Hari Kamis',
       deliveryTime: '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
@@ -523,7 +549,12 @@ class NutriMealMenuController extends ChangeNotifier {
           'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop',
       description:
           'Fresh green salad dengan dada ayam panggang, selada renyah, tomat ceri, dan dressing zaitun.',
-      tags: ['Dada Ayam', 'Romaine Lettuce', 'Paprika Kuning', 'Dressing Zaitun'],
+      tags: [
+        'Dada Ayam',
+        'Romaine Lettuce',
+        'Paprika Kuning',
+        'Dressing Zaitun',
+      ],
       schedule: 'Setiap Hari Jumat',
       deliveryTime: '12:00 - 13:00 WIB',
       nutrition: NutritionInfo(
@@ -576,9 +607,11 @@ class NutriMealMenuController extends ChangeNotifier {
 
   List<MenuItem> get filteredMenuItems {
     return _menuItems.where((item) {
-      final matchesCategory = _selectedCategory == 'Semua' ||
+      final matchesCategory =
+          _selectedCategory == 'Semua' ||
           item.category.toLowerCase() == _selectedCategory.toLowerCase();
-      final matchesQuery = _searchQuery.isEmpty ||
+      final matchesQuery =
+          _searchQuery.isEmpty ||
           item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.description.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesCategory && matchesQuery;
@@ -596,7 +629,8 @@ class NutriMealMenuController extends ChangeNotifier {
 
   // Selected Subscription Package (for Checkout from Langganan Katalog)
   Map<String, dynamic>? _selectedSubscriptionPackage;
-  Map<String, dynamic>? get selectedSubscriptionPackage => _selectedSubscriptionPackage;
+  Map<String, dynamic>? get selectedSubscriptionPackage =>
+      _selectedSubscriptionPackage;
 
   void setSelectedSubscriptionPackage(Map<String, dynamic>? package) {
     _selectedSubscriptionPackage = package;
@@ -634,7 +668,9 @@ class NutriMealMenuController extends ChangeNotifier {
   void addAiPlannedPackageToCart(AiPlannedPackage package) {
     for (final item in package.items) {
       if (item.quantity > 0) {
-        final existing = _menuItems.where((m) => m.id == item.meal.id).firstOrNull ?? item.meal;
+        final existing =
+            _menuItems.where((m) => m.id == item.meal.id).firstOrNull ??
+            item.meal;
         addToCart(existing, quantity: item.quantity);
       }
     }
@@ -694,7 +730,9 @@ class NutriMealMenuController extends ChangeNotifier {
   // Price Calculations
   int get subtotal => _cartItems.fold(0, (sum, i) => sum + i.totalPrice);
 
-  int get tax => _cartItems.isEmpty ? 0 : (subtotal == 93000 ? 4500 : (subtotal * 0.05).round());
+  int get tax => _cartItems.isEmpty
+      ? 0
+      : (subtotal == 93000 ? 4500 : (subtotal * 0.05).round());
 
   int get shippingFee => _cartItems.isEmpty ? 0 : 10000;
 
@@ -721,7 +759,9 @@ class NutriMealMenuController extends ChangeNotifier {
         calculatedDiscount = maxDisc;
       }
     } else if (type == 'free_shipping') {
-      calculatedDiscount = val > 0 ? (shippingFee < val ? shippingFee : val) : shippingFee;
+      calculatedDiscount = val > 0
+          ? (shippingFee < val ? shippingFee : val)
+          : shippingFee;
     } else {
       calculatedDiscount = val;
     }
@@ -765,7 +805,21 @@ class NutriMealMenuController extends ChangeNotifier {
 
   DeliveryAddress? _customDeliveryAddress;
 
-  List<DeliveryAddress> get savedAddresses => List.unmodifiable(_savedAddresses);
+  List<DeliveryAddress> get savedAddresses =>
+      List.unmodifiable(_savedAddresses);
+
+  bool get hasValidDeliveryAddress {
+    if (_customDeliveryAddress != null &&
+        _customDeliveryAddress!.fullAddress.trim().isNotEmpty &&
+        !_customDeliveryAddress!.fullAddress.contains('Belum ada alamat')) {
+      return true;
+    }
+    return _savedAddresses.any(
+      (a) =>
+          a.fullAddress.trim().isNotEmpty &&
+          !a.fullAddress.contains('Belum ada alamat'),
+    );
+  }
 
   DeliveryAddress get deliveryAddress {
     if (_customDeliveryAddress != null) return _customDeliveryAddress!;

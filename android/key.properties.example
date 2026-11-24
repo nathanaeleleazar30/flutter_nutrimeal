@@ -1,0 +1,24 @@
+# ==============================================================================
+# NutriMeal - Template Konfigurasi Keystore Release Android
+# ==============================================================================
+# 
+# PANDUAN LANGKAH PEMBUATAN KEYSTORE PRODUKSI:
+# 1. Buka Terminal / PowerShell di folder proyek ini.
+# 2. Jalankan perintah keytool berikut untuk membuat file keystore release:
+#
+#    keytool -genkey -v -keystore android/app/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# 3. Masukkan password keystore, nama Anda/organisasi, dan informasi lainnya.
+# 4. Salin file ini menjadi 'android/key.properties' di direktori android/:
+#    cp android/key.properties.example android/key.properties
+# 5. Isi 4 baris di bawah ini dengan password dan nama file keystore yang dibuat.
+#
+# CATATAN KEAMANAN PENTING:
+# - JANGAN PERNAH mengunggah file 'key.properties' atau '*.jks' ke repository Git!
+# - File-file tersebut sudah dimasukkan ke dalam .gitignore demi keamanan aplikasi.
+# ==============================================================================
+
+storePassword=GANTI_DENGAN_PASSWORD_KEYSTORE_ANDA
+keyPassword=GANTI_DENGAN_PASSWORD_KEY_ANDA
+keyAlias=upload
+storeFile=upload-keystore.jks

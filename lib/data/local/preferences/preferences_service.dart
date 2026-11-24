@@ -10,8 +10,10 @@ class PreferencesService {
 
   static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyIsFirstTime = 'app_is_first_time';
-  static const String _keySelectedFilterCategory = 'app_selected_filter_category';
-  static const String _keyLastCacheSyncUtcMillis = 'app_last_cache_sync_utc_millis';
+  static const String _keySelectedFilterCategory =
+      'app_selected_filter_category';
+  static const String _keyLastCacheSyncUtcMillis =
+      'app_last_cache_sync_utc_millis';
   static const String _keyNotificationEnabled = 'app_notification_enabled';
 
   SharedPreferences? _prefs;

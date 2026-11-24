@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../core/constants/api_config.dart';
 import '../data/local/secure/secure_storage_service.dart';
 import '../services/notification_service.dart';
@@ -116,11 +117,16 @@ class AuthController extends ChangeNotifier {
         _isLoggedIn = true;
         notifyListeners();
         if (kDebugMode) {
-          print('[NutriMeal Auth] 🔐 Sesi berhasil dipulihkan dari FlutterSecureStorage: $_currentUserEmail');
+          print(
+            '[NutriMeal Auth] 🔐 Sesi berhasil dipulihkan dari FlutterSecureStorage: $_currentUserEmail',
+          );
         }
       }
     } catch (e) {
-      if (kDebugMode) print('[NutriMeal Auth] ⚠️ Gagal memulihkan sesi dari secure storage: $e');
+      if (kDebugMode)
+        print(
+          '[NutriMeal Auth] ⚠️ Gagal memulihkan sesi dari secure storage: $e',
+        );
     }
   }
 
@@ -136,10 +142,7 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setValidationErrorsManual({
-    String? emailErr,
-    String? passwordErr,
-  }) {
+  void setValidationErrorsManual({String? emailErr, String? passwordErr}) {
     _emailError = emailErr;
     _passwordError = passwordErr;
     notifyListeners();
@@ -279,7 +282,8 @@ class AuthController extends ChangeNotifier {
       }
 
       if (successData == null) {
-        _generalError = 'Tidak dapat terhubung ke server. Cek koneksi jaringan.';
+        _generalError =
+            'Tidak dapat terhubung ke server. Cek koneksi jaringan.';
         _isLoading = false;
         notifyListeners();
         return false;
@@ -290,8 +294,14 @@ class AuthController extends ChangeNotifier {
       final customerData = successData['data'];
       _authToken = customerData?['token'];
       _customerId = customerData?['customer']?['id'] ?? customerData?['id'];
-      _currentUserName = customerData?['customer']?['name'] ?? customerData?['name'] ?? email.split('@').first;
-      _currentUserEmail = customerData?['customer']?['email'] ?? customerData?['email'] ?? email;
+      _currentUserName =
+          customerData?['customer']?['name'] ??
+          customerData?['name'] ??
+          email.split('@').first;
+      _currentUserEmail =
+          customerData?['customer']?['email'] ??
+          customerData?['email'] ??
+          email;
       _isLoggedIn = true;
       _backendMessage = 'Login berhasil';
 
@@ -317,7 +327,10 @@ class AuthController extends ChangeNotifier {
         customerId: _customerId,
       );
 
-      if (kDebugMode) print('[NutriMeal Auth] ✅ Login berhasil & tersimpan di SecureStorage: $_currentUserEmail');
+      if (kDebugMode)
+        print(
+          '[NutriMeal Auth] ✅ Login berhasil & tersimpan di SecureStorage: $_currentUserEmail',
+        );
     } catch (e) {
       _generalError = 'Terjadi kesalahan: $e';
       _isLoading = false;
@@ -356,18 +369,16 @@ class AuthController extends ChangeNotifier {
 
     try {
       // Daftar customer via endpoint customer-register (simpan password ke DB)
-      final resData = await _postToBackend(
-        ApiConfig.candidateRegisterUrls,
-        {
-          'name': nama.trim(),
-          'email': email.trim(),
-          'phone': whatsapp.trim(),
-          'password': password,
-        },
-      );
+      final resData = await _postToBackend(ApiConfig.candidateRegisterUrls, {
+        'name': nama.trim(),
+        'email': email.trim(),
+        'phone': whatsapp.trim(),
+        'password': password,
+      });
 
       if (resData == null) {
-        _generalError = 'Tidak dapat terhubung ke server. Cek koneksi jaringan.';
+        _generalError =
+            'Tidak dapat terhubung ke server. Cek koneksi jaringan.';
         _isLoading = false;
         notifyListeners();
         return false;
@@ -380,7 +391,7 @@ class AuthController extends ChangeNotifier {
         return false;
       }
 
-            // Sukses menyimpan ke database
+      // Sukses menyimpan ke database
       // Jangan langsung login otomatis, agar user login manual terlebih dahulu
       _resetCustomerProfile(); // Bersihkan seluruh profil akun lama
       _authToken = null;
@@ -390,7 +401,10 @@ class AuthController extends ChangeNotifier {
       _isLoggedIn = false;
       _backendMessage = 'Pendaftaran berhasil. Silakan masuk dengan akun Anda.';
 
-      if (kDebugMode) print('[NutriMeal Auth] 🚀 Register berhasil tersimpan di DB: ${email.trim()}');
+      if (kDebugMode)
+        print(
+          '[NutriMeal Auth] 🚀 Register berhasil tersimpan di DB: ${email.trim()}',
+        );
     } catch (e) {
       _generalError = 'Terjadi kesalahan: $e';
       _isLoading = false;
@@ -413,17 +427,20 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (kDebugMode) print('[NutriMeal Auth] Membuka jendela resmi Google Sign-In...');
+      if (kDebugMode)
+        print('[NutriMeal Auth] Membuka jendela resmi Google Sign-In...');
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        if (kDebugMode) print('[NutriMeal Auth] Pengguna membatalkan pemilihan akun Google.');
+        if (kDebugMode)
+          print('[NutriMeal Auth] Pengguna membatalkan pemilihan akun Google.');
         _isLoading = false;
         notifyListeners();
         return false;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
@@ -433,28 +450,28 @@ class AuthController extends ChangeNotifier {
         return false;
       }
 
-      if (kDebugMode) print('[NutriMeal Auth] Akun Google terpilih: ${googleUser.email}');
+      if (kDebugMode)
+        print('[NutriMeal Auth] Akun Google terpilih: ${googleUser.email}');
 
-      final resData = await _postToBackend(
-        ApiConfig.candidateGoogleAuthUrls,
-        {
-          'idToken': idToken,
-          'email': googleUser.email,
-          'name': googleUser.displayName ?? googleUser.email.split('@').first,
-          'googleId': googleUser.id,
-          'photoUrl': googleUser.photoUrl,
-        },
-      );
+      final resData = await _postToBackend(ApiConfig.candidateGoogleAuthUrls, {
+        'idToken': idToken,
+        'email': googleUser.email,
+        'name': googleUser.displayName ?? googleUser.email.split('@').first,
+        'googleId': googleUser.id,
+        'photoUrl': googleUser.photoUrl,
+      });
 
       if (resData == null) {
-        _generalError = 'Tidak dapat terhubung ke server setelah Google Sign-In.';
+        _generalError =
+            'Tidak dapat terhubung ke server setelah Google Sign-In.';
         _isLoading = false;
         notifyListeners();
         return false;
       }
 
       if (resData['success'] != true) {
-        _generalError = resData['message'] ?? 'Login Google gagal diverifikasi backend.';
+        _generalError =
+            resData['message'] ?? 'Login Google gagal diverifikasi backend.';
         _isLoading = false;
         notifyListeners();
         return false;
@@ -463,8 +480,10 @@ class AuthController extends ChangeNotifier {
       final customerData = resData['data'];
       _authToken = customerData?['token'];
       _customerId = customerData?['customer']?['id'];
-      _currentUserName = customerData?['customer']?['name'] ?? googleUser.displayName;
-      _currentUserEmail = customerData?['customer']?['email'] ?? googleUser.email;
+      _currentUserName =
+          customerData?['customer']?['name'] ?? googleUser.displayName;
+      _currentUserEmail =
+          customerData?['customer']?['email'] ?? googleUser.email;
       _isLoggedIn = true;
       _selectedGoogleAccount = RealGoogleUser(
         name: _currentUserName ?? googleUser.displayName ?? 'Pengguna Google',
@@ -473,7 +492,8 @@ class AuthController extends ChangeNotifier {
       );
       _backendMessage = 'Tersambung via Akun Google Resmi';
 
-      if (kDebugMode) print('[NutriMeal Auth] ✅ Google Sign-In berhasil: $_currentUserEmail');
+      if (kDebugMode)
+        print('[NutriMeal Auth] ✅ Google Sign-In berhasil: $_currentUserEmail');
 
       // Requirement 3.a: Simpan token Google / backend ke flutter_secure_storage
       if (_authToken != null) {
@@ -531,12 +551,15 @@ class AuthController extends ChangeNotifier {
           if (data['success'] == true) {
             print('[NutriMeal Auth] ✅ Berhasil terhubung ke: $url');
           } else {
-            print('[NutriMeal Auth] ⚠️ Backend response (${response.statusCode}) di $url: ${data['message']}');
+            print(
+              '[NutriMeal Auth] ⚠️ Backend response (${response.statusCode}) di $url: ${data['message']}',
+            );
           }
         }
         return data;
       } on Exception catch (e) {
-        if (kDebugMode) print('[NutriMeal Auth] ⚠️ Tidak dapat dijangkau $urlStr: $e');
+        if (kDebugMode)
+          print('[NutriMeal Auth] ⚠️ Tidak dapat dijangkau $urlStr: $e');
         continue;
       }
     }
@@ -555,7 +578,8 @@ class AuthController extends ChangeNotifier {
     if (data['email'] != null && data['email'].toString().isNotEmpty) {
       _currentUserEmail = data['email'].toString();
     }
-    _customerPhone = (data['phone'] != null && data['phone'].toString().trim().isNotEmpty)
+    _customerPhone =
+        (data['phone'] != null && data['phone'].toString().trim().isNotEmpty)
         ? data['phone'].toString().trim()
         : null;
 
@@ -570,7 +594,9 @@ class AuthController extends ChangeNotifier {
       _customerAvatarUrl = null;
     }
 
-    _customerAddress = (data['address'] != null && data['address'].toString().trim().isNotEmpty)
+    _customerAddress =
+        (data['address'] != null &&
+            data['address'].toString().trim().isNotEmpty)
         ? data['address'].toString().trim()
         : null;
 
@@ -584,12 +610,15 @@ class AuthController extends ChangeNotifier {
       _customerAge = int.tryParse(data['age'].toString()) ?? 0;
     }
     if (data['target_calories'] != null) {
-      _customerTargetCalories = int.tryParse(data['target_calories'].toString()) ?? 0;
+      _customerTargetCalories =
+          int.tryParse(data['target_calories'].toString()) ?? 0;
     }
     if (data['dietary_goals'] != null) {
       if (data['dietary_goals'] is List) {
         final list = data['dietary_goals'] as List;
-        _customerDietGoal = list.isNotEmpty ? list.first.toString() : 'Belum diatur';
+        _customerDietGoal = list.isNotEmpty
+            ? list.first.toString()
+            : 'Belum diatur';
       } else {
         _customerDietGoal = data['dietary_goals'].toString();
       }
@@ -612,7 +641,8 @@ class AuthController extends ChangeNotifier {
       _customerAllergies = [];
     }
     if (data['two_factor_auth'] != null) {
-      _customerTwoFactorAuth = data['two_factor_auth'] == 1 ||
+      _customerTwoFactorAuth =
+          data['two_factor_auth'] == 1 ||
           data['two_factor_auth'] == true ||
           data['two_factor_auth'] == '1';
     }
@@ -632,13 +662,16 @@ class AuthController extends ChangeNotifier {
           },
         );
 
-        final response = await http.get(
-          uri,
-          headers: {
-            'Content-Type': 'application/json',
-            if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-          },
-        ).timeout(const Duration(seconds: 5));
+        final response = await http
+            .get(
+              uri,
+              headers: {
+                'Content-Type': 'application/json',
+                if (token != null && token.isNotEmpty)
+                  'Authorization': 'Bearer $token',
+              },
+            )
+            .timeout(const Duration(seconds: 5));
 
         if (response.statusCode == 200) {
           final json = jsonDecode(response.body);
@@ -657,10 +690,9 @@ class AuthController extends ChangeNotifier {
       for (final base in ApiConfig.candidateCustomerUrls) {
         try {
           final url = Uri.parse('$base/$id');
-          final response = await http.get(
-            url,
-            headers: {'Content-Type': 'application/json'},
-          ).timeout(const Duration(seconds: 5));
+          final response = await http
+              .get(url, headers: {'Content-Type': 'application/json'})
+              .timeout(const Duration(seconds: 5));
 
           if (response.statusCode == 200) {
             final json = jsonDecode(response.body);
@@ -693,9 +725,51 @@ class AuthController extends ChangeNotifier {
     _generalError = null;
     notifyListeners();
 
+    // Pastikan _customerId valid. Jika belum ada, coba pulihkan dari sesi backend/email
+    if (_customerId == null || _customerId!.isEmpty) {
+      await fetchCustomerProfile();
+    }
+
+    if ((_customerId == null || _customerId!.isEmpty) &&
+        _currentUserEmail != null &&
+        _currentUserEmail!.isNotEmpty) {
+      for (final base in ApiConfig.candidateCustomerUrls) {
+        try {
+          final uri = Uri.parse('$base?search=$_currentUserEmail');
+          final res = await http.get(uri).timeout(const Duration(seconds: 4));
+          if (res.statusCode == 200) {
+            final data = jsonDecode(res.body);
+            final list = data['data'] as List?;
+            if (list != null && list.isNotEmpty) {
+              final matched = list.firstWhere(
+                (c) =>
+                    c['email']?.toString().toLowerCase() ==
+                    _currentUserEmail!.toLowerCase(),
+                orElse: () => list.first,
+              );
+              if (matched != null && matched['id'] != null) {
+                _customerId = matched['id'].toString();
+                if (kDebugMode)
+                  print(
+                    '[NutriMeal Auth] ✅ Berhasil menemukan customerId dari email: $_customerId',
+                  );
+                break;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
     final targetId = _customerId;
     if (targetId == null || targetId.isEmpty) {
-      if (kDebugMode) print('[NutriMeal Auth] ⚠️ Tidak ada customerId aktif. Membatalkan update profil.');
+      if (kDebugMode)
+        print(
+          '[NutriMeal Auth] ⚠️ Tidak ada customerId aktif. Memperbarui lokal.',
+        );
+      if (name != null) _currentUserName = name;
+      if (email != null) _currentUserEmail = email;
+      if (avatarUrl != null) _customerAvatarUrl = avatarUrl;
       _isLoading = false;
       notifyListeners();
       return false;
@@ -742,10 +816,12 @@ class AuthController extends ChangeNotifier {
           notifyListeners();
           return true;
         } else {
-          _generalError = data['message'] ?? 'Gagal memperbarui profil di server.';
+          _generalError =
+              data['message'] ?? 'Gagal memperbarui profil di server.';
         }
       } catch (e) {
-        if (kDebugMode) print('[NutriMeal Auth] Gagal PUT customer ke $base: $e');
+        if (kDebugMode)
+          print('[NutriMeal Auth] Gagal PUT customer ke $base: $e');
         continue;
       }
     }
@@ -760,11 +836,9 @@ class AuthController extends ChangeNotifier {
     required String newPassword,
   }) async {
     final targetId = _customerId;
-    if (targetId == null || targetId.isEmpty) return {'success': false, 'message': 'Sesi login tidak valid.'};
-    final payload = {
-      'old_password': oldPassword,
-      'new_password': newPassword,
-    };
+    if (targetId == null || targetId.isEmpty)
+      return {'success': false, 'message': 'Sesi login tidak valid.'};
+    final payload = {'old_password': oldPassword, 'new_password': newPassword};
 
     for (final base in ApiConfig.candidateCustomerUrls) {
       try {
@@ -779,16 +853,26 @@ class AuthController extends ChangeNotifier {
 
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         if (response.statusCode == 200 && data['success'] == true) {
-          return {'success': true, 'message': data['message'] ?? 'Kata sandi berhasil diperbarui!'};
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Kata sandi berhasil diperbarui!',
+          };
         } else {
-          return {'success': false, 'message': data['message'] ?? 'Kata sandi saat ini tidak cocok.'};
+          return {
+            'success': false,
+            'message': data['message'] ?? 'Kata sandi saat ini tidak cocok.',
+          };
         }
       } catch (e) {
-        if (kDebugMode) print('[NutriMeal Auth] Gagal ubah password di $base: $e');
+        if (kDebugMode)
+          print('[NutriMeal Auth] Gagal ubah password di $base: $e');
         continue;
       }
     }
-    return {'success': false, 'message': 'Tidak dapat terhubung ke server backend.'};
+    return {
+      'success': false,
+      'message': 'Tidak dapat terhubung ke server backend.',
+    };
   }
 
   // =========================================================
@@ -800,14 +884,29 @@ class AuthController extends ChangeNotifier {
 
     try {
       final bytes = await imageFile.readAsBytes();
-      final filename = imageFile.name.isNotEmpty
+      String filename = imageFile.name.isNotEmpty
           ? imageFile.name
           : 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Pastikan ekstensi file valid agar diterima multer di backend
+      final lowerName = filename.toLowerCase();
+      String subType = 'jpeg';
+      if (lowerName.endsWith('.png')) {
+        subType = 'png';
+      } else if (lowerName.endsWith('.webp')) {
+        subType = 'webp';
+      } else if (!lowerName.endsWith('.jpg') && !lowerName.endsWith('.jpeg')) {
+        filename = '$filename.jpg';
+        subType = 'jpeg';
+      }
 
       for (final urlStr in ApiConfig.candidateUploadUrls) {
         try {
           final uri = Uri.parse(urlStr);
-          if (kDebugMode) print('[NutriMeal Auth] Mengunggah foto profil ke: $uri');
+          if (kDebugMode)
+            print(
+              '[NutriMeal Auth] Mengunggah foto profil ($filename) ke: $uri',
+            );
 
           final request = http.MultipartRequest('POST', uri);
           request.files.add(
@@ -815,26 +914,35 @@ class AuthController extends ChangeNotifier {
               'image',
               bytes,
               filename: filename,
+              contentType: MediaType('image', subType),
             ),
           );
 
-          final streamedResponse =
-              await request.send().timeout(const Duration(seconds: 15));
+          final streamedResponse = await request.send().timeout(
+            const Duration(seconds: 10),
+          );
           final response = await http.Response.fromStream(streamedResponse);
 
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body) as Map<String, dynamic>;
             if (data['success'] == true && data['imageUrl'] != null) {
               final rawPath = data['imageUrl'].toString();
-              final resolved = ApiConfig.resolveImageUrl(rawPath);
-              _customerAvatarUrl = resolved;
+              _customerAvatarUrl = rawPath;
               _isLoading = false;
               notifyListeners();
-              return resolved;
+              if (kDebugMode)
+                print('[NutriMeal Auth] ✅ Upload foto profil sukses: $rawPath');
+              return rawPath;
             }
+          } else {
+            if (kDebugMode)
+              print(
+                '[NutriMeal Auth] ⚠️ Upload gagal code ${response.statusCode}: ${response.body}',
+              );
           }
         } catch (e) {
-          if (kDebugMode) print('[NutriMeal Auth] Gagal upload foto di $urlStr: $e');
+          if (kDebugMode)
+            print('[NutriMeal Auth] Gagal upload foto di $urlStr: $e');
           continue;
         }
       }

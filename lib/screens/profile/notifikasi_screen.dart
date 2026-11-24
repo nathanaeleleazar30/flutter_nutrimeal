@@ -5,6 +5,8 @@ import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
+import '../../core/widgets/center_feedback_toast.dart';
+import '../order/order_tracking_screen.dart';
 
 class NotifikasiScreen extends StatefulWidget {
   const NotifikasiScreen({super.key});
@@ -32,7 +34,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final list = await ApiService.instance.fetchNotifications(customerId ?? '');
+      final list = await ApiService.instance.fetchNotifications(
+        customerId ?? '',
+      );
       if (mounted) {
         setState(() {
           _notifications = list;
@@ -50,8 +54,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     }
   }
 
-  int get _unreadCount =>
-      _notifications.where((n) => n['is_read'] != true && n['is_read'] != 1).length;
+  int get _unreadCount => _notifications
+      .where((n) => n['is_read'] != true && n['is_read'] != 1)
+      .length;
 
   Future<void> _markAllAsRead() async {
     final auth = context.read<AuthController>();
@@ -65,19 +70,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       }
     });
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Semua notifikasi telah ditandai sebagai dibaca',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: AppColors.primaryGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: 'Semua notifikasi telah ditandai sebagai dibaca',
       );
     }
   }
@@ -88,7 +83,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     final customerId = auth.customerId ?? '';
     final id = item['id'];
     if (id != null && customerId.isNotEmpty) {
-      await ApiService.instance.markNotificationAsRead(id is int ? id : int.tryParse('$id') ?? 0, customerId);
+      await ApiService.instance.markNotificationAsRead(
+        id is int ? id : int.tryParse('$id') ?? 0,
+        customerId,
+      );
     }
     setState(() {
       item['is_read'] = true;
@@ -99,7 +97,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     if (_selectedFilterIndex == 1) {
       return _notifications.where((n) {
         final t = (n['type'] ?? '').toString().toLowerCase();
-        return t == 'order' || t == 'pesanan';
+        return t == 'order' ||
+            t == 'pesanan' ||
+            t == 'subscription' ||
+            t == 'langganan';
       }).toList();
     }
     if (_selectedFilterIndex == 2) {
@@ -161,7 +162,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               size: 22,
             ),
             tooltip: 'Debug Izin & Notifikasi',
-            onPressed: () => Navigator.pushNamed(context, '/device-permissions'),
+            onPressed: () =>
+                Navigator.pushNamed(context, '/device-permissions'),
           ),
         ],
       ),
@@ -187,7 +189,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),
                     child: Center(
-                      child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryGreen,
+                      ),
                     ),
                   )
                 else if (filtered.isEmpty)
@@ -198,7 +202,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: filtered.length,
                     separatorBuilder: (_, index) => const SizedBox(height: 12),
-                    itemBuilder: (ctx, idx) => _buildNotificationCard(filtered[idx]),
+                    itemBuilder: (ctx, idx) =>
+                        _buildNotificationCard(filtered[idx]),
                   ),
 
                 const SizedBox(height: 24),
@@ -303,6 +308,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       iconData = Icons.two_wheeler_rounded;
       iconBg = const Color(0xFFDCFCE7);
       iconColor = const Color(0xFF166534);
+    } else if (type == 'subscription' || type == 'langganan') {
+      iconData = Icons.calendar_month_rounded;
+      iconBg = const Color(0xFFEEF2FF);
+      iconColor = const Color(0xFF4338CA);
     } else if (type == 'promo' || type == 'voucher') {
       iconData = Icons.local_offer_rounded;
       iconBg = const Color(0xFFFEF3C7);
@@ -313,14 +322,40 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _markSingleAsRead(item),
+        onTap: () {
+          _markSingleAsRead(item);
+          final route = item['route']?.toString();
+          if (type == 'subscription' || type == 'langganan') {
+            Navigator.pushNamed(context, route ?? '/langganan-saya');
+          } else if (type == 'order' || type == 'pesanan') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OrderTrackingScreen(
+                  orderId: item['order_id']?.toString() ?? 'ORD-8842',
+                  packageName:
+                      item['package_name']?.toString() ??
+                      'Paket Menu NutriMeal',
+                  estimatedMinutes: item['estimated_minutes'] is int
+                      ? item['estimated_minutes']
+                      : int.tryParse('${item['estimated_minutes']}') ?? 30,
+                  isSubscription: false,
+                ),
+              ),
+            );
+          } else if (route != null && route.isNotEmpty) {
+            Navigator.pushNamed(context, route);
+          }
+        },
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isUnread ? const Color(0xFF86EFAC) : const Color(0xFFE2E8F0),
+              color: isUnread
+                  ? const Color(0xFF86EFAC)
+                  : const Color(0xFFE2E8F0),
               width: isUnread ? 1.2 : 1,
             ),
             boxShadow: [
@@ -375,7 +410,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                             item['title'] ?? 'Pemberitahuan',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
-                              fontWeight: isUnread ? FontWeight.w800 : FontWeight.w700,
+                              fontWeight: isUnread
+                                  ? FontWeight.w800
+                                  : FontWeight.w700,
                               color: AppColors.textDark,
                             ),
                           ),
@@ -395,14 +432,57 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       item['body'] ?? '',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12.5,
-                        color: isUnread ? const Color(0xFF334155) : const Color(0xFF64748B),
+                        color: isUnread
+                            ? const Color(0xFF334155)
+                            : const Color(0xFF64748B),
                         height: 1.35,
                       ),
                     ),
-                    if (item['estimated_minutes'] != null || item['order_id'] != null) ...[
+                    if (type == 'subscription' || type == 'langganan') ...[
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFC7D2FE)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.event_available_rounded,
+                              size: 15,
+                              color: Color(0xFF4338CA),
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                item['delivery_schedule'] ??
+                                    'Langganan Aktif • Mulai Senin 11:30 WIB',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF4338CA),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else if (item['estimated_minutes'] != null ||
+                        item['order_id'] != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(10),
@@ -418,7 +498,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Estimasi Sampai: ${item['estimated_minutes'] ?? 30} Menit',
+                              'Estimasi Tiba: ${item['estimated_minutes'] ?? 30} Menit • Lacak Pesanan',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
@@ -523,7 +603,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               if (badgeText != null) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color(0xFF22C55E)

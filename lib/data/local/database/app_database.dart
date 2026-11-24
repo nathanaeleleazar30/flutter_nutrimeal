@@ -18,8 +18,10 @@ class Meals extends Table {
   TextColumn get imageUrl => text()();
   TextColumn get description => text()();
   TextColumn get tags => text().withDefault(const Constant(''))();
-  TextColumn get schedule => text().withDefault(const Constant('Setiap Hari'))();
-  TextColumn get deliveryTime => text().withDefault(const Constant('12:00 - 13:00 WIB'))();
+  TextColumn get schedule =>
+      text().withDefault(const Constant('Setiap Hari'))();
+  TextColumn get deliveryTime =>
+      text().withDefault(const Constant('12:00 - 13:00 WIB'))();
   TextColumn get protein => text().withDefault(const Constant('30g'))();
   TextColumn get fat => text().withDefault(const Constant('10g'))();
   TextColumn get carbs => text().withDefault(const Constant('40g'))();
@@ -55,12 +57,16 @@ class AppDatabase extends _$AppDatabase {
   /// UI akan langsung memperbarui tampilannya secara otomatis segera
   /// setelah database lokal selesai menyimpan pembaruan.
   Stream<List<Meal>> watchAllMeals() {
-    return (select(meals)..orderBy([(t) => OrderingTerm(expression: t.name)])).watch();
+    return (select(
+      meals,
+    )..orderBy([(t) => OrderingTerm(expression: t.name)])).watch();
   }
 
   /// Ambil seluruh data menu dari database lokal secara asynchronous.
   Future<List<Meal>> getAllMeals() {
-    return (select(meals)..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
+    return (select(
+      meals,
+    )..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
   }
 
   /// Requirement 1.e: Terapkan Database Transaction untuk membungkus operasi

@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/center_feedback_toast.dart';
+import 'order_tracking_screen.dart';
 
 class PaymentStatusScreen extends StatelessWidget {
   final String orderId;
@@ -15,6 +17,7 @@ class PaymentStatusScreen extends StatelessWidget {
   final String deliveryTime;
   final int estimatedMinutes;
   final bool isSubscription;
+  final String customerAddress;
 
   const PaymentStatusScreen({
     super.key,
@@ -28,6 +31,7 @@ class PaymentStatusScreen extends StatelessWidget {
     this.deliveryTime = 'Hari Ini, 12:00 WIB',
     this.estimatedMinutes = 30,
     this.isSubscription = false,
+    this.customerAddress = 'Jl. Soekarno Hatta No. 45, Malang',
   });
 
   @override
@@ -44,7 +48,10 @@ class PaymentStatusScreen extends StatelessWidget {
             // Main Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 child: Column(
                   children: [
                     // Big Green Checkmark Icon with soft outer halo
@@ -133,14 +140,14 @@ class PaymentStatusScreen extends StatelessWidget {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFC3E7C4),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFC3E7C4)),
       child: Row(
         children: [
           GestureDetector(
             onTap: () {
-              Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/home', (route) => false);
             },
             child: Container(
               width: 36,
@@ -216,17 +223,18 @@ class PaymentStatusScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: '#$orderId'));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('ID Pesanan disalin ke clipboard'),
-                          behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 2),
-                        ),
+                      CenterFeedbackToast.showSuccess(
+                        context,
+                        message: 'ID Pesanan disalin ke clipboard',
                       );
                     },
                     child: Row(
                       children: [
-                        const Icon(Icons.copy_rounded, size: 12, color: Color(0xFF16A34A)),
+                        const Icon(
+                          Icons.copy_rounded,
+                          size: 12,
+                          color: Color(0xFF16A34A),
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           'Salin',
@@ -329,7 +337,10 @@ class PaymentStatusScreen extends StatelessWidget {
                 width: 58,
                 height: 58,
                 color: const Color(0xFFDCFCE7),
-                child: const Icon(Icons.restaurant_rounded, color: Color(0xFF16A34A)),
+                child: const Icon(
+                  Icons.restaurant_rounded,
+                  color: Color(0xFF16A34A),
+                ),
               ),
             ),
           ),
@@ -342,7 +353,11 @@ class PaymentStatusScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.access_time_filled_rounded, size: 13, color: Color(0xFF16A34A)),
+                    const Icon(
+                      Icons.access_time_filled_rounded,
+                      size: 13,
+                      color: Color(0xFF16A34A),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       deliveryTime,
@@ -399,35 +414,60 @@ class PaymentStatusScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Button 1: Pesan Menu Lainnya ->
+          // Button 1 (Primary Action): Lacak Pesanan / Lihat Jadwal Katering
           SizedBox(
             width: double.infinity,
             height: 48,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: () {
                 final controller = context.read<NutriMealMenuController>();
                 controller.clearCart();
-                Navigator.of(context).pushNamedAndRemoveUntil('/menu', (route) => false);
+                controller.clearSubscriptionPackage();
+
+                if (isSubscription) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/langganan-saya',
+                    (route) => false,
+                  );
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => OrderTrackingScreen(
+                        orderId: orderId,
+                        packageName: packageName,
+                        totalAmount: totalAmount,
+                        customerAddress: customerAddress,
+                        deliveryTime: deliveryTime,
+                        estimatedMinutes: estimatedMinutes,
+                        isSubscription: isSubscription,
+                      ),
+                    ),
+                  );
+                }
               },
+              icon: Icon(
+                isSubscription
+                    ? Icons.calendar_month_rounded
+                    : Icons.two_wheeler_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: Text(
+                isSubscription
+                    ? 'Lihat Jadwal Katering Saya'
+                    : 'Lacak Status Pesanan (Live Tracking)',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F8A50),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Pesan Menu Lainnya',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
-                ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
             ),
           ),
@@ -441,12 +481,17 @@ class PaymentStatusScreen extends StatelessWidget {
               onPressed: () {
                 final controller = context.read<NutriMealMenuController>();
                 controller.clearCart();
-                Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+                controller.clearSubscriptionPackage();
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/home', (route) => false);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF1F5F9),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
               child: Text(
                 'Kembali ke Beranda',

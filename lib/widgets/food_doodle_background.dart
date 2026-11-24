@@ -6,20 +6,13 @@ class FoodDoodleBackground extends StatelessWidget {
   final Widget? child;
   final bool fillFull;
 
-  const FoodDoodleBackground({
-    super.key,
-    this.child,
-    this.fillFull = true,
-  });
+  const FoodDoodleBackground({super.key, this.child, this.fillFull = true});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.mintBackground,
-      child: CustomPaint(
-        painter: FoodDoodlePainter(),
-        child: child,
-      ),
+      child: CustomPaint(painter: FoodDoodlePainter(), child: child),
     );
   }
 }
@@ -63,10 +56,22 @@ class FoodDoodlePainter extends CustomPainter {
     _drawFrenchFries(canvas, Offset(w * 0.80, h * 0.105), 28, linePaint);
 
     // Ice cream cone (far right, below fries)
-    _drawIceCream(canvas, Offset(w * 0.90, h * 0.15), 24, linePaint, angle: 0.15);
+    _drawIceCream(
+      canvas,
+      Offset(w * 0.90, h * 0.15),
+      24,
+      linePaint,
+      angle: 0.15,
+    );
 
     // Coffee bean (below cup, center)
-    _drawCoffeeBean(canvas, Offset(w * 0.58, h * 0.095), 11, linePaint, angle: -0.3);
+    _drawCoffeeBean(
+      canvas,
+      Offset(w * 0.58, h * 0.095),
+      11,
+      linePaint,
+      angle: -0.3,
+    );
 
     // Salad / dumplings bowl (left, below burger)
     _drawBowl(canvas, Offset(w * 0.16, h * 0.14), 28, linePaint);
@@ -134,7 +139,13 @@ class FoodDoodlePainter extends CustomPainter {
     _drawBurger(canvas, Offset(w * 0.13, h * 0.50), 26, linePaint);
 
     // Ice cream cone (center-left)
-    _drawIceCream(canvas, Offset(w * 0.60, h * 0.51), 25, linePaint, angle: -0.1);
+    _drawIceCream(
+      canvas,
+      Offset(w * 0.60, h * 0.51),
+      25,
+      linePaint,
+      angle: -0.1,
+    );
 
     // Drink cup with straw (right)
     _drawDrinkCup(canvas, Offset(w * 0.87, h * 0.51), 24, linePaint);
@@ -152,7 +163,13 @@ class FoodDoodlePainter extends CustomPainter {
     _drawPizza(canvas, Offset(w * 0.16, h * 0.63), 28, linePaint, angle: -0.4);
 
     // Chicken drumstick (bottom center-left)
-    _drawChicken(canvas, Offset(w * 0.45, h * 0.68), 29, linePaint, angle: -0.7);
+    _drawChicken(
+      canvas,
+      Offset(w * 0.45, h * 0.68),
+      29,
+      linePaint,
+      angle: -0.7,
+    );
 
     // Taco (bottom center-right)
     _drawTaco(canvas, Offset(w * 0.71, h * 0.70), 24, linePaint, angle: 0.1);
@@ -224,7 +241,11 @@ class FoodDoodlePainter extends CustomPainter {
 
     // Patty
     final RRect patty = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(0, 6.5 * s), width: 23 * s, height: 3.5 * s),
+      Rect.fromCenter(
+        center: Offset(0, 6.5 * s),
+        width: 23 * s,
+        height: 3.5 * s,
+      ),
       Radius.circular(2 * s),
     );
     canvas.drawRRect(patty, paint);
@@ -257,7 +278,11 @@ class FoodDoodlePainter extends CustomPainter {
 
     // Lid Rim
     final RRect lid = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(0, -4.5 * s), width: 17 * s, height: 2.5 * s),
+      Rect.fromCenter(
+        center: Offset(0, -4.5 * s),
+        width: 17 * s,
+        height: 2.5 * s,
+      ),
       Radius.circular(1.2 * s),
     );
     canvas.drawRRect(lid, paint);
@@ -283,7 +308,12 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawFrenchFries(Canvas canvas, Offset center, double size, Paint paint) {
+  void _drawFrenchFries(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint,
+  ) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     final double s = size / 24.0;
@@ -439,7 +469,13 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawIceCream(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawIceCream(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -507,7 +543,13 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawChicken(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawChicken(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -530,7 +572,13 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawTaco(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawTaco(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -587,7 +635,13 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawPizza(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawPizza(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -615,14 +669,24 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawEgg(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawEgg(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
     final double s = size / 24.0;
 
     // Oval egg silhouette
-    final Rect eggRect = Rect.fromCenter(center: Offset.zero, width: 17 * s, height: 23 * s);
+    final Rect eggRect = Rect.fromCenter(
+      center: Offset.zero,
+      width: 17 * s,
+      height: 23 * s,
+    );
     canvas.drawOval(eggRect, paint);
 
     // Yolk in center
@@ -631,7 +695,13 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawHotdog(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawHotdog(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -685,7 +755,13 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawCutlery(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawCutlery(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -700,14 +776,24 @@ class FoodDoodlePainter extends CustomPainter {
     // Spoon (Right)
     canvas.drawLine(Offset(4 * s, -3 * s), Offset(4 * s, 12 * s), paint);
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(4 * s, -7 * s), width: 5.5 * s, height: 8 * s),
+      Rect.fromCenter(
+        center: Offset(4 * s, -7 * s),
+        width: 5.5 * s,
+        height: 8 * s,
+      ),
       paint,
     );
 
     canvas.restore();
   }
 
-  void _drawCoffeeBean(Canvas canvas, Offset center, double size, Paint paint, {double angle = 0}) {
+  void _drawCoffeeBean(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint, {
+    double angle = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -742,7 +828,13 @@ class FoodDoodlePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawDot(Canvas canvas, Offset center, double radius, Paint paint, bool filled) {
+  void _drawDot(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Paint paint,
+    bool filled,
+  ) {
     canvas.drawCircle(center, radius, paint);
   }
 

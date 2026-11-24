@@ -5,10 +5,13 @@ import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/ai_planner_models.dart';
 import '../../services/ai_planner_service.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../../widgets/nutri_meal_image.dart';
 
 class AiPlannerScreen extends StatefulWidget {
-  const AiPlannerScreen({super.key});
+  final bool showBackButton;
+
+  const AiPlannerScreen({super.key, this.showBackButton = true});
 
   @override
   State<AiPlannerScreen> createState() => _AiPlannerScreenState();
@@ -28,7 +31,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
   }
 
   // Form state
-  final TextEditingController _budgetController = TextEditingController(text: '750000');
+  final TextEditingController _budgetController = TextEditingController(
+    text: '750000',
+  );
   String _selectedEventType = 'Rapat Kantor';
   int _pax = 25;
   String _selectedTaste = 'Semua';
@@ -70,21 +75,17 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
   Future<void> _handleGenerate() async {
     final budget = _parsedBudget;
     if (budget <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Silakan masukkan total anggaran yang valid.'),
-          backgroundColor: Colors.redAccent,
-        ),
+      CenterFeedbackToast.showError(
+        context,
+        message: 'Silakan masukkan total anggaran yang valid.',
       );
       return;
     }
 
     if (_pax <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Jumlah porsi peserta minimal 1 orang.'),
-          backgroundColor: Colors.redAccent,
-        ),
+      CenterFeedbackToast.showError(
+        context,
+        message: 'Jumlah porsi peserta minimal 1 orang.',
       );
       return;
     }
@@ -127,8 +128,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
     if (_packages.isEmpty) return;
     final package = _packages[_selectedPackageIndex];
     if (package.items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Paket ini tidak memiliki menu terpilih.')),
+      CenterFeedbackToast.showError(
+        context,
+        message: 'Paket ini tidak memiliki menu terpilih.',
       );
       return;
     }
@@ -136,33 +138,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
     final menuController = context.read<NutriMealMenuController>();
     menuController.addAiPlannedPackageToCart(package);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF15803D),
-        duration: const Duration(seconds: 4),
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '${package.name} dimasukkan ke keranjang!',
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ],
-        ),
-        action: SnackBarAction(
-          label: 'KERANJANG',
-          textColor: const Color(0xFFFDE68A),
-          onPressed: () {
-            Navigator.of(context).pushNamed('/cart');
-          },
-        ),
-      ),
+    CenterFeedbackToast.showSuccess(
+      context,
+      message: '${package.name} dimasukkan ke keranjang!',
     );
   }
 
@@ -173,10 +151,16 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
+        leading: (widget.showBackButton && Navigator.canPop(context))
+            ? IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.textDark,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -188,22 +172,31 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 16,
+              ),
             ),
             const SizedBox(width: 8),
-            Text(
-              'NutriMeal AI Planner',
-              style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                color: AppColors.textDark,
+            Flexible(
+              child: Text(
+                'NutriMeal AI Planner',
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: AppColors.textDark,
+                ),
               ),
             ),
           ],
         ),
         centerTitle: true,
       ),
-      bottomNavigationBar: _packages.isNotEmpty ? _buildStickyBottomCartBar() : null,
+      bottomNavigationBar: _packages.isNotEmpty
+          ? _buildStickyBottomCartBar()
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         child: Column(
@@ -270,7 +263,11 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.psychology_rounded, size: 14, color: Color(0xFFFDE047)),
+                const Icon(
+                  Icons.psychology_rounded,
+                  size: 14,
+                  color: Color(0xFFFDE047),
+                ),
                 const SizedBox(width: 5),
                 Text(
                   'OR-Tools Optimization Engine',
@@ -354,6 +351,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
+                    showCheckmark: false,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
                     label: Text(type),
                     selected: isSelected,
                     onSelected: (val) {
@@ -363,13 +363,19 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                     backgroundColor: const Color(0xFFF1F5F9),
                     labelStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFF475569),
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? const Color(0xFF1D4ED8)
+                          : const Color(0xFF475569),
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                       side: BorderSide(
-                        color: isSelected ? const Color(0xFF3B82F6) : Colors.transparent,
+                        color: isSelected
+                            ? const Color(0xFF3B82F6)
+                            : Colors.transparent,
                       ),
                     ),
                   ),
@@ -383,27 +389,38 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Jumlah Peserta / Porsi',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF64748B),
+              Expanded(
+                child: Text(
+                  'Jumlah Peserta / Porsi',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF64748B),
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      padding: EdgeInsets.zero,
                       icon: const Icon(Icons.remove_rounded, size: 18),
-                      onPressed: _pax > 5 ? () => setState(() => _pax -= 5) : null,
+                      onPressed: _pax > 5
+                          ? () => setState(() => _pax -= 5)
+                          : null,
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         '$_pax Orang',
                         style: GoogleFonts.plusJakartaSans(
@@ -414,8 +431,15 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                       ),
                     ),
                     IconButton(
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      padding: EdgeInsets.zero,
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      onPressed: _pax < 300 ? () => setState(() => _pax += 5) : null,
+                      onPressed: _pax < 300
+                          ? () => setState(() => _pax += 5)
+                          : null,
                     ),
                   ],
                 ),
@@ -452,7 +476,10 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
               hintText: 'Contoh: 750000',
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
@@ -463,7 +490,10 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2563EB),
+                  width: 1.5,
+                ),
               ),
             ),
             onChanged: (val) => setState(() {}),
@@ -499,7 +529,10 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                     },
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
@@ -537,6 +570,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
             children: _tastePreferences.map((taste) {
               final isSelected = _selectedTaste == taste;
               return ChoiceChip(
+                showCheckmark: false,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
                 label: Text(taste),
                 selected: isSelected,
                 onSelected: (val) {
@@ -547,12 +583,16 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 labelStyle: GoogleFonts.plusJakartaSans(
                   fontSize: 11.5,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? const Color(0xFF15803D) : const Color(0xFF475569),
+                  color: isSelected
+                      ? const Color(0xFF15803D)
+                      : const Color(0xFF475569),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
-                    color: isSelected ? const Color(0xFF16A34A) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF16A34A)
+                        : Colors.transparent,
                   ),
                 ),
               );
@@ -585,7 +625,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                     )
                   : const Icon(Icons.auto_awesome, size: 18),
               label: Text(
-                _isLoading ? 'AI Sedang Mengoptimasi...' : 'Generate 3 Pilihan Paket AI ✨',
+                _isLoading
+                    ? 'AI Sedang Mengoptimasi...'
+                    : 'Generate 3 Pilihan Paket AI ✨',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w800,
@@ -653,7 +695,11 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 24),
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xFFDC2626),
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -669,7 +715,8 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _errorMessage ?? 'Anggaran terlalu rendah atau stok menu tidak mencukupi untuk jumlah porsi ini.',
+                  _errorMessage ??
+                      'Anggaran terlalu rendah atau stok menu tidak mencukupi untuk jumlah porsi ini.',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.5,
                     color: const Color(0xFFB91C1C),
@@ -702,7 +749,11 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
             color: const Color(0xFFDCFCE7),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
+          child: const Icon(
+            Icons.check_circle_rounded,
+            color: Color(0xFF16A34A),
+            size: 18,
+          ),
         ),
         const SizedBox(width: 10),
         Text(
@@ -732,12 +783,17 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
               onTap: () => setState(() => _selectedPackageIndex = idx),
               borderRadius: BorderRadius.circular(14),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? pkg.badgeColor : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isSelected ? pkg.badgeColor : const Color(0xFFE2E8F0),
+                    color: isSelected
+                        ? pkg.badgeColor
+                        : const Color(0xFFE2E8F0),
                     width: isSelected ? 1.5 : 1,
                   ),
                   boxShadow: isSelected
@@ -754,20 +810,27 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                   children: [
                     Text(
                       pkg.tier.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
-                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF64748B),
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Text(
-                      _formatRupiah(pkg.totalCost),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        color: isSelected ? Colors.white : AppColors.textDark,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _formatRupiah(pkg.totalCost),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: isSelected ? Colors.white : AppColors.textDark,
+                        ),
                       ),
                     ),
                   ],
@@ -803,34 +866,51 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: package.badgeColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.stars_rounded, size: 14, color: package.badgeColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      package.badge,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: package.badgeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.stars_rounded,
+                        size: 14,
                         color: package.badgeColor,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          package.badge,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: package.badgeColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              Text(
-                'Per orang: ${_formatRupiah(package.pricePerPax)}',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF64748B),
+              const SizedBox(width: 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Per orang: ${_formatRupiah(package.pricePerPax)}',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF64748B),
+                  ),
                 ),
               ),
             ],
@@ -870,7 +950,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 child: _buildMetricItem(
                   label: 'Sisa Budget',
                   value: _formatRupiah(package.budgetRemaining),
-                  color: package.budgetRemaining >= 0 ? const Color(0xFF2563EB) : const Color(0xFFDC2626),
+                  color: package.budgetRemaining >= 0
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFFDC2626),
                 ),
               ),
               Expanded(
@@ -897,6 +979,8 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
       children: [
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 10,
             fontWeight: FontWeight.w600,
@@ -904,12 +988,15 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
           ),
         ),
         const SizedBox(height: 3),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
-            color: color,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -923,14 +1010,19 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Rincian Menu Paket (${package.items.length} Menu)',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
+            Expanded(
+              child: Text(
+                'Rincian Menu Paket (${package.items.length} Menu)',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               'Bisa atur porsi di bawah',
               style: GoogleFonts.plusJakartaSans(
@@ -955,7 +1047,11 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
     );
   }
 
-  Widget _buildPlannedItemTile(AiPlannedPackage package, AiPlannedItem item, int idx) {
+  Widget _buildPlannedItemTile(
+    AiPlannedPackage package,
+    AiPlannedItem item,
+    int idx,
+  ) {
     final isVeg = item.meal.tags.any((t) => t.toLowerCase().contains('veg'));
 
     return Container(
@@ -1010,7 +1106,10 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                     const SizedBox(width: 6),
                     if (isVeg)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1.5,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(6),
@@ -1029,6 +1128,8 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Subtotal: ${_formatRupiah(item.totalPrice)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w800,
@@ -1067,7 +1168,11 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                   borderRadius: BorderRadius.circular(8),
                   child: const Padding(
                     padding: EdgeInsets.all(6),
-                    child: Icon(Icons.remove, size: 14, color: Color(0xFF64748B)),
+                    child: Icon(
+                      Icons.remove,
+                      size: 14,
+                      color: Color(0xFF64748B),
+                    ),
                   ),
                 ),
                 Padding(
@@ -1104,67 +1209,83 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
 
   Widget _buildStickyBottomCartBar() {
     final package = _packages[_selectedPackageIndex];
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Total ${package.items.fold(0, (sum, it) => sum + it.quantity)} Porsi',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: const Color(0xFF64748B),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  _formatRupiah(package.totalCost),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF15803D),
-                  ),
-                ),
-              ],
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -3),
             ),
-          ),
-          const SizedBox(width: 14),
-          ElevatedButton.icon(
-            onPressed: _addCurrentPackageToCart,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF15803D),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total ${package.items.fold(0, (sum, it) => sum + it.quantity)} Porsi',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      _formatRupiah(package.totalCost),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF15803D),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-            label: Text(
-              'Pilih Paket Ini',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w800,
+            const SizedBox(width: 14),
+            Flexible(
+              child: ElevatedButton.icon(
+                onPressed: _addCurrentPackageToCart,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF15803D),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Pilih Paket Ini',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

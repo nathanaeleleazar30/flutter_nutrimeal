@@ -8,10 +8,7 @@ import '../nutribot_chat_screen.dart';
 class BantuanFaqScreen extends StatefulWidget {
   final bool showHeaderWithLogo;
 
-  const BantuanFaqScreen({
-    super.key,
-    this.showHeaderWithLogo = true,
-  });
+  const BantuanFaqScreen({super.key, this.showHeaderWithLogo = true});
 
   @override
   State<BantuanFaqScreen> createState() => _BantuanFaqScreenState();
@@ -84,7 +81,10 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 color: AppColors.primaryGreen,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -105,7 +105,9 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 30),
                           child: Center(
-                            child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryGreen,
+                            ),
                           ),
                         )
                       else if (filtered.isEmpty)
@@ -139,7 +141,11 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.help_outline_rounded, size: 36, color: Color(0xFF94A3B8)),
+          const Icon(
+            Icons.help_outline_rounded,
+            size: 36,
+            color: Color(0xFF94A3B8),
+          ),
           const SizedBox(height: 8),
           Text(
             'Belum ada pertanyaan FAQ untuk kategori ini.',
@@ -162,9 +168,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFC3E7C4),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFC3E7C4)),
       child: Row(
         children: [
           GestureDetector(
@@ -234,7 +238,10 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
@@ -245,12 +252,19 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                       Container(
                         width: 5,
                         height: 5,
-                        decoration: const BoxDecoration(color: Color(0xFF4ADE80), shape: BoxShape.circle),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4ADE80),
+                          shape: BoxShape.circle,
+                        ),
                       ),
                       const SizedBox(width: 5),
                       Text(
                         'Bantuan NutriCare 24/7',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -289,7 +303,11 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 width: 60,
                 height: 60,
                 color: const Color(0xFFDCFCE7),
-                child: const Icon(Icons.smart_toy_rounded, color: Color(0xFF0F8A50), size: 32),
+                child: const Icon(
+                  Icons.smart_toy_rounded,
+                  color: Color(0xFF0F8A50),
+                  size: 32,
+                ),
               ),
             ),
           ),
@@ -297,8 +315,6 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
       ),
     );
   }
-
-
 
   Widget _buildFilterChips() {
     return SingleChildScrollView(
@@ -321,7 +337,9 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 color: isSelected ? const Color(0xFF0F5132) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF0F5132) : const Color(0xFFE2E8F0),
+                  color: isSelected
+                      ? const Color(0xFF0F5132)
+                      : const Color(0xFFE2E8F0),
                 ),
               ),
               child: Text(
@@ -360,7 +378,9 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const NutriBotChatScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const NutriBotChatScreen(),
+                    ),
                   );
                 },
                 child: Container(
@@ -386,7 +406,11 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                           color: Color(0xFFDCFCE7),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.smart_toy_outlined, color: Color(0xFF0F8A50), size: 20),
+                        child: const Icon(
+                          Icons.smart_toy_outlined,
+                          color: Color(0xFF0F8A50),
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -395,11 +419,18 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                           children: [
                             Text(
                               'Live NutriBot AI',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textDark,
+                              ),
                             ),
                             Text(
                               'Chat otomatis 24 jam',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 10, color: const Color(0xFF64748B)),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                color: const Color(0xFF64748B),
+                              ),
                             ),
                           ],
                         ),
@@ -443,7 +474,11 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                           color: Color(0xFFDCFCE7),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.support_agent_rounded, color: Color(0xFF0F8A50), size: 20),
+                        child: const Icon(
+                          Icons.support_agent_rounded,
+                          color: Color(0xFF0F8A50),
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -452,11 +487,18 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                           children: [
                             Text(
                               'Admin CS',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textDark,
+                              ),
                             ),
                             Text(
                               'Respon rata-rata < 5 mnt',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 10, color: const Color(0xFF64748B)),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                color: const Color(0xFF64748B),
+                              ),
                             ),
                           ],
                         ),
@@ -506,45 +548,54 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
 
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
+            child: Material(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                initiallyExpanded: isExpanded,
-                onExpansionChanged: (val) {
-                  setState(() => _expandedIndex = val ? index : null);
-                },
-                tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                title: Text(
-                  item['question']?.toString() ?? '',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                    height: 1.3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              child: Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (val) {
+                    setState(() => _expandedIndex = val ? index : null);
+                  },
+                  tilePadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 2,
                   ),
-                ),
-                trailing: Icon(
-                  isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                  color: const Color(0xFF0F8A50),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                    child: Text(
-                      item['answer']?.toString() ?? '',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        color: const Color(0xFF64748B),
-                        height: 1.4,
-                      ),
+                  title: Text(
+                    item['question']?.toString() ?? '',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                      height: 1.3,
                     ),
                   ),
-                ],
+                  trailing: Icon(
+                    isExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: const Color(0xFF0F8A50),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                      child: Text(
+                        item['answer']?.toString() ?? '',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11.5,
+                          color: const Color(0xFF64748B),
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -579,13 +630,21 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                   color: Color(0xFFDCFCE7),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.chat_rounded, color: Color(0xFF0F8A50), size: 18),
+                child: const Icon(
+                  Icons.chat_rounded,
+                  color: Color(0xFF0F8A50),
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Masih butuh bantuan lain?\nTim NutriMeal CS selalu siap membantu jam 07.00 - 22.00 WIB',
-                  style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B), height: 1.3),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                    height: 1.3,
+                  ),
                 ),
               ),
             ],
@@ -601,7 +660,11 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                   MaterialPageRoute(builder: (_) => const AdminChatScreen()),
                 );
               },
-              icon: const Icon(Icons.headset_mic_rounded, color: Colors.white, size: 16),
+              icon: const Icon(
+                Icons.headset_mic_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
               label: Text(
                 'Hubungi CS via WhatsApp',
                 style: GoogleFonts.plusJakartaSans(
@@ -613,7 +676,9 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F8A50),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             ),
           ),

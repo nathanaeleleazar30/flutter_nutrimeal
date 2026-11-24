@@ -6,7 +6,6 @@ import 'controllers/menu_controller.dart';
 import 'core/constants/app_colors.dart';
 import 'screens/address_screen.dart';
 import 'screens/admin_chat_screen.dart';
-import 'screens/ai_planner/ai_planner_screen.dart';
 import 'screens/bantuan_faq_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/device_permissions_debug_screen.dart';
@@ -18,8 +17,8 @@ import 'screens/langganan_saya_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation_shell.dart';
 import 'screens/notifikasi_screen.dart';
-import 'screens/nutribot_chat_screen.dart';
 import 'screens/preview_shell.dart';
+import 'screens/order_tracking_screen.dart';
 import 'screens/payment_method_screen.dart';
 import 'screens/payment_status_screen.dart';
 import 'screens/voucher_promo_screen.dart';
@@ -85,16 +84,17 @@ class NutriMealApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/verify-email': (context) => const VerifyEmailScreen(),
         '/home': (context) => const MainNavigationShell(),
-        '/ai-planner': (context) => const AiPlannerScreen(),
+        '/ai-planner': (context) => const MainNavigationShell(initialIndex: 2),
         '/menu': (context) => const MainNavigationShell(initialIndex: 1),
-        '/pesan': (context) => const MainNavigationShell(initialIndex: 2),
-        '/chat-ai': (context) => const NutriBotChatScreen(),
+        '/pesan': (context) => const AdminChatScreen(),
+        '/chat-ai': (context) => const AdminChatScreen(),
         '/chat-admin': (context) => const AdminChatScreen(),
         '/jadwal': (context) => const JadwalScreen(),
         '/cart': (context) => const KeranjangScreen(),
         '/checkout': (context) => const CheckoutScreen(),
         '/payment-method': (context) => const PaymentMethodScreen(),
         '/payment-status': (context) => const PaymentStatusScreen(),
+        '/order-tracking': (context) => const OrderTrackingScreen(),
         '/voucher-promo': (context) => const VoucherPromoScreen(),
         '/address': (context) => const AddressScreen(),
         '/profile': (context) => const ProfileScreen(),

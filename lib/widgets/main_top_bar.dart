@@ -51,10 +51,7 @@ class MainTopBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const NutriMealLogo(
-                fontSize: 19,
-                hasShadow: false,
-              ),
+              const NutriMealLogo(fontSize: 19, hasShadow: false),
             ],
           ),
 
@@ -64,7 +61,8 @@ class MainTopBar extends StatelessWidget {
             children: [
               // Notification Bell Button with Green Dot Badge
               GestureDetector(
-                onTap: onNotificationTap ??
+                onTap:
+                    onNotificationTap ??
                     () => Navigator.of(context).pushNamed('/notifikasi'),
                 child: Stack(
                   clipBehavior: Clip.none,

@@ -60,10 +60,7 @@ class _CustomButtonState extends State<CustomButton> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  widget.text,
-                  style: AppTextStyles.buttonText,
-                ),
+                Text(widget.text, style: AppTextStyles.buttonText),
                 if (widget.showArrow) ...[
                   const SizedBox(width: 8),
                   const Icon(

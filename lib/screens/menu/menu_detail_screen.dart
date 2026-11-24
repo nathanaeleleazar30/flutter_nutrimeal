@@ -3,15 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../../widgets/nutri_meal_image.dart';
+import '../chat/admin_chat_screen.dart';
 
 class MenuDetailScreen extends StatefulWidget {
   final MenuItem item;
 
-  const MenuDetailScreen({
-    super.key,
-    required this.item,
-  });
+  const MenuDetailScreen({super.key, required this.item});
 
   @override
   State<MenuDetailScreen> createState() => _MenuDetailScreenState();
@@ -38,26 +37,12 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     final menuController = context.read<NutriMealMenuController>();
     menuController.addToCart(widget.item, quantity: _quantity);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$_quantity x ${widget.item.name} berhasil ditambahkan ke keranjang!',
-          style: GoogleFonts.plusJakartaSans(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        action: SnackBarAction(
-          label: 'Lihat',
-          textColor: Colors.white,
-          onPressed: () {
-            Navigator.of(context).pushNamed('/cart');
-          },
-        ),
-        backgroundColor: AppColors.primaryGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+    // Feedback notifikasi di tengah layar, agak samar, dan perlahan menghilang
+    CenterFeedbackToast.show(
+      context,
+      title: 'Berhasil Masuk Keranjang!',
+      message: '$_quantity x ${widget.item.name}',
+      icon: Icons.check_circle_rounded,
     );
   }
 
@@ -78,7 +63,10 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                 // Top App Bar
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 8,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -199,7 +187,10 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           left: 20,
                           top: 80,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
@@ -227,7 +218,10 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           right: 48,
                           bottom: 24,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
@@ -391,8 +385,10 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           runSpacing: 8,
                           children: widget.item.tags.map((tag) {
                             return Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(10),
@@ -424,106 +420,144 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           title: 'Waktu Pengiriman',
                           subtitle: widget.item.deliveryTime,
                         ),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
                 ),
               ],
             ),
-
-            // Sticky Bottom Action Bar
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  14,
-                  20,
-                  MediaQuery.of(context).padding.bottom + 14,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // Quantity Stepper: — 1 +
-                    Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(14),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                // 1. Chat Admin NutriMeal Button (Sebelah kiri jumlah menu)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const AdminChatScreen(),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: _decrement,
-                            icon: const Icon(Icons.remove_rounded, size: 18),
-                            color: AppColors.textDark,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 32),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Text(
-                              '$_quantity',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textDark,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _increment,
-                            icon: const Icon(Icons.add_rounded, size: 18),
-                            color: AppColors.textDark,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 32),
-                          ),
-                        ],
-                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
-                    const SizedBox(width: 14),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 20,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
 
-                    // Masukkan Keranjang Button
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _handleAddToCart,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                // 2. Quantity Stepper: — 1 +
+                Container(
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: _decrement,
+                        icon: const Icon(Icons.remove_rounded, size: 16),
+                        color: AppColors.textDark,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 30,
+                          minHeight: 30,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          '$_quantity',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
                           ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _increment,
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        color: AppColors.textDark,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 30,
+                          minHeight: 30,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                // Masukkan Keranjang Button (Tanpa logo keranjang & teks utuh tidak terpotong)
+                Expanded(
+                  child: SizedBox(
+                    height: 46,
+                    child: ElevatedButton(
+                      onPressed: _handleAddToCart,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
                           child: Text(
                             'Masukkan Keranjang',
+                            maxLines: 1,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -582,11 +616,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppColors.textSecondary,
-          ),
+          child: Icon(icon, size: 20, color: AppColors.textSecondary),
         ),
         const SizedBox(width: 12),
         Column(

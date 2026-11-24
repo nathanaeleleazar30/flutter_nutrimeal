@@ -4,16 +4,14 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../core/widgets/center_feedback_toast.dart';
 import '../address_screen.dart';
 import 'langganan_katalog_screen.dart';
 
 class LanggananSayaScreen extends StatefulWidget {
   final bool showBottomNav;
 
-  const LanggananSayaScreen({
-    super.key,
-    this.showBottomNav = true,
-  });
+  const LanggananSayaScreen({super.key, this.showBottomNav = true});
 
   @override
   State<LanggananSayaScreen> createState() => _LanggananSayaScreenState();
@@ -50,7 +48,8 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
             _subscription = null;
           }
           if (_subscription != null) {
-            _isAutoRenew = _subscription!['auto_renew'] == 1 ||
+            _isAutoRenew =
+                _subscription!['auto_renew'] == 1 ||
                 _subscription!['auto_renew'] == true;
           }
           _isLoading = false;
@@ -74,17 +73,18 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
     );
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ok
-                ? 'Perpanjangan otomatis berhasil ${val ? "diaktifkan" : "dimatikan"}'
-                : 'Gagal memperbarui status perpanjangan otomatis',
-          ),
-          backgroundColor: ok ? const Color(0xFF16A34A) : const Color(0xFFEF4444),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (ok) {
+        CenterFeedbackToast.showSuccess(
+          context,
+          message:
+              'Perpanjangan otomatis berhasil ${val ? "diaktifkan" : "dimatikan"}',
+        );
+      } else {
+        CenterFeedbackToast.showError(
+          context,
+          message: 'Gagal memperbarui status perpanjangan otomatis',
+        );
+      }
     }
   }
 
@@ -106,12 +106,9 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Status langganan berhasil diubah menjadi: $newStatus'),
-          backgroundColor: const Color(0xFF16A34A),
-          behavior: SnackBarBehavior.floating,
-        ),
+      CenterFeedbackToast.showSuccess(
+        context,
+        message: 'Status langganan berhasil diubah menjadi: $newStatus',
       );
     }
   }
@@ -134,63 +131,68 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                 color: AppColors.primaryGreen,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: _isLoading
                       ? const Padding(
                           padding: EdgeInsets.symmetric(vertical: 60),
                           child: Center(
-                            child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryGreen,
+                            ),
                           ),
                         )
                       : _subscription == null
-                          ? _buildEmptySubscriptionState()
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 1. Active Package Card
-                                _buildActivePackageCard(),
-                                const SizedBox(height: 20),
+                      ? _buildEmptySubscriptionState()
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 1. Active Package Card
+                            _buildActivePackageCard(),
+                            const SizedBox(height: 20),
 
-                                // 2. Jadwal Hari Ini Section
-                                _buildTodayScheduleSection(),
-                                const SizedBox(height: 20),
+                            // 2. Jadwal Hari Ini Section
+                            _buildTodayScheduleSection(),
+                            const SizedBox(height: 20),
 
-                                // 3. Alamat Pengantaran Section
-                                _buildDeliveryAddressSection(context),
-                                const SizedBox(height: 20),
+                            // 3. Alamat Pengantaran Section
+                            _buildDeliveryAddressSection(context),
+                            const SizedBox(height: 20),
 
-                                // 4. Perpanjang Otomatis Section
-                                _buildAutoRenewSection(),
-                                const SizedBox(height: 20),
+                            // 4. Perpanjang Otomatis Section
+                            _buildAutoRenewSection(),
+                            const SizedBox(height: 20),
 
-                                // 5. Button: Jadwal & Menu Bulanan
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.pushNamed(context, '/jadwal');
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0F8A50),
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Jadwal & Menu Bulanan',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                            // 5. Button: Jadwal & Menu Bulanan
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/jadwal');
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF0F8A50),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
-                              ],
+                                child: Text(
+                                  'Jadwal & Menu Bulanan',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -289,13 +291,19 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFC3E7C4),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFC3E7C4)),
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/home', (route) => false);
+              }
+            },
             child: Container(
               width: 36,
               height: 36,
@@ -345,7 +353,9 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
     final totalDays = int.tryParse('${sub['total_days']}') ?? 30;
     final daysRemaining = int.tryParse('${sub['days_remaining']}') ?? 0;
     final daysUsed = (totalDays - daysRemaining).clamp(0, totalDays);
-    final progressVal = totalDays > 0 ? (daysUsed / totalDays).clamp(0.0, 1.0) : 0.0;
+    final progressVal = totalDays > 0
+        ? (daysUsed / totalDays).clamp(0.0, 1.0)
+        : 0.0;
     final percent = (progressVal * 100).round();
 
     final startDate = sub['start_date']?.toString() ?? '-';
@@ -374,9 +384,14 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: isPaused ? const Color(0xFFFEF3C7) : const Color(0xFFDCFCE7),
+                  color: isPaused
+                      ? const Color(0xFFFEF3C7)
+                      : const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -386,7 +401,9 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                       width: 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: isPaused ? const Color(0xFFD97706) : const Color(0xFF16A34A),
+                        color: isPaused
+                            ? const Color(0xFFD97706)
+                            : const Color(0xFF16A34A),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -396,7 +413,9 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: isPaused ? const Color(0xFF92400E) : const Color(0xFF166534),
+                        color: isPaused
+                            ? const Color(0xFF92400E)
+                            : const Color(0xFF166534),
                       ),
                     ),
                   ],
@@ -406,13 +425,18 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                 onTap: _togglePause,
                 borderRadius: BorderRadius.circular(8),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   child: Text(
                     isPaused ? 'Lanjutkan' : 'Jeda',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: isPaused ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                      color: isPaused
+                          ? const Color(0xFF16A34A)
+                          : const Color(0xFFD97706),
                     ),
                   ),
                 ),
@@ -446,14 +470,18 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$daysUsed dari $totalDays Hari Berjalan',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
+              Flexible(
+                child: Text(
+                  '$daysUsed dari $totalDays Hari Berjalan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '$percent% Selesai',
                 style: GoogleFonts.plusJakartaSans(
@@ -472,7 +500,9 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
             child: LinearProgressIndicator(
               value: progressVal,
               backgroundColor: const Color(0xFFE2E8F0),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F8A50)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF0F8A50),
+              ),
               minHeight: 6,
             ),
           ),
@@ -482,18 +512,25 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Mulai: $startDate',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.5,
-                  color: const Color(0xFF64748B),
+              Flexible(
+                child: Text(
+                  'Mulai: $startDate',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    color: const Color(0xFF64748B),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Text(
-                'Berakhir: $endDate',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.5,
-                  color: const Color(0xFF64748B),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Berakhir: $endDate',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    color: const Color(0xFF64748B),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -505,7 +542,8 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
 
   Widget _buildTodayScheduleSection() {
     final sub = _subscription!;
-    final timeSlot = sub['delivery_time_slot'] ?? '11.30 – 13.00 WIB (Slot Utama)';
+    final timeSlot =
+        sub['delivery_time_slot'] ?? '11.30 – 13.00 WIB (Slot Utama)';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,7 +553,11 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.restaurant_rounded, color: Color(0xFF0F8A50), size: 18),
+                const Icon(
+                  Icons.restaurant_rounded,
+                  color: Color(0xFF0F8A50),
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Waktu Pengantaran',
@@ -540,7 +582,11 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.access_time_rounded, color: Color(0xFF0F8A50), size: 20),
+              const Icon(
+                Icons.access_time_rounded,
+                color: Color(0xFF0F8A50),
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -585,7 +631,11 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.location_on_outlined, color: Color(0xFF0F8A50), size: 20),
+              const Icon(
+                Icons.location_on_outlined,
+                color: Color(0xFF0F8A50),
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -606,7 +656,9 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const AddressScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const AddressScreen(),
+                              ),
                             );
                           },
                           child: Text(
@@ -672,7 +724,10 @@ class _LanggananSayaScreenState extends State<LanggananSayaScreen> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(6),

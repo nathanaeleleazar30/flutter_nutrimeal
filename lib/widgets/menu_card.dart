@@ -8,11 +8,7 @@ class MenuCard extends StatelessWidget {
   final MenuItem item;
   final VoidCallback? onTap;
 
-  const MenuCard({
-    super.key,
-    required this.item,
-    this.onTap,
-  });
+  const MenuCard({super.key, required this.item, this.onTap});
 
   String _formatPrice(int price) {
     // Format number to Indonesian Rupiah representation: Rp30.000

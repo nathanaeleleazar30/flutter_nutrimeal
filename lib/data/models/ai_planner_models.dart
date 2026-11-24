@@ -43,20 +43,14 @@ class AiPlannedItem {
     final mealJson = json['meal'] as Map<String, dynamic>? ?? {};
     final parsedMeal = MenuItem.fromJson(mealJson, baseUrl: baseUrl);
     final qty = int.tryParse(json['quantity']?.toString() ?? '1') ?? 1;
-    final unitPrc = int.tryParse(json['unit_price']?.toString() ?? '${parsedMeal.price}') ?? parsedMeal.price;
+    final unitPrc =
+        int.tryParse(json['unit_price']?.toString() ?? '${parsedMeal.price}') ??
+        parsedMeal.price;
 
-    return AiPlannedItem(
-      meal: parsedMeal,
-      quantity: qty,
-      unitPrice: unitPrc,
-    );
+    return AiPlannedItem(meal: parsedMeal, quantity: qty, unitPrice: unitPrc);
   }
 
-  AiPlannedItem copyWith({
-    MenuItem? meal,
-    int? quantity,
-    int? unitPrice,
-  }) {
+  AiPlannedItem copyWith({MenuItem? meal, int? quantity, int? unitPrice}) {
     return AiPlannedItem(
       meal: meal ?? this.meal,
       quantity: quantity ?? this.quantity,
@@ -109,19 +103,28 @@ class AiPlannedPackage {
 
     final rawItems = (json['items'] as List<dynamic>?) ?? [];
     final parsedItems = rawItems
-        .map((it) => AiPlannedItem.fromJson(it as Map<String, dynamic>, baseUrl: baseUrl))
+        .map(
+          (it) => AiPlannedItem.fromJson(
+            it as Map<String, dynamic>,
+            baseUrl: baseUrl,
+          ),
+        )
         .toList();
 
     final totCost = int.tryParse(json['total_cost']?.toString() ?? '0') ?? 0;
     final prcPax = int.tryParse(json['price_per_pax']?.toString() ?? '0') ?? 0;
-    final bRem = int.tryParse(json['budget_remaining']?.toString() ?? '0') ?? (totalBudget - totCost);
+    final bRem =
+        int.tryParse(json['budget_remaining']?.toString() ?? '0') ??
+        (totalBudget - totCost);
     final cals = int.tryParse(json['avg_calories']?.toString() ?? '450') ?? 450;
 
     return AiPlannedPackage(
       id: json['id']?.toString() ?? 'pkg-opt',
       name: json['name']?.toString() ?? 'Paket Pilihan AI',
       tier: json['tier']?.toString() ?? 'seimbang',
-      tagline: json['tagline']?.toString() ?? 'Kombinasi menu katering sehat optimal',
+      tagline:
+          json['tagline']?.toString() ??
+          'Kombinasi menu katering sehat optimal',
       badge: json['badge']?.toString() ?? 'Rekomendasi AI',
       badgeColor: parsedColor,
       totalCost: totCost,
