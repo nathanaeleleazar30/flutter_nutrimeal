@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'controllers/auth_controller.dart';
@@ -67,6 +67,13 @@ class NutriMealApp extends StatelessWidget {
       navigatorKey: NotificationService.navigatorKey,
       title: 'NutriMeal',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Bridge sementara untuk package pihak ketiga (mis. flutter_map) yang masih memakai legacy Theme/Localizations.
+        // ignore: deprecated_member_use
+        return MaterialUiCompatibilityBridge(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.mintBackground,

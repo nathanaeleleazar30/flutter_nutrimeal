@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
@@ -332,7 +332,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => OrderTrackingScreen(
-                  orderId: item['order_id']?.toString() ?? 'ORD-8842',
+                  orderId: item['order_id']?.toString() ?? '',
                   packageName:
                       item['package_name']?.toString() ??
                       'Paket Menu NutriMeal',

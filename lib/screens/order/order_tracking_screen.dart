@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
@@ -18,11 +18,11 @@ class OrderTrackingScreen extends StatefulWidget {
 
   const OrderTrackingScreen({
     super.key,
-    this.orderId = 'ORD-2026',
-    this.packageName = 'Paket Katering Sehat NutriMeal',
-    this.totalAmount = 'Rp170.347',
-    this.customerAddress = 'Jl. Soekarno Hatta No. 45, Malang',
-    this.deliveryTime = 'Hari Ini, 12:00 WIB',
+    this.orderId = '',
+    this.packageName = '',
+    this.totalAmount = '',
+    this.customerAddress = '',
+    this.deliveryTime = '',
     this.estimatedMinutes = 25,
     this.isSubscription = false,
   });
@@ -32,11 +32,12 @@ class OrderTrackingScreen extends StatefulWidget {
 }
 
 class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
-  // Current active stage index: 0 = Diterima, 1 = Disiapkan, 2 = Diantar, 3 = Tiba
-  int _currentStageIndex =
-      2; // Default to 'Diantar' (Dalam Pengiriman) for instant rich view
+  // Current active stage index: 0 = Diterima, 1 = Diproses, 2 = Dikirim, 3 = Selesai
+  int _currentStageIndex = 0;
   bool _isLoading = false;
   Map<String, dynamic>? _serverOrder;
+  String _serverStatus = '';
+  String _serverPaymentStatus = '';
   Timer? _countdownTimer;
   late int _remainingMinutes;
 
@@ -97,27 +98,47 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Future<void> _fetchLiveOrderStatus() async {
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    final argOrderId = routeArgs is Map
+        ? (routeArgs['orderId'] ?? routeArgs['order_id'] ?? '').toString()
+        : '';
+    final lookupOrderId = widget.orderId.trim().isNotEmpty
+        ? widget.orderId.trim()
+        : argOrderId.trim();
+
+    if (lookupOrderId.isEmpty) {
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final orders = await ApiService.instance.fetchOrders(
-        search: widget.orderId,
+        search: lookupOrderId,
       );
       if (orders.isNotEmpty && mounted) {
+        final matched = orders.firstWhere(
+          (o) =>
+              o['id']?.toString().toLowerCase() == lookupOrderId.toLowerCase(),
+          orElse: () => orders.first,
+        );
         setState(() {
-          _serverOrder = orders.first;
-          final statusStr = (_serverOrder?['status'] ?? '')
-              .toString()
-              .toLowerCase();
-          if (statusStr.contains('terima') || statusStr.contains('bayar')) {
+          _serverOrder = matched;
+          _serverStatus = (matched['status'] ?? '').toString();
+          _serverPaymentStatus = (matched['payment_status'] ?? '').toString();
+          final statusStr = _serverStatus.toLowerCase();
+          if (statusStr.contains('menunggu') || statusStr.contains('batal')) {
             _currentStageIndex = 0;
-          } else if (statusStr.contains('siap') ||
+          } else if (statusStr.contains('terima')) {
+            _currentStageIndex = 0;
+          } else if (statusStr.contains('proses') ||
+              statusStr.contains('siap') ||
               statusStr.contains('masak')) {
             _currentStageIndex = 1;
-          } else if (statusStr.contains('antar') ||
-              statusStr.contains('kirim')) {
+          } else if (statusStr.contains('kirim') ||
+              statusStr.contains('antar')) {
             _currentStageIndex = 2;
-          } else if (statusStr.contains('tiba') ||
-              statusStr.contains('selesai')) {
+          } else if (statusStr.contains('selesai') ||
+              statusStr.contains('tiba')) {
             _currentStageIndex = 3;
           }
         });
@@ -126,31 +147,50 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     if (mounted) setState(() => _isLoading = false);
   }
 
-  void _simulateNextStage() {
-    setState(() {
-      _currentStageIndex = (_currentStageIndex + 1) % _stages.length;
-    });
-    CenterFeedbackToast.showSuccess(
-      context,
-      message:
-          'Status pesanan diperbarui: ${_stages[_currentStageIndex]['title']}',
-    );
+  String _formatServerRupiah(dynamic value) {
+    final numVal = value is num
+        ? value.round()
+        : double.tryParse('$value')?.round() ?? 0;
+    if (numVal <= 0) return '-';
+    final str = numVal.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(str[i]);
+    }
+    return 'Rp$buffer';
   }
 
   @override
   Widget build(BuildContext context) {
-    final effectiveOrderId = widget.orderId.isNotEmpty
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    final argMap = routeArgs is Map
+        ? Map<String, dynamic>.from(routeArgs)
+        : const <String, dynamic>{};
+
+    final effectiveOrderId = widget.orderId.trim().isNotEmpty
         ? widget.orderId
-        : 'ORD-8842';
-    final effectivePackageName = widget.packageName.isNotEmpty
+        : (_serverOrder?['id']?.toString() ??
+              argMap['orderId']?.toString() ??
+              argMap['order_id']?.toString() ??
+              '-');
+    final effectivePackageName = widget.packageName.trim().isNotEmpty
         ? widget.packageName
-        : 'Paket Menu NutriMeal';
-    final effectiveTotalAmount = widget.totalAmount.isNotEmpty
+        : (_serverOrder?['package_name']?.toString() ??
+              argMap['packageName']?.toString() ??
+              'Pesanan NutriMeal');
+    final effectiveTotalAmount = widget.totalAmount.trim().isNotEmpty
         ? widget.totalAmount
-        : 'Rp170.347';
-    final effectiveAddress = widget.customerAddress.isNotEmpty
+        : (_serverOrder?['total_price'] != null
+              ? _formatServerRupiah(_serverOrder!['total_price'])
+              : (argMap['totalAmount']?.toString() ?? '-'));
+    final effectiveAddress = widget.customerAddress.trim().isNotEmpty
         ? widget.customerAddress
-        : 'Alamat Pengiriman Pelanggan';
+        : (_serverOrder?['customer_address']?.toString() ??
+              argMap['customerAddress']?.toString() ??
+              '-');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -232,21 +272,52 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Widget _buildHeroEtaCard(String orderId) {
+    final lowerStatus = _serverStatus.toLowerCase();
+    final lowerPayStatus = _serverPaymentStatus.toLowerCase();
+    final isCancelled =
+        lowerStatus.contains('batal') ||
+        lowerPayStatus.contains('batal') ||
+        lowerPayStatus.contains('kedaluwarsa');
+    final isWaitingPayment =
+        !isCancelled &&
+        (lowerStatus.contains('menunggu') ||
+            lowerPayStatus.contains('menunggu'));
+
     final currentStage = _stages[_currentStageIndex];
+    final headline = isCancelled
+        ? 'Pesanan Dibatalkan / Kedaluwarsa'
+        : isWaitingPayment
+        ? 'Menunggu Pembayaran QRIS'
+        : currentStage['title'].toString();
+    final subtitle = isCancelled
+        ? 'Pesanan ini tidak lagi aktif karena pembayaran dibatalkan atau melewati batas waktu.'
+        : isWaitingPayment
+        ? 'Selesaikan pembayaran QRIS terlebih dahulu agar pesanan diteruskan ke dapur NutriMeal.'
+        : currentStage['subtitle'].toString();
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F8A50), Color(0xFF15803D)],
+        gradient: LinearGradient(
+          colors: isCancelled
+              ? [const Color(0xFFDC2626), const Color(0xFFB91C1C)]
+              : isWaitingPayment
+              ? [const Color(0xFFD97706), const Color(0xFFB45309)]
+              : const [Color(0xFF0F8A50), Color(0xFF15803D)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F8A50).withValues(alpha: 0.25),
+            color:
+                (isCancelled
+                        ? const Color(0xFFDC2626)
+                        : isWaitingPayment
+                        ? const Color(0xFFD97706)
+                        : const Color(0xFF0F8A50))
+                    .withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -288,7 +359,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: _simulateNextStage,
+                onTap: _fetchLiveOrderStatus,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -301,13 +372,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.play_circle_fill_rounded,
+                        Icons.refresh_rounded,
                         color: Color(0xFF0F8A50),
                         size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Simulasi Status',
+                        'Perbarui Status',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -322,7 +393,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            currentStage['title'],
+            headline,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 22,
               fontWeight: FontWeight.w900,
@@ -331,10 +402,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            currentStage['subtitle'],
+            subtitle,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12.5,
-              color: const Color(0xFFDCFCE7),
+              color: Colors.white.withValues(alpha: 0.92),
               height: 1.4,
             ),
           ),
@@ -354,16 +425,22 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   size: 18,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  _currentStageIndex == 3
-                      ? 'Pesanan Telah Tiba di Lokasi Anda'
-                      : widget.isSubscription
-                      ? 'Katering Siap Diantar: ${widget.deliveryTime}'
-                      : 'Estimasi Sampai: $_remainingMinutes Menit (${widget.deliveryTime})',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                Expanded(
+                  child: Text(
+                    isCancelled
+                        ? 'Status Pembayaran: ${_serverPaymentStatus.isNotEmpty ? _serverPaymentStatus : 'Dibatalkan'}'
+                        : isWaitingPayment
+                        ? 'Pembayaran belum dikonfirmasi oleh sistem QRIS'
+                        : _currentStageIndex == 3
+                        ? 'Pesanan Telah Tiba di Lokasi Anda'
+                        : widget.isSubscription
+                        ? 'Katering Siap Diantar${widget.deliveryTime.isNotEmpty ? ': ${widget.deliveryTime}' : ''}'
+                        : 'Estimasi Sampai: $_remainingMinutes Menit${widget.deliveryTime.isNotEmpty ? ' (${widget.deliveryTime})' : ''}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -784,8 +861,18 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             itemCount: _stages.length,
             itemBuilder: (context, index) {
               final stage = _stages[index];
-              final isDone = index <= _currentStageIndex;
-              final isCurrent = index == _currentStageIndex;
+              final lowerStatus = _serverStatus.toLowerCase();
+              final lowerPayStatus = _serverPaymentStatus.toLowerCase();
+              final isWaitingOrCancelled =
+                  lowerStatus.contains('menunggu') ||
+                  lowerStatus.contains('batal') ||
+                  lowerPayStatus.contains('menunggu') ||
+                  lowerPayStatus.contains('batal') ||
+                  lowerPayStatus.contains('kedaluwarsa');
+              final isDone =
+                  !isWaitingOrCancelled && index <= _currentStageIndex;
+              final isCurrent =
+                  !isWaitingOrCancelled && index == _currentStageIndex;
               final isLast = index == _stages.length - 1;
 
               return IntrinsicHeight(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
@@ -37,12 +37,10 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     final menuController = context.read<NutriMealMenuController>();
     menuController.addToCart(widget.item, quantity: _quantity);
 
-    // Feedback notifikasi di tengah layar, agak samar, dan perlahan menghilang
-    CenterFeedbackToast.show(
+    // Feedback notifikasi ringkas berwarna putih, agak samar, dan perlahan menghilang
+    CenterFeedbackToast.showSuccess(
       context,
-      title: 'Berhasil Masuk Keranjang!',
-      message: '$_quantity x ${widget.item.name}',
-      icon: Icons.check_circle_rounded,
+      message: '$_quantity x ${widget.item.name} masuk keranjang',
     );
   }
 

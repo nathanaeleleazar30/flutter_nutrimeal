@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../core/constants/api_config.dart';
+import '../data/local/preferences/preferences_service.dart';
 import '../data/local/secure/secure_storage_service.dart';
 import '../services/notification_service.dart';
 
@@ -680,6 +681,14 @@ class AuthController extends ChangeNotifier {
             notifyListeners();
             return;
           }
+        } else if (response.statusCode == 401) {
+          if (kDebugMode) {
+            print(
+              '[NutriMeal Auth] Token sesi ditolak (401), membersihkan sesi.',
+            );
+          }
+          await logout();
+          return;
         }
       } catch (e) {
         if (kDebugMode) print('[NutriMeal Auth] fetchCustomerProfile err: $e');
@@ -965,8 +974,11 @@ class AuthController extends ChangeNotifier {
     _backendMessage = null;
     _resetCustomerProfile(); // Bersihkan foto dan data profil akun saat keluar
     _googleSignIn.signOut().catchError((_) => null);
-    // Requirement 3: Hapus semua data sensitif dari SecureStorage saat logout
+    // Requirement 3: Hapus semua data sensitif dari SecureStorage & idempotency checkout saat logout
     await SecureStorageService.instance.clearAllSecrets();
+    try {
+      await PreferencesService.instance.clearCheckoutIdempotencyState();
+    } catch (_) {}
     clearErrors();
     notifyListeners();
   }

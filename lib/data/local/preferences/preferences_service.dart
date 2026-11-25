@@ -15,6 +15,11 @@ class PreferencesService {
   static const String _keyLastCacheSyncUtcMillis =
       'app_last_cache_sync_utc_millis';
   static const String _keyNotificationEnabled = 'app_notification_enabled';
+  static const String _keyQrisIdempotencyKey = 'qris_checkout_idempotency_key';
+  static const String _keyQrisIdempotencyFingerprint =
+      'qris_checkout_idempotency_fingerprint';
+  static const String _keyQrisIdempotencyCustomerId =
+      'qris_checkout_idempotency_customer_id';
 
   SharedPreferences? _prefs;
 
@@ -79,6 +84,37 @@ class PreferencesService {
   Future<void> setNotificationEnabled(bool enabled) async {
     final prefs = await _safePrefs;
     await prefs.setBool(_keyNotificationEnabled, enabled);
+  }
+
+  // --- QRIS Checkout Idempotency State (non-sensitif: hanya UUID v4 & hash sidik keranjang) ---
+  Future<({String key, String fingerprint, String customerId})?>
+  getCheckoutIdempotencyState() async {
+    final prefs = await _safePrefs;
+    final key = prefs.getString(_keyQrisIdempotencyKey);
+    final fp = prefs.getString(_keyQrisIdempotencyFingerprint);
+    final custId = prefs.getString(_keyQrisIdempotencyCustomerId);
+    if (key == null || key.isEmpty || fp == null || fp.isEmpty) {
+      return null;
+    }
+    return (key: key, fingerprint: fp, customerId: custId ?? '');
+  }
+
+  Future<void> saveCheckoutIdempotencyState({
+    required String key,
+    required String fingerprint,
+    required String customerId,
+  }) async {
+    final prefs = await _safePrefs;
+    await prefs.setString(_keyQrisIdempotencyKey, key);
+    await prefs.setString(_keyQrisIdempotencyFingerprint, fingerprint);
+    await prefs.setString(_keyQrisIdempotencyCustomerId, customerId);
+  }
+
+  Future<void> clearCheckoutIdempotencyState() async {
+    final prefs = await _safePrefs;
+    await prefs.remove(_keyQrisIdempotencyKey);
+    await prefs.remove(_keyQrisIdempotencyFingerprint);
+    await prefs.remove(_keyQrisIdempotencyCustomerId);
   }
 
   // Clear all non-sensitive preferences

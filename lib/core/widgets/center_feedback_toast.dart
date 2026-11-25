@@ -1,31 +1,38 @@
-import 'dart:ui' as ui;
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../constants/app_colors.dart';
 
 enum FeedbackToastType { success, error, info }
 
-/// Notifikasi feedback di tengah layar dengan tampilan agak samar (translucent frosted glass)
-/// dan animasi fade out menghilang perlahan ("lama-lama hilang").
+/// Notifikasi feedback ringkas berwarna putih agak samar (translucent)
+/// yang menghilang perlahan tanpa mengganggu interaksi layar.
 class CenterFeedbackToast {
+  static OverlayEntry? _activeEntry;
+
+  static void _removeActiveEntry() {
+    final current = _activeEntry;
+    _activeEntry = null;
+    if (current != null && current.mounted) {
+      try {
+        current.remove();
+      } catch (_) {}
+    }
+  }
+
   static void show(
     BuildContext context, {
     required String message,
     String? title,
     IconData? icon,
     FeedbackToastType type = FeedbackToastType.success,
-    Duration displayDuration = const Duration(milliseconds: 1400),
-    Duration fadeOutDuration = const Duration(milliseconds: 650),
+    Duration displayDuration = const Duration(milliseconds: 1150),
+    Duration fadeOutDuration = const Duration(milliseconds: 450),
   }) {
     final overlayState = Overlay.maybeOf(context);
     if (overlayState == null) return;
 
-    late OverlayEntry overlayEntry;
-
-    final defaultTitle =
-        title ??
-        (type == FeedbackToastType.success
-            ? 'Berhasil!'
-            : (type == FeedbackToastType.error ? 'Perhatian' : 'Informasi'));
+    _removeActiveEntry();
 
     final defaultIcon =
         icon ??
@@ -35,29 +42,36 @@ class CenterFeedbackToast {
                   ? Icons.error_outline_rounded
                   : Icons.info_outline_rounded));
 
+    late OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
       builder: (ctx) => _CenterToastWidget(
-        title: defaultTitle,
+        title: title,
         message: message,
         icon: defaultIcon,
         type: type,
         displayDuration: displayDuration,
         fadeOutDuration: fadeOutDuration,
         onDismissed: () {
-          try {
-            overlayEntry.remove();
-          } catch (_) {}
+          if (_activeEntry == overlayEntry) {
+            _activeEntry = null;
+          }
+          if (overlayEntry.mounted) {
+            try {
+              overlayEntry.remove();
+            } catch (_) {}
+          }
         },
       ),
     );
 
+    _activeEntry = overlayEntry;
     overlayState.insert(overlayEntry);
   }
 
   static void showSuccess(
     BuildContext context, {
     required String message,
-    String title = 'Berhasil!',
+    String? title,
   }) {
     show(
       context,
@@ -70,7 +84,7 @@ class CenterFeedbackToast {
   static void showError(
     BuildContext context, {
     required String message,
-    String title = 'Perhatian',
+    String? title,
   }) {
     show(
       context,
@@ -83,14 +97,14 @@ class CenterFeedbackToast {
   static void showInfo(
     BuildContext context, {
     required String message,
-    String title = 'Informasi',
+    String? title,
   }) {
     show(context, message: message, title: title, type: FeedbackToastType.info);
   }
 }
 
 class _CenterToastWidget extends StatefulWidget {
-  final String title;
+  final String? title;
   final String message;
   final IconData icon;
   final FeedbackToastType type;
@@ -99,7 +113,7 @@ class _CenterToastWidget extends StatefulWidget {
   final VoidCallback onDismissed;
 
   const _CenterToastWidget({
-    required this.title,
+    this.title,
     required this.message,
     required this.icon,
     required this.type,
@@ -117,6 +131,7 @@ class _CenterToastWidgetState extends State<_CenterToastWidget>
   late AnimationController _animController;
   late Animation<double> _opacityAnim;
   late Animation<double> _scaleAnim;
+  Timer? _dismissTimer;
 
   @override
   void initState() {
@@ -124,7 +139,7 @@ class _CenterToastWidgetState extends State<_CenterToastWidget>
 
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 160),
     );
 
     _opacityAnim = CurvedAnimation(
@@ -132,15 +147,13 @@ class _CenterToastWidgetState extends State<_CenterToastWidget>
       curve: Curves.easeOut,
     );
 
-    _scaleAnim = Tween<double>(begin: 0.88, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
+    _scaleAnim = Tween<double>(begin: 0.94, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
     );
 
-    // 1. Fade in
     _animController.forward();
 
-    // 2. Tunggu displayDuration, lalu fade out perlahan (lama-lama hilang)
-    Future.delayed(widget.displayDuration, () {
+    _dismissTimer = Timer(widget.displayDuration, () {
       if (!mounted) return;
       _animController
           .animateTo(
@@ -158,6 +171,7 @@ class _CenterToastWidgetState extends State<_CenterToastWidget>
 
   @override
   void dispose() {
+    _dismissTimer?.cancel();
     _animController.dispose();
     super.dispose();
   }
@@ -165,120 +179,111 @@ class _CenterToastWidgetState extends State<_CenterToastWidget>
   Color get _iconColor {
     switch (widget.type) {
       case FeedbackToastType.success:
-        return const Color(0xFF4ADE80);
+        return AppColors.primaryGreenHover;
       case FeedbackToastType.error:
-        return const Color(0xFFF87171);
+        return AppColors.errorRed;
       case FeedbackToastType.info:
-        return const Color(0xFF60A5FA);
-    }
-  }
-
-  Color get _iconBgColor {
-    switch (widget.type) {
-      case FeedbackToastType.success:
-        return const Color(0xFF0F8A50).withValues(alpha: 0.25);
-      case FeedbackToastType.error:
-        return const Color(0xFFEF4444).withValues(alpha: 0.22);
-      case FeedbackToastType.info:
-        return const Color(0xFF3B82F6).withValues(alpha: 0.22);
-    }
-  }
-
-  Color get _iconBorderColor {
-    switch (widget.type) {
-      case FeedbackToastType.success:
-        return const Color(0xFF22C55E).withValues(alpha: 0.6);
-      case FeedbackToastType.error:
-        return const Color(0xFFF87171).withValues(alpha: 0.6);
-      case FeedbackToastType.info:
-        return const Color(0xFF60A5FA).withValues(alpha: 0.6);
+        return AppColors.textLinkTeal;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final trimmedTitle = widget.title?.trim();
+    final hasTitle = trimmedTitle != null && trimmedTitle.isNotEmpty;
+    final maxWidth = (MediaQuery.sizeOf(context).width - 48).clamp(
+      180.0,
+      300.0,
+    );
+
     return IgnorePointer(
       child: Material(
         color: Colors.transparent,
         child: Center(
-          child: AnimatedBuilder(
-            animation: _animController,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _opacityAnim.value.clamp(0.0, 1.0),
-                child: Transform.scale(scale: _scaleAnim.value, child: child),
-              );
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: AnimatedBuilder(
+              animation: _animController,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _opacityAnim.value.clamp(0.0, 1.0),
+                  child: Transform.scale(scale: _scaleAnim.value, child: child),
+                );
+              },
+              child: Semantics(
+                liveRegion: true,
+                label: hasTitle
+                    ? '$trimmedTitle. ${widget.message}'
+                    : widget.message,
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 295),
+                  constraints: BoxConstraints(maxWidth: maxWidth),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 18,
+                    horizontal: 14,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    // Warna agak samar (translucent frosted glass)
-                    color: const Color(0xCC0F172A), // 80% opacity dark slate
-                    borderRadius: BorderRadius.circular(22),
+                    color: AppColors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      width: 1.2,
+                      color: AppColors.inputBorder.withValues(alpha: 0.9),
+                      width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.22),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Lingkaran Ikon
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _iconBgColor,
-                          border: Border.all(
-                            color: _iconBorderColor,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Icon(widget.icon, color: _iconColor, size: 26),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Title
-                      Text(
-                        widget.title,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Subtitle / Detail Pesan
-                      Text(
-                        widget.message,
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFFCBD5E1),
-                          height: 1.35,
-                        ),
+                      Icon(widget.icon, color: _iconColor, size: 18),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: hasTitle
+                            ? Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    trimmedTitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textDark,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 1),
+                                  Text(
+                                    widget.message,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondary,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                widget.message,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textDark,
+                                  height: 1.3,
+                                ),
+                              ),
                       ),
                     ],
                   ),

@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend_nutrimeal/controllers/auth_controller.dart';
 import 'package:frontend_nutrimeal/controllers/menu_controller.dart';
+import 'package:frontend_nutrimeal/core/widgets/center_feedback_toast.dart';
+import 'package:frontend_nutrimeal/data/models/qris_payment.dart';
 import 'package:frontend_nutrimeal/screens/beranda_screen.dart';
 import 'package:frontend_nutrimeal/screens/galeri_menu_screen.dart';
 import 'package:frontend_nutrimeal/screens/login_screen.dart';
@@ -142,6 +144,23 @@ final Uint8List kTransparentImage = Uint8List.fromList(<int>[
   0x60,
   0x82,
 ]);
+
+class _TestAuthController extends AuthController {
+  final bool authenticated;
+  _TestAuthController({required this.authenticated});
+
+  @override
+  Future<void> restoreSession() async {}
+
+  @override
+  bool get isLoggedIn => authenticated;
+
+  @override
+  String? get authToken => authenticated ? 'test-jwt-token' : null;
+
+  @override
+  String? get customerId => authenticated ? 'cst-test-01' : null;
+}
 
 Widget createTestApp(
   Widget child, {
@@ -298,15 +317,60 @@ void main() {
     WidgetTester tester,
   ) async {
     final menuController = NutriMealMenuController();
+    final now = DateTime.now().toUtc();
+    final pendingPayment = QrisPayment(
+      paymentId: 'PAY-TEST-1',
+      orderId: 'ORD-TEST-1',
+      providerOrderId: 'NUTRI-ORD-TEST-1-001',
+      amount: 115000,
+      subtotal: 100000,
+      tax: 5000,
+      shippingFee: 10000,
+      discount: 0,
+      isSubscription: false,
+      packageName: 'Grilled Chicken Rice Bowl',
+      qrString: '00020101021226580014ID.CO.GOPAY.WWW0118936009140000000000',
+      expiresAt: now.add(const Duration(minutes: 15)),
+      serverTime: now,
+      receivedAt: now,
+      status: 'pending',
+      paymentStatus: 'Menunggu Pembayaran',
+    );
 
     await tester.pumpWidget(
-      createTestApp(const CheckoutScreen(), menuController: menuController),
+      createTestApp(
+        CheckoutScreen(existingPayment: pendingPayment),
+        menuController: menuController,
+        authController: _TestAuthController(authenticated: true),
+      ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
-    expect(find.text('Pembayaran'), findsOneWidget);
+    expect(find.text('Pembayaran QRIS'), findsOneWidget);
+    expect(find.text('Menunggu Pembayaran'), findsOneWidget);
     expect(find.text('Petunjuk Pembayaran QRIS'), findsOneWidget);
-    expect(find.text('Cek Status Pembayaran'), findsOneWidget);
+    expect(find.text('Refresh Status'), findsOneWidget);
+    expect(find.text('Bayar nanti'), findsOneWidget);
+    expect(find.text('Batalkan QRIS'), findsOneWidget);
+  });
+
+  testWidgets('7b. Unauthenticated CheckoutScreen prompts Login Diperlukan', (
+    WidgetTester tester,
+  ) async {
+    final menuController = NutriMealMenuController();
+    await tester.pumpWidget(
+      createTestApp(
+        const CheckoutScreen(),
+        menuController: menuController,
+        authController: _TestAuthController(authenticated: false),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.text('Login Diperlukan'), findsOneWidget);
+    expect(find.text('Login Sekarang'), findsOneWidget);
   });
 
   testWidgets('8. Renders AddressScreen with address list', (
@@ -430,6 +494,59 @@ void main() {
       expect(find.text('Langganan Katering'), findsOneWidget);
       expect(find.text('Pilih Paket Langganan'), findsOneWidget);
       expect(find.text('Mulai Langganan'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    '17. CenterFeedbackToast renders simple white pill, replaces active toast, and auto-dismisses',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => CenterFeedbackToast.showSuccess(
+                  context,
+                  message: '1 x Grilled Chicken masuk keranjang',
+                ),
+                child: const Text('Trigger Toast'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Trigger Toast'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text('1 x Grilled Chicken masuk keranjang'), findsOneWidget);
+      expect(find.text('Berhasil!'), findsNothing);
+
+      final container = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.text('1 x Grilled Chicken masuk keranjang'),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      final decoration = container.decoration as BoxDecoration;
+      expect(
+        decoration.color?.toARGB32(),
+        Colors.white.withValues(alpha: 0.92).toARGB32(),
+      );
+
+      // Trigger again to verify single-toast replacement without stacking
+      await tester.tap(find.text('Trigger Toast'), warnIfMissed: false);
+      await tester.pump();
+      expect(find.text('1 x Grilled Chicken masuk keranjang'), findsOneWidget);
+
+      // Advance past display + fadeOut duration to verify clean dismissal
+      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 x Grilled Chicken masuk keranjang'), findsNothing);
     },
   );
 }

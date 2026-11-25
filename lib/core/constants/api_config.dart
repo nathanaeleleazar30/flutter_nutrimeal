@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '10.255.191.102';
+  static const String hostLanIp = '192.168.20.225';
 
   /// URL Produksi Backend (bisa disetel via build flag: --dart-define=API_URL=https://api.domain.com)
   static const String productionApiUrl = String.fromEnvironment('API_URL');
@@ -138,6 +138,15 @@ class ApiConfig {
   /// Daftar URL alternatif backend untuk Kirim Pesan Chat (/api/chat/messages)
   static List<String> get candidateChatMessagesUrls =>
       _buildCandidates('/api/chat/messages');
+
+  /// Endpoint pembayaran QRIS berbasis single baseUrl (tanpa fallback ke LAN/localhost lain)
+  static String get paymentQuoteUrl => '$baseUrl/api/payments/quote';
+  static String get paymentCreateQrisUrl => '$baseUrl/api/payments/qris';
+  static String get paymentActiveUrl => '$baseUrl/api/payments/active';
+  static String paymentStatusUrl(String paymentId) =>
+      '$baseUrl/api/payments/${Uri.encodeComponent(paymentId)}';
+  static String paymentCancelUrl(String paymentId) =>
+      '$baseUrl/api/payments/${Uri.encodeComponent(paymentId)}/cancel';
 
   /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
   static String resolveImageUrl(String? rawUrl, {String? activeBaseUrl}) {
