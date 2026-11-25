@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../core/constants/api_config.dart';
 import '../data/local/preferences/preferences_service.dart';
 import '../data/models/ai_planner_models.dart';
+import '../data/models/qris_payment.dart';
 import '../data/repositories/meal_repository.dart';
 import '../data/schedule_data.dart';
+import '../services/payment_service.dart';
 
 class NutritionInfo {
   final int calories;
@@ -186,6 +189,7 @@ class PaymentOption {
   final String subtitle;
   final String? badge;
   final IconData icon;
+  final bool isEnabled;
 
   const PaymentOption({
     required this.id,
@@ -193,6 +197,7 @@ class PaymentOption {
     required this.subtitle,
     this.badge,
     required this.icon,
+    this.isEnabled = true,
   });
 }
 
@@ -730,9 +735,7 @@ class NutriMealMenuController extends ChangeNotifier {
   // Price Calculations
   int get subtotal => _cartItems.fold(0, (sum, i) => sum + i.totalPrice);
 
-  int get tax => _cartItems.isEmpty
-      ? 0
-      : (subtotal == 93000 ? 4500 : (subtotal * 0.05).round());
+  int get tax => _cartItems.isEmpty ? 0 : (subtotal * 0.05).round();
 
   int get shippingFee => _cartItems.isEmpty ? 0 : 10000;
 
@@ -847,6 +850,10 @@ class NutriMealMenuController extends ChangeNotifier {
     _savedAddresses.clear();
     _customDeliveryAddress = null;
     _selectedSubscriptionPackage = null;
+    _activePendingPayment = null;
+    _cachedIdempotencyKey = null;
+    _cachedIdempotencyFingerprint = null;
+    _prefsService.clearCheckoutIdempotencyState().catchError((_) {});
     _voucherCode = null;
     _voucherDiscount = 0;
     _searchQuery = '';
@@ -909,47 +916,196 @@ class NutriMealMenuController extends ChangeNotifier {
     notifyListeners();
   }
 
+  static const Uuid _uuid = Uuid();
+
+  // Active Pending QRIS Payment & Idempotency State
+  QrisPayment? _activePendingPayment;
+  QrisPayment? get activePendingPayment => _activePendingPayment;
+  bool _isLoadingActivePayment = false;
+  bool get isLoadingActivePayment => _isLoadingActivePayment;
+  String? _cachedIdempotencyKey;
+  String? _cachedIdempotencyFingerprint;
+
+  String computeCartSignature({String? packageId}) {
+    if (packageId != null && packageId.isNotEmpty) {
+      return 'pkg:$packageId|v:${_voucherCode ?? ''}';
+    }
+    final parts = _cartItems.map((c) => '${c.item.id}:${c.quantity}').toList()
+      ..sort();
+    return 'cart:${parts.join(',')}|v:${_voucherCode ?? ''}';
+  }
+
+  String computeCheckoutFingerprint({
+    required String customerId,
+    String? packageId,
+    required String phone,
+    required String address,
+  }) {
+    final baseSig = computeCartSignature(packageId: packageId);
+    return '$baseSig|cust:${customerId.trim()}|ph:${phone.trim()}|addr:${address.trim()}';
+  }
+
+  Future<String> getOrCreateIdempotencyKey({
+    required String customerId,
+    String? packageId,
+    required String phone,
+    required String address,
+  }) async {
+    final fingerprint = computeCheckoutFingerprint(
+      customerId: customerId,
+      packageId: packageId,
+      phone: phone,
+      address: address,
+    );
+
+    if (_cachedIdempotencyKey != null &&
+        _cachedIdempotencyFingerprint == fingerprint) {
+      return _cachedIdempotencyKey!;
+    }
+
+    try {
+      final saved = await _prefsService.getCheckoutIdempotencyState();
+      if (saved != null &&
+          saved.fingerprint == fingerprint &&
+          saved.customerId == customerId.trim()) {
+        _cachedIdempotencyKey = saved.key;
+        _cachedIdempotencyFingerprint = saved.fingerprint;
+        return saved.key;
+      }
+    } catch (_) {}
+
+    final newKey = _uuid.v4();
+    _cachedIdempotencyKey = newKey;
+    _cachedIdempotencyFingerprint = fingerprint;
+    try {
+      await _prefsService.saveCheckoutIdempotencyState(
+        key: newKey,
+        fingerprint: fingerprint,
+        customerId: customerId.trim(),
+      );
+    } catch (_) {}
+    return newKey;
+  }
+
+  Future<String> rotateIdempotencyKey({
+    required String customerId,
+    String? packageId,
+    required String phone,
+    required String address,
+  }) async {
+    final fingerprint = computeCheckoutFingerprint(
+      customerId: customerId,
+      packageId: packageId,
+      phone: phone,
+      address: address,
+    );
+    final newKey = _uuid.v4();
+    _cachedIdempotencyKey = newKey;
+    _cachedIdempotencyFingerprint = fingerprint;
+    try {
+      await _prefsService.saveCheckoutIdempotencyState(
+        key: newKey,
+        fingerprint: fingerprint,
+        customerId: customerId.trim(),
+      );
+    } catch (_) {}
+    return newKey;
+  }
+
+  Future<void> clearCheckoutIdempotencyKey() async {
+    _cachedIdempotencyKey = null;
+    _cachedIdempotencyFingerprint = null;
+    try {
+      await _prefsService.clearCheckoutIdempotencyState();
+    } catch (_) {}
+  }
+
+  void setActivePendingPayment(QrisPayment? payment) {
+    if (payment != null && !payment.isPending) {
+      _activePendingPayment = null;
+    } else {
+      _activePendingPayment = payment;
+    }
+    notifyListeners();
+  }
+
+  Future<QrisPayment?> refreshActivePendingPayment(
+    String? authToken, {
+    PaymentService? service,
+  }) async {
+    if (authToken == null || authToken.trim().isEmpty) {
+      _activePendingPayment = null;
+      notifyListeners();
+      return null;
+    }
+    _isLoadingActivePayment = true;
+    try {
+      final api = service ?? PaymentService();
+      final active = await api.getActivePayment(authToken: authToken);
+      _activePendingPayment = (active != null && active.isPending)
+          ? active
+          : null;
+      return _activePendingPayment;
+    } catch (_) {
+      return _activePendingPayment;
+    } finally {
+      _isLoadingActivePayment = false;
+      notifyListeners();
+    }
+  }
+
   // Payment Options & Selected Payment
   String _selectedPaymentId = 'qris';
   String get selectedPaymentId => _selectedPaymentId;
 
   final List<PaymentOption> paymentOptions = const [
     PaymentOption(
-      id: 'gopay',
-      name: 'GoPay / NutriPay',
-      subtitle: 'Saldo: Rp 245.000',
-      badge: 'Terhubung',
-      icon: Icons.account_balance_wallet_rounded,
-    ),
-    PaymentOption(
       id: 'qris',
       name: 'QRIS Instant',
-      subtitle: 'Gopay, OVO, Dana, ShopeePay',
-      badge: 'Instant',
+      subtitle: 'GoPay, OVO, Dana, ShopeePay, Mobile Banking',
+      badge: 'Aktif',
       icon: Icons.qr_code_2_rounded,
+      isEnabled: true,
+    ),
+    PaymentOption(
+      id: 'gopay',
+      name: 'GoPay / E-Wallet Langsung',
+      subtitle: 'Tautan akun e-wallet sedang disiapkan',
+      badge: 'Segera hadir',
+      icon: Icons.account_balance_wallet_rounded,
+      isEnabled: false,
     ),
     PaymentOption(
       id: 'bca_va',
       name: 'BCA Virtual Account',
-      subtitle: 'Verifikasi Otomatis',
+      subtitle: 'Transfer otomatis via BCA',
+      badge: 'Segera hadir',
       icon: Icons.account_balance_rounded,
+      isEnabled: false,
     ),
     PaymentOption(
       id: 'mandiri_va',
       name: 'Mandiri Virtual Account',
-      subtitle: 'Verifikasi Otomatis',
+      subtitle: 'Transfer otomatis via Mandiri',
+      badge: 'Segera hadir',
       icon: Icons.account_balance_rounded,
+      isEnabled: false,
     ),
   ];
 
   PaymentOption get selectedPaymentOption {
     return paymentOptions.firstWhere(
-      (opt) => opt.id == _selectedPaymentId,
-      orElse: () => paymentOptions[0],
+      (opt) => opt.id == _selectedPaymentId && opt.isEnabled,
+      orElse: () => paymentOptions.firstWhere(
+        (opt) => opt.isEnabled,
+        orElse: () => paymentOptions[0],
+      ),
     );
   }
 
   void selectPaymentMethod(String id) {
+    final matching = paymentOptions.where((opt) => opt.id == id);
+    if (matching.isEmpty || !matching.first.isEnabled) return;
     _selectedPaymentId = id;
     notifyListeners();
   }

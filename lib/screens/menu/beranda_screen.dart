@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/models/qris_payment.dart';
 import '../../data/schedule_data.dart';
 import '../../widgets/main_top_bar.dart';
 import '../../widgets/menu_card.dart';
 import '../../widgets/nutri_meal_image.dart';
+import '../checkout_screen.dart';
 import '../menu_detail_screen.dart';
 
 class BerandaScreen extends StatefulWidget {
@@ -32,6 +35,13 @@ class _BerandaScreenState extends State<BerandaScreen> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final token = context.read<AuthController>().authToken;
+      context.read<NutriMealMenuController>().refreshActivePendingPayment(
+        token,
+      );
+    });
   }
 
   @override
@@ -42,7 +52,11 @@ class _BerandaScreenState extends State<BerandaScreen> {
 
   Future<void> _handleRefresh() async {
     final menuController = context.read<NutriMealMenuController>();
-    await menuController.fetchMenusFromApi();
+    final token = context.read<AuthController>().authToken;
+    await Future.wait([
+      menuController.fetchMenusFromApi(),
+      menuController.refreshActivePendingPayment(token),
+    ]);
   }
 
   @override
@@ -197,6 +211,15 @@ class _BerandaScreenState extends State<BerandaScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+
+                      if (menuController.activePendingPayment != null &&
+                          menuController.activePendingPayment!.isPending) ...[
+                        _buildPendingPaymentBanner(
+                          context,
+                          menuController.activePendingPayment!,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
 
                       // Subscription Banner Card (Langganan Katering Sehat)
                       Padding(
@@ -790,6 +813,103 @@ class _BerandaScreenState extends State<BerandaScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPendingPaymentBanner(BuildContext context, QrisPayment payment) {
+    final totalFormatted = payment.amount.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFFDE68A)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.qr_code_2_rounded,
+                color: Color(0xFFD97706),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Menunggu Pembayaran QRIS',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF92400E),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${payment.displaySummaryTitle} • Rp $totalFormatted',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFB45309),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => CheckoutScreen(existingPayment: payment),
+                  ),
+                );
+                if (context.mounted) {
+                  final token = context.read<AuthController>().authToken;
+                  context
+                      .read<NutriMealMenuController>()
+                      .refreshActivePendingPayment(token);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F8A50),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Lanjutkan Pembayaran',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

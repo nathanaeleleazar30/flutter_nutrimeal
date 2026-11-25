@@ -4,10 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/api_config.dart';
 import '../../core/widgets/center_feedback_toast.dart';
+import '../../data/models/qris_payment.dart';
 import 'order_tracking_screen.dart';
 
 class PaymentStatusScreen extends StatelessWidget {
+  final QrisPayment? payment;
   final String orderId;
   final String totalAmount;
   final String packageName;
@@ -21,21 +24,145 @@ class PaymentStatusScreen extends StatelessWidget {
 
   const PaymentStatusScreen({
     super.key,
-    this.orderId = 'NM-2026-88421',
-    this.totalAmount = 'Rp170.347',
-    this.packageName = 'Paket Katering Sehat NutriMeal',
+    this.payment,
+    this.orderId = '',
+    this.totalAmount = '',
+    this.packageName = '',
     this.paymentMethod = 'QRIS',
-    this.firstMealName = 'Grilled Chicken Rice Bowl',
-    this.firstMealImage =
-        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
-    this.deliveryTime = 'Hari Ini, 12:00 WIB',
+    this.firstMealName = '',
+    this.firstMealImage = '',
+    this.deliveryTime = '',
     this.estimatedMinutes = 30,
     this.isSubscription = false,
-    this.customerAddress = 'Jl. Soekarno Hatta No. 45, Malang',
+    this.customerAddress = '',
   });
+
+  String _formatRupiah(int amount) {
+    final str = amount.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(str[i]);
+    }
+    return 'Rp$buffer';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    final argPayment = payment ?? (routeArgs is QrisPayment ? routeArgs : null);
+    final argMap = routeArgs is Map
+        ? Map<String, dynamic>.from(routeArgs)
+        : const <String, dynamic>{};
+
+    final resolvedOrderId = orderId.trim().isNotEmpty
+        ? orderId.trim()
+        : (argPayment?.orderId ?? argMap['orderId']?.toString() ?? '').trim();
+    final resolvedAmount = totalAmount.trim().isNotEmpty
+        ? totalAmount.trim()
+        : (argPayment != null
+              ? _formatRupiah(argPayment.amount)
+              : (argMap['totalAmount']?.toString() ?? '').trim());
+    final resolvedPackage = packageName.trim().isNotEmpty
+        ? packageName.trim()
+        : (argPayment?.packageName ??
+              argMap['packageName']?.toString() ??
+              'Pesanan NutriMeal');
+    final resolvedFirstMeal = firstMealName.trim().isNotEmpty
+        ? firstMealName.trim()
+        : (argPayment?.firstMealName ??
+              argMap['firstMealName']?.toString() ??
+              resolvedPackage);
+    final resolvedFirstMealImage = firstMealImage.trim().isNotEmpty
+        ? firstMealImage.trim()
+        : (argPayment?.firstMealImage ??
+              argMap['firstMealImage']?.toString() ??
+              '');
+    final resolvedDeliveryTime = deliveryTime.trim().isNotEmpty
+        ? deliveryTime.trim()
+        : (argPayment?.deliveryTime ??
+              argMap['deliveryTime']?.toString() ??
+              '11:30 - 13:00 WIB');
+    final resolvedIsSubscription =
+        isSubscription ||
+        (argPayment?.isSubscription ?? (argMap['isSubscription'] == true));
+    final resolvedAddress = customerAddress.trim().isNotEmpty
+        ? customerAddress.trim()
+        : (argPayment?.customerAddress ??
+              argMap['customerAddress']?.toString() ??
+              '');
+
+    if (resolvedOrderId.isEmpty || resolvedAmount.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.receipt_long_rounded,
+                        size: 54,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Data Pembayaran Tidak Tersedia',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Silakan selesaikan pembayaran QRIS terlebih dahulu atau cek pesanan aktif Anda.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(
+                            context,
+                          ).pushNamedAndRemoveUntil('/home', (route) => false);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F8A50),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(
+                          'Kembali ke Beranda',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
@@ -104,7 +231,7 @@ class PaymentStatusScreen extends StatelessWidget {
 
                     // Amount
                     Text(
-                      totalAmount,
+                      resolvedAmount,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -114,18 +241,35 @@ class PaymentStatusScreen extends StatelessWidget {
                     const SizedBox(height: 28),
 
                     // Order Info Card
-                    _buildOrderInfoCard(context),
+                    _buildOrderInfoCard(
+                      context,
+                      resolvedOrderId: resolvedOrderId,
+                      resolvedPackage: resolvedPackage,
+                    ),
                     const SizedBox(height: 16),
 
                     // Upcoming Meal Card
-                    _buildUpcomingMealCard(),
+                    _buildUpcomingMealCard(
+                      resolvedFirstMeal: resolvedFirstMeal,
+                      resolvedFirstMealImage: resolvedFirstMealImage,
+                      resolvedDeliveryTime: resolvedDeliveryTime,
+                      resolvedIsSubscription: resolvedIsSubscription,
+                    ),
                   ],
                 ),
               ),
             ),
 
             // Bottom Buttons
-            _buildBottomButtons(context),
+            _buildBottomButtons(
+              context,
+              resolvedOrderId: resolvedOrderId,
+              resolvedPackage: resolvedPackage,
+              resolvedAmount: resolvedAmount,
+              resolvedAddress: resolvedAddress,
+              resolvedDeliveryTime: resolvedDeliveryTime,
+              resolvedIsSubscription: resolvedIsSubscription,
+            ),
           ],
         ),
       ),
@@ -188,7 +332,11 @@ class PaymentStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderInfoCard(BuildContext context) {
+  Widget _buildOrderInfoCard(
+    BuildContext context, {
+    required String resolvedOrderId,
+    required String resolvedPackage,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -212,7 +360,7 @@ class PaymentStatusScreen extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    '#$orderId',
+                    '#$resolvedOrderId',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
@@ -222,7 +370,9 @@ class PaymentStatusScreen extends StatelessWidget {
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: () {
-                      Clipboard.setData(ClipboardData(text: '#$orderId'));
+                      Clipboard.setData(
+                        ClipboardData(text: '#$resolvedOrderId'),
+                      );
                       CenterFeedbackToast.showSuccess(
                         context,
                         message: 'ID Pesanan disalin ke clipboard',
@@ -267,7 +417,7 @@ class PaymentStatusScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  packageName,
+                  resolvedPackage,
                   textAlign: TextAlign.right,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12.5,
@@ -308,7 +458,15 @@ class PaymentStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildUpcomingMealCard() {
+  Widget _buildUpcomingMealCard({
+    required String resolvedFirstMeal,
+    required String resolvedFirstMealImage,
+    required String resolvedDeliveryTime,
+    required bool resolvedIsSubscription,
+  }) {
+    final effectiveImageUrl = resolvedFirstMealImage.isNotEmpty
+        ? ApiConfig.resolveImageUrl(resolvedFirstMealImage)
+        : '';
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -328,21 +486,31 @@ class PaymentStatusScreen extends StatelessWidget {
           // Food Image
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              firstMealImage,
-              width: 58,
-              height: 58,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                width: 58,
-                height: 58,
-                color: const Color(0xFFDCFCE7),
-                child: const Icon(
-                  Icons.restaurant_rounded,
-                  color: Color(0xFF16A34A),
-                ),
-              ),
-            ),
+            child: effectiveImageUrl.isNotEmpty
+                ? Image.network(
+                    effectiveImageUrl,
+                    width: 58,
+                    height: 58,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      width: 58,
+                      height: 58,
+                      color: const Color(0xFFDCFCE7),
+                      child: const Icon(
+                        Icons.restaurant_rounded,
+                        color: Color(0xFF16A34A),
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 58,
+                    height: 58,
+                    color: const Color(0xFFDCFCE7),
+                    child: const Icon(
+                      Icons.restaurant_rounded,
+                      color: Color(0xFF16A34A),
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
 
@@ -359,19 +527,23 @@ class PaymentStatusScreen extends StatelessWidget {
                       color: Color(0xFF16A34A),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      deliveryTime,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF16A34A),
+                    Expanded(
+                      child: Text(
+                        resolvedDeliveryTime,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF16A34A),
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  firstMealName,
+                  resolvedFirstMeal,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
@@ -382,7 +554,7 @@ class PaymentStatusScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  isSubscription
+                  resolvedIsSubscription
                       ? 'Pengiriman katering • Estimasi tiba $estimatedMinutes menit'
                       : 'Sedang disiapkan di dapur • Estimasi tiba $estimatedMinutes menit',
                   style: GoogleFonts.plusJakartaSans(
@@ -398,7 +570,15 @@ class PaymentStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomButtons(BuildContext context) {
+  Widget _buildBottomButtons(
+    BuildContext context, {
+    required String resolvedOrderId,
+    required String resolvedPackage,
+    required String resolvedAmount,
+    required String resolvedAddress,
+    required String resolvedDeliveryTime,
+    required bool resolvedIsSubscription,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -423,8 +603,9 @@ class PaymentStatusScreen extends StatelessWidget {
                 final controller = context.read<NutriMealMenuController>();
                 controller.clearCart();
                 controller.clearSubscriptionPackage();
+                controller.setActivePendingPayment(null);
 
-                if (isSubscription) {
+                if (resolvedIsSubscription) {
                   Navigator.of(context).pushNamedAndRemoveUntil(
                     '/langganan-saya',
                     (route) => false,
@@ -433,27 +614,27 @@ class PaymentStatusScreen extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => OrderTrackingScreen(
-                        orderId: orderId,
-                        packageName: packageName,
-                        totalAmount: totalAmount,
-                        customerAddress: customerAddress,
-                        deliveryTime: deliveryTime,
+                        orderId: resolvedOrderId,
+                        packageName: resolvedPackage,
+                        totalAmount: resolvedAmount,
+                        customerAddress: resolvedAddress,
+                        deliveryTime: resolvedDeliveryTime,
                         estimatedMinutes: estimatedMinutes,
-                        isSubscription: isSubscription,
+                        isSubscription: resolvedIsSubscription,
                       ),
                     ),
                   );
                 }
               },
               icon: Icon(
-                isSubscription
+                resolvedIsSubscription
                     ? Icons.calendar_month_rounded
                     : Icons.two_wheeler_rounded,
                 color: Colors.white,
                 size: 20,
               ),
               label: Text(
-                isSubscription
+                resolvedIsSubscription
                     ? 'Lihat Jadwal Katering Saya'
                     : 'Lacak Status Pesanan (Live Tracking)',
                 style: GoogleFonts.plusJakartaSans(

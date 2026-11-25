@@ -332,7 +332,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => OrderTrackingScreen(
-                  orderId: item['order_id']?.toString() ?? 'ORD-8842',
+                  orderId: item['order_id']?.toString() ?? '',
                   packageName:
                       item['package_name']?.toString() ??
                       'Paket Menu NutriMeal',

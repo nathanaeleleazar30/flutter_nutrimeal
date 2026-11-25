@@ -69,13 +69,19 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Option 1: QRIS (Selected in screenshot)
+                    // Option 1: QRIS (Active)
                     _buildQrisCard(
                       isSelected: _selectedMethod == 'qris',
                       onTap: () {
                         setState(() => _selectedMethod = 'qris');
                       },
                     ),
+                    const SizedBox(height: 12),
+
+                    // Metode lain yang masih disabled ("Segera hadir")
+                    ...controller.paymentOptions
+                        .where((opt) => opt.id != 'qris')
+                        .map(_buildUnavailableMethodCard),
                   ],
                 ),
               ),
@@ -317,6 +323,78 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     );
   }
 
+  Widget _buildUnavailableMethodCard(PaymentOption option) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Opacity(
+        opacity: 0.65,
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                option.icon,
+                color: const Color(0xFF64748B),
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    option.name,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    option.subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                option.badge ?? 'Segera hadir',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF475569),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomBar(
     BuildContext context,
     NutriMealMenuController controller,
@@ -346,30 +424,12 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                   color: const Color(0xFF64748B),
                 ),
               ),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Rp 120.000 ',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF94A3B8),
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                    TextSpan(
-                      text: _formatRupiah(
-                        controller.grandTotal > 0
-                            ? controller.grandTotal
-                            : 95000,
-                      ),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ],
+              Text(
+                _formatRupiah(controller.grandTotal),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textDark,
                 ),
               ),
             ],

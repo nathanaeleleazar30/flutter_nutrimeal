@@ -5,6 +5,7 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/center_feedback_toast.dart';
+import '../../data/models/qris_payment.dart';
 import '../address_screen.dart';
 import '../admin_chat_screen.dart';
 import '../checkout_screen.dart';
@@ -20,6 +21,18 @@ class KeranjangScreen extends StatefulWidget {
 
 class _KeranjangScreenState extends State<KeranjangScreen> {
   int _selectedAddressIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final token = context.read<AuthController>().authToken;
+      context.read<NutriMealMenuController>().refreshActivePendingPayment(
+        token,
+      );
+    });
+  }
 
   String _formatRupiah(int amount) {
     final str = amount.toString();
@@ -447,6 +460,13 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
           children: [
             // Top Header (Soft mint tint matching screenshot 1)
             _buildHeader(),
+
+            if (menuController.activePendingPayment != null &&
+                menuController.activePendingPayment!.isPending)
+              _buildPendingQrisBanner(
+                menuController,
+                menuController.activePendingPayment!,
+              ),
 
             // Content
             Expanded(
@@ -1069,12 +1089,108 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
     );
   }
 
+  Widget _buildPendingQrisBanner(
+    NutriMealMenuController menuController,
+    QrisPayment payment,
+  ) {
+    final currentSig = menuController.computeCartSignature();
+    final cartChanged =
+        menuController.cartItems.isNotEmpty &&
+        payment.cartSignature != null &&
+        payment.cartSignature!.isNotEmpty &&
+        payment.cartSignature != currentSig;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cartChanged ? const Color(0xFFFFF7ED) : const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cartChanged
+              ? const Color(0xFFFDBA74)
+              : const Color(0xFFFDE68A),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.qr_code_2_rounded,
+                color: Color(0xFFD97706),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Menunggu pembayaran QRIS (${_formatRupiah(payment.amount)})',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF92400E),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (cartChanged) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Isi keranjang berubah. Batalkan QRIS lama terlebih dahulu jika ingin membuat QRIS dengan isi keranjang baru.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF9A3412),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CheckoutScreen(existingPayment: payment),
+                  ),
+                );
+                if (mounted) {
+                  final token = context.read<AuthController>().authToken;
+                  context
+                      .read<NutriMealMenuController>()
+                      .refreshActivePendingPayment(token);
+                }
+              },
+              icon: const Icon(Icons.open_in_new_rounded, size: 16),
+              label: Text(
+                'Lanjutkan Pembayaran',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF0F8A50),
+                side: const BorderSide(color: Color(0xFF0F8A50)),
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPriceSummary(NutriMealMenuController controller) {
-    final subtotal = controller.subtotal > 0 ? controller.subtotal : 93000;
-    final tax = controller.tax > 0 ? controller.tax : 4500;
-    final shipping = controller.shippingFee > 0
-        ? controller.shippingFee
-        : 10000;
+    final subtotal = controller.subtotal;
+    final tax = controller.tax;
+    final shipping = controller.shippingFee;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1175,9 +1291,7 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
   }
 
   Widget _buildBottomCheckoutBar(NutriMealMenuController controller) {
-    final grandTotal = controller.grandTotal > 0
-        ? controller.grandTotal
-        : 107500;
+    final grandTotal = controller.grandTotal;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -1237,6 +1351,34 @@ class _KeranjangScreenState extends State<KeranjangScreen> {
                     message: !hasAddress
                         ? 'Mohon lengkapi atau pilih alamat pengiriman Anda terlebih dahulu.'
                         : 'Mohon lengkapi nomor WhatsApp untuk pengantaran katering.',
+                  );
+                  return;
+                }
+
+                final pending = controller.activePendingPayment;
+                if (pending != null && pending.isPending) {
+                  final currentSig = controller.computeCartSignature();
+                  final cartChanged =
+                      pending.cartSignature != null &&
+                      pending.cartSignature!.isNotEmpty &&
+                      pending.cartSignature != currentSig;
+                  if (cartChanged) {
+                    CenterFeedbackToast.showError(
+                      context,
+                      message:
+                          'Anda masih memiliki QRIS menunggu pembayaran. Batalkan QRIS lama terlebih dahulu atau lanjutkan bayar.',
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CheckoutScreen()),
+                    );
+                    return;
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CheckoutScreen(existingPayment: pending),
+                    ),
                   );
                   return;
                 }
