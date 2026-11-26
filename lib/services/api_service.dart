@@ -234,7 +234,7 @@ class ApiService {
       'category': 'Menu & Diet',
       'question': 'Apakah menu NutriMeal bisa disesuaikan dengan alergi saya?',
       'answer':
-          'Tentu saja! Anda dapat mengatur preferensi alergi pada menu Profil > Kelengkapan Data Nutrisi, dan NutriBot akan menyaring bahan makanan tersebut.',
+          'Tentu saja! Anda dapat mengatur preferensi alergi pada menu AI Planner, dan NutriBot akan menyaring bahan makanan tersebut.',
       'is_active': 1,
     },
     {
@@ -258,10 +258,12 @@ class ApiService {
   Future<List<Map<String, dynamic>>> fetchFaqs() async {
     try {
       final res = await _get(ApiConfig.candidateFaqsUrls);
-      if (res != null &&
-          res['data'] is List &&
-          (res['data'] as List).isNotEmpty) {
-        return (res['data'] as List).cast<Map<String, dynamic>>();
+      if (res != null && res['data'] is List) {
+        final raw = (res['data'] as List).cast<Map<String, dynamic>>();
+        return raw.where((f) {
+          final active = f['is_active'];
+          return active == null || active == 1 || active == true;
+        }).toList();
       }
     } catch (_) {}
     return defaultFaqs;

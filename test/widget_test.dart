@@ -440,7 +440,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Informasi Pribadi'), findsOneWidget);
-    expect(find.text('Kelengkapan Data Nutrisi'), findsOneWidget);
+    expect(find.text('Kelengkapan Data Nutrisi'), findsNothing);
+    expect(find.text('Kontak & Akun'), findsOneWidget);
     expect(find.text('Simpan Perubahan'), findsOneWidget);
   });
 

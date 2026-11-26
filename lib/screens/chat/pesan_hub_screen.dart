@@ -117,7 +117,7 @@ class _PesanHubScreenState extends State<PesanHubScreen> {
               ),
               clipBehavior: Clip.antiAlias,
               child: Image.asset(
-                'assets/images/profile_avatar.jpg',
+                'assets/images/app_logo.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: const Color(0xFFDCFCE7),
