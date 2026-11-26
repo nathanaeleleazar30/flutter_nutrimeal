@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'controllers/auth_controller.dart';
@@ -17,7 +17,6 @@ import 'screens/login_screen.dart';
 import 'screens/main_navigation_shell.dart';
 import 'screens/notifikasi_screen.dart';
 import 'screens/preview_shell.dart';
-import 'screens/order_tracking_screen.dart';
 import 'screens/payment_method_screen.dart';
 import 'screens/payment_status_screen.dart';
 import 'screens/voucher_promo_screen.dart';
@@ -66,6 +65,13 @@ class NutriMealApp extends StatelessWidget {
       navigatorKey: NotificationService.navigatorKey,
       title: 'NutriMeal',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Bridge sementara untuk dependency pihak ketiga (mis. flutter_map) yang masih memakai legacy Theme/Localizations.
+        // ignore: deprecated_member_use
+        return MaterialUiCompatibilityBridge(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.mintBackground,
@@ -93,7 +99,6 @@ class NutriMealApp extends StatelessWidget {
         '/checkout': (context) => const CheckoutScreen(),
         '/payment-method': (context) => const PaymentMethodScreen(),
         '/payment-status': (context) => const PaymentStatusScreen(),
-        '/order-tracking': (context) => const OrderTrackingScreen(),
         '/voucher-promo': (context) => const VoucherPromoScreen(),
         '/address': (context) => const AddressScreen(),
         '/profile': (context) => const ProfileScreen(),

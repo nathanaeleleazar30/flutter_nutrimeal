@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -7,9 +7,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/api_config.dart';
 import '../../core/widgets/center_feedback_toast.dart';
 import '../../data/models/qris_payment.dart';
-import 'order_tracking_screen.dart';
 
-class PaymentStatusScreen extends StatelessWidget {
+class PaymentStatusScreen extends StatefulWidget {
   final QrisPayment? payment;
   final String orderId;
   final String totalAmount;
@@ -37,6 +36,113 @@ class PaymentStatusScreen extends StatelessWidget {
     this.customerAddress = '',
   });
 
+  @override
+  State<PaymentStatusScreen> createState() => _PaymentStatusScreenState();
+}
+
+class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
+  bool _hasShownPopup = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hasShownPopup) return;
+      final routeArgs = ModalRoute.of(context)?.settings.arguments;
+      final argPayment =
+          widget.payment ?? (routeArgs is QrisPayment ? routeArgs : null);
+      final argMap = routeArgs is Map
+          ? Map<String, dynamic>.from(routeArgs)
+          : const <String, dynamic>{};
+      final hasOrderId =
+          widget.orderId.trim().isNotEmpty ||
+          (argPayment?.orderId ?? argMap['orderId']?.toString() ?? '')
+              .trim()
+              .isNotEmpty;
+      if (!hasOrderId) return;
+      _hasShownPopup = true;
+      _showNotificationPopup(context);
+    });
+  }
+
+  void _showNotificationPopup(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Color(0xFFDCFCE7),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_active_rounded,
+                color: Color(0xFF0F8A50),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Pembayaran Berhasil!',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Pesanan Anda sedang diproses. Anda dapat melihat status dan detail pesanan di menu Notifikasi.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: const Color(0xFF475569),
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(
+              'Nanti',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              Navigator.of(context).pushNamed('/notifikasi');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F8A50),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Lihat di Notifikasi',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatRupiah(int amount) {
     final str = amount.toString();
     final buffer = StringBuffer();
@@ -51,6 +157,16 @@ class PaymentStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final payment = widget.payment;
+    final orderId = widget.orderId;
+    final totalAmount = widget.totalAmount;
+    final packageName = widget.packageName;
+    final firstMealName = widget.firstMealName;
+    final firstMealImage = widget.firstMealImage;
+    final deliveryTime = widget.deliveryTime;
+    final isSubscription = widget.isSubscription;
+    final customerAddress = widget.customerAddress;
+
     final routeArgs = ModalRoute.of(context)?.settings.arguments;
     final argPayment = payment ?? (routeArgs is QrisPayment ? routeArgs : null);
     final argMap = routeArgs is Map
@@ -444,7 +560,7 @@ class PaymentStatusScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                paymentMethod,
+                widget.paymentMethod,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w800,
@@ -555,8 +671,8 @@ class PaymentStatusScreen extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   resolvedIsSubscription
-                      ? 'Pengiriman katering • Estimasi tiba $estimatedMinutes menit'
-                      : 'Sedang disiapkan di dapur • Estimasi tiba $estimatedMinutes menit',
+                      ? 'Pengiriman katering • Estimasi tiba ${widget.estimatedMinutes} menit'
+                      : 'Sedang disiapkan di dapur • Estimasi tiba ${widget.estimatedMinutes} menit',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: const Color(0xFF64748B),
@@ -594,7 +710,7 @@ class PaymentStatusScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Button 1 (Primary Action): Lacak Pesanan / Lihat Jadwal Katering
+          // Button 1 (Primary Action): Lihat di Notifikasi / Lihat Jadwal Katering
           SizedBox(
             width: double.infinity,
             height: 48,
@@ -611,32 +727,20 @@ class PaymentStatusScreen extends StatelessWidget {
                     (route) => false,
                   );
                 } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => OrderTrackingScreen(
-                        orderId: resolvedOrderId,
-                        packageName: resolvedPackage,
-                        totalAmount: resolvedAmount,
-                        customerAddress: resolvedAddress,
-                        deliveryTime: resolvedDeliveryTime,
-                        estimatedMinutes: estimatedMinutes,
-                        isSubscription: resolvedIsSubscription,
-                      ),
-                    ),
-                  );
+                  Navigator.of(context).pushNamed('/notifikasi');
                 }
               },
               icon: Icon(
                 resolvedIsSubscription
                     ? Icons.calendar_month_rounded
-                    : Icons.two_wheeler_rounded,
+                    : Icons.notifications_active_rounded,
                 color: Colors.white,
                 size: 20,
               ),
               label: Text(
                 resolvedIsSubscription
                     ? 'Lihat Jadwal Katering Saya'
-                    : 'Lacak Status Pesanan (Live Tracking)',
+                    : 'Lihat di Notifikasi',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,

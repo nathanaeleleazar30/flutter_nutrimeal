@@ -1,12 +1,13 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import '../core/constants/api_config.dart';
+import '../data/local/preferences/preferences_service.dart';
 import '../data/local/secure/secure_storage_service.dart';
 
 /// Top-level background message handler wajib untuk FCM saat aplikasi di background / terminated
@@ -79,8 +80,7 @@ class NotificationService {
   }) async {
     final now = DateTime.now();
     final effectiveRoute =
-        route ??
-        (type == 'subscription' ? '/langganan-saya' : '/order-tracking');
+        route ?? (type == 'subscription' ? '/langganan-saya' : '/notifikasi');
 
     final notifItem = {
       'id': now.millisecondsSinceEpoch,
@@ -99,11 +99,99 @@ class NotificationService {
 
     _inMemoryNotifications.insert(0, notifItem);
 
+    final accountKey = (customerId ?? '').trim().isNotEmpty
+        ? customerId!.trim()
+        : 'guest';
+    try {
+      final existing = await PreferencesService.instance
+          .getNotificationsForAccount(accountKey);
+      existing.insert(0, notifItem);
+      if (existing.length > 50) {
+        existing.removeRange(50, existing.length);
+      }
+      await PreferencesService.instance.saveNotificationsForAccount(
+        accountKey,
+        existing,
+      );
+    } catch (_) {}
+
     // Kirim pop-up banner notifikasi lokal ke OS perangkat
     await showInstantNotification(
       title: title,
       body: body,
       payload: effectiveRoute,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getSavedNotifications(
+    String? customerId,
+  ) async {
+    final accountKey = (customerId ?? '').trim().isNotEmpty
+        ? customerId!.trim()
+        : 'guest';
+    List<Map<String, dynamic>> saved = [];
+    try {
+      saved = await PreferencesService.instance
+          .getNotificationsForAccount(accountKey)
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    final merged = <Map<String, dynamic>>[];
+    final seenKeys = <String>{};
+
+    void addUnique(Map<String, dynamic> item) {
+      final key = '${item['id'] ?? ''}_${item['order_id'] ?? ''}';
+      if (seenKeys.add(key)) {
+        merged.add(Map<String, dynamic>.from(item));
+      }
+    }
+
+    for (final item in _inMemoryNotifications) {
+      final itemCust = item['customer_id']?.toString().trim() ?? '';
+      if (itemCust.isEmpty || itemCust == accountKey) {
+        addUnique(item);
+      }
+    }
+    for (final item in saved) {
+      addUnique(item);
+    }
+    return merged;
+  }
+
+  Future<void> markSingleSavedRead(String? customerId, dynamic id) async {
+    final accountKey = (customerId ?? '').trim().isNotEmpty
+        ? customerId!.trim()
+        : 'guest';
+    final saved = await PreferencesService.instance.getNotificationsForAccount(
+      accountKey,
+    );
+    bool changed = false;
+    for (final item in saved) {
+      if ('${item['id']}' == '$id') {
+        item['is_read'] = true;
+        changed = true;
+      }
+    }
+    if (changed) {
+      await PreferencesService.instance.saveNotificationsForAccount(
+        accountKey,
+        saved,
+      );
+    }
+  }
+
+  Future<void> markAllSavedRead(String? customerId) async {
+    final accountKey = (customerId ?? '').trim().isNotEmpty
+        ? customerId!.trim()
+        : 'guest';
+    final saved = await PreferencesService.instance.getNotificationsForAccount(
+      accountKey,
+    );
+    for (final item in saved) {
+      item['is_read'] = true;
+    }
+    await PreferencesService.instance.saveNotificationsForAccount(
+      accountKey,
+      saved,
     );
   }
 

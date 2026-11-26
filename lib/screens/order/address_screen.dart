@@ -1,5 +1,5 @@
-﻿import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -31,8 +31,21 @@ class _AddressScreenState extends State<AddressScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final controller = context.read<NutriMealMenuController>();
+      final auth = context.read<AuthController>();
+      final accountKey = (auth.customerId ?? '').trim().isNotEmpty
+          ? auth.customerId!.trim()
+          : (auth.currentUserEmail ?? '').trim();
+      if (accountKey.isNotEmpty) {
+        await controller.syncAccountData(
+          accountKey,
+          fallbackAddress: auth.customerAddress,
+          fallbackName: auth.currentUserName,
+          fallbackPhone: auth.customerPhone,
+        );
+      }
+      if (!mounted) return;
       setState(() {
         _selectedAddressId = controller.deliveryAddress.id.isNotEmpty
             ? controller.deliveryAddress.id
