@@ -180,6 +180,25 @@ class PaymentService {
     return QrisPayment.fromJson(Map<String, dynamic>.from(data));
   }
 
+  Future<QrisPayment> simulatePay({
+    required String authToken,
+    required String paymentId,
+  }) async {
+    final json = await _sendJson(
+      method: 'POST',
+      url: ApiConfig.paymentSimulatePayUrl(paymentId),
+      authToken: authToken,
+      body: const {},
+    );
+    final data = json['data'];
+    if (data is! Map) {
+      throw const PaymentApiException(
+        message: 'Respons simulasi pembayaran tidak valid.',
+      );
+    }
+    return QrisPayment.fromJson(Map<String, dynamic>.from(data));
+  }
+
   Future<Map<String, dynamic>> _sendJson({
     required String method,
     required String url,

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1586,6 +1586,53 @@ class _CheckoutScreenState extends State<CheckoutScreen>
                           'Salin QR URL (Debug Sandbox)',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ElevatedButton.icon(
+                        onPressed: _isCheckingStatus
+                            ? null
+                            : () async {
+                                final token = context
+                                    .read<AuthController>()
+                                    .authToken;
+                                if (token == null) return;
+                                setState(() => _isCheckingStatus = true);
+                                try {
+                                  final paid = await _paymentService.simulatePay(
+                                    authToken: token,
+                                    paymentId: payment.paymentId,
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _isCheckingStatus = false);
+                                  await _handlePaymentSucceeded(paid);
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  setState(() => _isCheckingStatus = false);
+                                  CenterFeedbackToast.showError(
+                                    context,
+                                    message: 'Gagal simulasi: $e',
+                                  );
+                                }
+                              },
+                        icon: const Icon(Icons.flash_on_rounded, size: 16),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F8A50),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        label: Text(
+                          '⚡ Simulasikan Bayar Lunas (Sandbox)',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
