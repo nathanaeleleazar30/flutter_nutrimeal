@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '172.16.3.77';
+  static const String hostLanIp = '172.16.3.250';
 
   /// URL Produksi Backend (bisa disetel via build flag: --dart-define=API_URL=https://api.domain.com)
   static const String productionApiUrl = String.fromEnvironment('API_URL');
@@ -147,6 +147,8 @@ class ApiConfig {
       '$baseUrl/api/payments/${Uri.encodeComponent(paymentId)}';
   static String paymentCancelUrl(String paymentId) =>
       '$baseUrl/api/payments/${Uri.encodeComponent(paymentId)}/cancel';
+  static String paymentSimulatePayUrl(String paymentId) =>
+      '$baseUrl/api/payments/${Uri.encodeComponent(paymentId)}/simulate-pay';
 
   /// Mengubah path gambar relatif (seperti /uploads/...) menjadi URL HTTP lengkap
   static String resolveImageUrl(String? rawUrl, {String? activeBaseUrl}) {
