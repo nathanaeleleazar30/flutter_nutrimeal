@@ -325,6 +325,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                     // Title
                     Text(
                       'Pembayaran Berhasil!',
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -348,6 +349,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                     // Amount
                     Text(
                       resolvedAmount,
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -456,7 +458,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -473,47 +475,55 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                   color: const Color(0xFF64748B),
                 ),
               ),
-              Row(
-                children: [
-                  Text(
-                    '#$resolvedOrderId',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () {
-                      Clipboard.setData(
-                        ClipboardData(text: '#$resolvedOrderId'),
-                      );
-                      CenterFeedbackToast.showSuccess(
-                        context,
-                        message: 'ID Pesanan disalin ke clipboard',
-                      );
-                    },
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.copy_rounded,
-                          size: 12,
-                          color: Color(0xFF16A34A),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '#$resolvedOrderId',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
                         ),
-                        const SizedBox(width: 2),
-                        Text(
-                          'Salin',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF16A34A),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(
+                          ClipboardData(text: '#$resolvedOrderId'),
+                        );
+                        CenterFeedbackToast.showSuccess(
+                          context,
+                          message: 'ID Pesanan disalin ke clipboard',
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.copy_rounded,
+                            size: 12,
+                            color: Color(0xFF16A34A),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 2),
+                          Text(
+                            'Salin',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF16A34A),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
