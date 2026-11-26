@@ -25,13 +25,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   String _phone = '';
   String? _avatarUrl;
   File? _localImageFile;
+  XFile? _pendingImageFile;
   bool _isSaving = false;
 
   // Physical & Nutrition Data — akun baru kosongan
   double _heightCm = 0.0;
   double _weightKg = 0.0;
   int _age = 0;
-  double _nutritionPercent = 0.0;
   List<String> _selectedAllergies = [];
   String _dietGoal = 'Belum diatur';
 
@@ -59,20 +59,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       _age = auth.customerAge;
       _selectedAllergies = List.from(auth.customerAllergies);
       _dietGoal = auth.customerDietGoal;
-      _nutritionPercent = (_heightCm > 0 && _weightKg > 0) ? 0.85 : 0.0;
     });
-  }
-
-  double get _bmi => (_heightCm > 0 && _weightKg > 0)
-      ? _weightKg / ((_heightCm / 100) * (_heightCm / 100))
-      : 0.0;
-
-  String get _bmiCategory {
-    if (_bmi <= 0) return 'Belum dihitung';
-    if (_bmi < 18.5) return 'Kurang (Underweight)';
-    if (_bmi < 24.9) return 'Ideal & Normal (Healthy)';
-    if (_bmi < 29.9) return 'Kelebihan (Overweight)';
-    return 'Obesitas';
   }
 
   void _showEditNameDialog() {
@@ -203,6 +190,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       if (!mounted) return;
       setState(() {
         _localImageFile = localFile;
+        _pendingImageFile = pickedFile;
         _isSaving = true;
       });
       _showSuccessToast('Mengunggah foto profil dari perangkat ke server...');
@@ -213,6 +201,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         if (!mounted) return;
         setState(() {
           _avatarUrl = uploadedUrl;
+          _pendingImageFile = null;
         });
         final ok = await auth.updateCustomerProfile(avatarUrl: uploadedUrl);
         if (!mounted) return;
@@ -221,7 +210,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             'Foto profil baru berhasil diunggah & disimpan ke MySQL!',
           );
         } else {
-          _showSuccessToast('Foto profil berhasil diunggah!');
+          _showErrorToast(
+            'Foto terunggah, tetapi gagal menyimpan ke database server.',
+          );
         }
       } else {
         if (!mounted) return;
@@ -549,6 +540,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     Navigator.pop(ctx);
                     setState(() {
                       _localImageFile = null;
+                      _pendingImageFile = null;
                       _avatarUrl = null;
                     });
                     final auth = context.read<AuthController>();
@@ -561,440 +553,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  void _showNutritionDataSheet() {
-    double tempHeight = _heightCm;
-    double tempWeight = _weightKg;
-    int tempAge = _age;
-    List<String> tempAllergies = List.from(_selectedAllergies);
-    String tempDietGoal = _dietGoal;
-
-    final allAllergies = [
-      'Kacang',
-      'Seafood',
-      'Gluten',
-      'Susu Sapi',
-      'Telur',
-      'Rendah Gula',
-      'Tidak Ada Alergi',
-    ];
-    final allGoals = [
-      'Defisit Kalori',
-      'Maintenance',
-      'Tinggi Protein',
-      'Rendah Karbo',
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final bmiVal =
-                tempWeight / ((tempHeight / 100) * (tempHeight / 100));
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 18,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header Modal
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFDCFCE7),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.fitness_center_rounded,
-                                  color: Color(0xFF16A34A),
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Data Fisik & Nutrisi',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textDark,
-                                ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 20),
-                            onPressed: () => Navigator.pop(ctx),
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 18),
-
-                      // Measurements (Height & Weight)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tinggi Badan',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11,
-                                      color: const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${tempHeight.toInt()} cm',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          InkWell(
-                                            onTap: () => setSheetState(
-                                              () =>
-                                                  tempHeight = (tempHeight - 1)
-                                                      .clamp(120, 220),
-                                            ),
-                                            child: const Icon(
-                                              Icons.remove_circle_outline,
-                                              size: 20,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          InkWell(
-                                            onTap: () => setSheetState(
-                                              () =>
-                                                  tempHeight = (tempHeight + 1)
-                                                      .clamp(120, 220),
-                                            ),
-                                            child: const Icon(
-                                              Icons.add_circle_outline,
-                                              size: 20,
-                                              color: Color(0xFF0F8A50),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Berat Badan',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11,
-                                      color: const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${tempWeight.toStringAsFixed(1)} kg',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          InkWell(
-                                            onTap: () => setSheetState(
-                                              () => tempWeight =
-                                                  (tempWeight - 0.5).clamp(
-                                                    30,
-                                                    180,
-                                                  ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.remove_circle_outline,
-                                              size: 20,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          InkWell(
-                                            onTap: () => setSheetState(
-                                              () => tempWeight =
-                                                  (tempWeight + 0.5).clamp(
-                                                    30,
-                                                    180,
-                                                  ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.add_circle_outline,
-                                              size: 20,
-                                              color: Color(0xFF0F8A50),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-
-                      // BMI Live Preview Card
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFECFDF5),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFA7F3D0)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.health_and_safety_rounded,
-                              color: Color(0xFF047857),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'BMI: ${bmiVal.toStringAsFixed(1)} (${bmiVal < 18.5
-                                    ? "Underweight"
-                                    : bmiVal < 25
-                                    ? "Ideal & Normal"
-                                    : "Overweight"}) • Usia $tempAge th',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF065F46),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Riwayat Alergi
-                      Text(
-                        'Riwayat Alergi / Pantangan Makan',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: allAllergies.map((allergy) {
-                          final isSelected = tempAllergies.contains(allergy);
-                          return FilterChip(
-                            label: Text(allergy),
-                            selected: isSelected,
-                            selectedColor: const Color(0xFFDCFCE7),
-                            checkmarkColor: const Color(0xFF0F8A50),
-                            labelStyle: GoogleFonts.plusJakartaSans(
-                              fontSize: 11.5,
-                              fontWeight: isSelected
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? const Color(0xFF0F8A50)
-                                  : const Color(0xFF475569),
-                            ),
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? const Color(0xFF0F8A50)
-                                    : const Color(0xFFE2E8F0),
-                              ),
-                            ),
-                            onSelected: (val) {
-                              setSheetState(() {
-                                if (allergy == 'Tidak Ada Alergi') {
-                                  tempAllergies = ['Tidak Ada Alergi'];
-                                } else {
-                                  tempAllergies.remove('Tidak Ada Alergi');
-                                  if (val) {
-                                    tempAllergies.add(allergy);
-                                  } else {
-                                    tempAllergies.remove(allergy);
-                                  }
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Target Pola Makan
-                      Text(
-                        'Target Katering Harian',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: allGoals.map((goal) {
-                          final isSelected = tempDietGoal == goal;
-                          return ChoiceChip(
-                            label: Text(goal),
-                            selected: isSelected,
-                            selectedColor: const Color(0xFF0F8A50),
-                            labelStyle: GoogleFonts.plusJakartaSans(
-                              fontSize: 11.5,
-                              fontWeight: isSelected
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF475569),
-                            ),
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? const Color(0xFF0F8A50)
-                                    : const Color(0xFFE2E8F0),
-                              ),
-                            ),
-                            onSelected: (val) {
-                              if (val) setSheetState(() => tempDietGoal = goal);
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Submit button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            setState(() {
-                              _heightCm = tempHeight;
-                              _weightKg = tempWeight;
-                              _age = tempAge;
-                              _selectedAllergies = tempAllergies;
-                              _dietGoal = tempDietGoal;
-                              _nutritionPercent = tempAllergies.isNotEmpty
-                                  ? 1.0
-                                  : 0.85;
-                            });
-                            Navigator.pop(ctx);
-                            final auth = context.read<AuthController>();
-                            final ok = await auth.updateCustomerProfile(
-                              heightCm: tempHeight,
-                              weightKg: tempWeight,
-                              age: tempAge,
-                              allergies: tempAllergies,
-                              dietaryGoals: tempDietGoal,
-                            );
-                            if (ok) {
-                              _showSuccessToast(
-                                'Data nutrisi & fisik tersimpan di database MySQL!',
-                              );
-                            } else {
-                              _showSuccessToast(
-                                'Data nutrisi disimpan secara lokal',
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F8A50),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Simpan Data Nutrisi',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 
@@ -1355,11 +913,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     _buildAvatarSection(),
                     const SizedBox(height: 16),
 
-                    // 2. Kelengkapan Data Nutrisi Card (Interactive bottom sheet)
-                    _buildNutritionProgressCard(),
-                    const SizedBox(height: 16),
-
-                    // 3. Kontak & Akun Section Card (Interactive fields)
+                    // 2. Kontak & Akun Section Card (Interactive fields)
                     _buildContactSection(),
                     const SizedBox(height: 16),
 
@@ -1598,89 +1152,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               color: Color(0xFF16A34A),
               size: 44,
             ),
-    );
-  }
-
-  Widget _buildNutritionProgressCard() {
-    return GestureDetector(
-      onTap: _showNutritionDataSheet,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.verified_outlined,
-                      color: Color(0xFF0F8A50),
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Kelengkapan Data Nutrisi',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text(
-                      '${(_nutritionPercent * 100).toInt()}% Lengkap',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F8A50),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Color(0xFF0F8A50),
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: _nutritionPercent,
-                backgroundColor: const Color(0xFFE2E8F0),
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  Color(0xFF0F8A50),
-                ),
-                minHeight: 5,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              (_heightCm > 0 && _weightKg > 0)
-                  ? 'Data Fisik: ${_heightCm.toInt()} cm • ${_weightKg.toInt()} kg (BMI: ${_bmiCategory.split(' ').first}) • Tap untuk lengkapi riwayat alergi.'
-                  : 'Data Fisik: Belum diisi • Tap untuk melengkapi data fisik & riwayat alergi.',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                color: const Color(0xFF64748B),
-                height: 1.35,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -2084,7 +1555,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                         Text(
-                          '••••••••••••',
+                          '****',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             color: const Color(0xFF64748B),
@@ -2135,6 +1606,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 : () async {
                     setState(() => _isSaving = true);
                     final auth = context.read<AuthController>();
+                    if (_pendingImageFile != null) {
+                      final uploadedUrl = await auth.uploadProfileImage(
+                        _pendingImageFile!,
+                      );
+                      if (!context.mounted) return;
+                      if (uploadedUrl == null) {
+                        setState(() => _isSaving = false);
+                        _showErrorToast(
+                          'Gagal mengunggah foto profil ke backend server. Periksa koneksi.',
+                        );
+                        return;
+                      }
+                      _avatarUrl = uploadedUrl;
+                      _pendingImageFile = null;
+                    }
                     final ok = await auth.updateCustomerProfile(
                       name: _name,
                       email: _email,
@@ -2148,13 +1634,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     );
                     if (!context.mounted) return;
                     setState(() => _isSaving = false);
-                    CenterFeedbackToast.showSuccess(
-                      context,
-                      message: ok
-                          ? 'Semua informasi pribadi berhasil disimpan ke Database MySQL!'
-                          : 'Perubahan informasi pribadi tersimpan secara lokal.',
-                    );
-                    Navigator.pop(context);
+                    if (ok) {
+                      CenterFeedbackToast.showSuccess(
+                        context,
+                        message:
+                            'Semua informasi pribadi berhasil disimpan ke Database MySQL!',
+                      );
+                      Navigator.pop(context);
+                    } else {
+                      _showErrorToast(
+                        auth.generalError ??
+                            'Gagal menyimpan perubahan ke server. Periksa koneksi.',
+                      );
+                    }
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0F8A50),

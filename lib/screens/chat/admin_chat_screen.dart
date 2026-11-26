@@ -353,8 +353,8 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                         height: 40,
                         decoration: const BoxDecoration(shape: BoxShape.circle),
                         clipBehavior: Clip.antiAlias,
-                        child: Image.network(
-                          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
@@ -595,8 +595,8 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
               height: 32,
               decoration: const BoxDecoration(shape: BoxShape.circle),
               clipBehavior: Clip.antiAlias,
-              child: Image.network(
-                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+              child: Image.asset(
+                'assets/images/app_logo.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: const Color(0xFFDCFCE7),

@@ -57,7 +57,20 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
     return _faqs.where((f) {
       final itemCat = (f['category'] ?? '').toString().toLowerCase();
       final q = (f['question'] ?? '').toString().toLowerCase();
-      return itemCat.contains(cat) || q.contains(cat);
+      if (itemCat.contains(cat) || q.contains(cat)) return true;
+      // Samakan kategori dari Admin Web ('Pengiriman', 'Menu', 'Langganan', 'Pembayaran')
+      switch (_selectedFilterIndex) {
+        case 1: // Pengantaran
+          return itemCat.contains('pengiriman') || itemCat.contains('antar');
+        case 2: // Menu & Diet
+          return itemCat.contains('menu') || itemCat.contains('diet');
+        case 3: // Jadwal & Langganan
+          return itemCat.contains('langganan') || itemCat.contains('jadwal');
+        case 4: // Pembayaran
+          return itemCat.contains('pembayaran') || itemCat.contains('bayar');
+        default:
+          return false;
+      }
     }).toList();
   }
 
