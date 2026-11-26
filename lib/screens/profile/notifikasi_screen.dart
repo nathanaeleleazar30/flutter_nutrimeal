@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
@@ -6,7 +6,6 @@ import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
 import '../../core/widgets/center_feedback_toast.dart';
-import '../order/order_tracking_screen.dart';
 
 class NotifikasiScreen extends StatefulWidget {
   const NotifikasiScreen({super.key});
@@ -33,24 +32,34 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     final customerId = auth.customerId;
     setState(() => _isLoading = true);
 
+    List<Map<String, dynamic>> remoteList = [];
     try {
-      final list = await ApiService.instance.fetchNotifications(
+      remoteList = await ApiService.instance.fetchNotifications(
         customerId ?? '',
       );
-      if (mounted) {
-        setState(() {
-          _notifications = list;
-          _isLoading = false;
-        });
+    } catch (_) {}
+
+    List<Map<String, dynamic>> savedList = [];
+    try {
+      savedList = await NotificationService.instance.getSavedNotifications(
+        customerId,
+      );
+    } catch (_) {}
+    final merged = <Map<String, dynamic>>[];
+    final seenIds = <String>{};
+    for (final item in [...savedList, ...remoteList]) {
+      final key =
+          '${item['id'] ?? ''}_${item['order_id'] ?? ''}_${item['title'] ?? ''}';
+      if (seenIds.add(key)) {
+        merged.add(Map<String, dynamic>.from(item));
       }
-    } catch (_) {
-      if (mounted) {
-        final fallback = NotificationService.instance.inMemoryNotifications;
-        setState(() {
-          _notifications = List.from(fallback);
-          _isLoading = false;
-        });
-      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _notifications = merged;
+        _isLoading = false;
+      });
     }
   }
 
@@ -58,12 +67,92 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       .where((n) => n['is_read'] != true && n['is_read'] != 1)
       .length;
 
+  void _showOrderNotificationDetail(Map<String, dynamic> item) {
+    final title = (item['title'] ?? 'Detail Pesanan').toString();
+    final body = (item['body'] ?? '').toString();
+    final orderId = (item['order_id'] ?? '').toString();
+    final packageName = (item['package_name'] ?? '').toString();
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          title,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (orderId.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'ID Pesanan: $orderId',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F8A50),
+                  ),
+                ),
+              ),
+            if (packageName.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Menu: $packageName',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+            Text(
+              body,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: const Color(0xFF475569),
+                height: 1.45,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F8A50),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Tutup',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _markAllAsRead() async {
     final auth = context.read<AuthController>();
     final customerId = auth.customerId;
     if (customerId != null && customerId.isNotEmpty) {
       await ApiService.instance.markAllNotificationsAsRead(customerId);
     }
+    await NotificationService.instance.markAllSavedRead(customerId);
     setState(() {
       for (final n in _notifications) {
         n['is_read'] = true;
@@ -87,6 +176,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
         id is int ? id : int.tryParse('$id') ?? 0,
         customerId,
       );
+    }
+    if (id != null) {
+      await NotificationService.instance.markSingleSavedRead(customerId, id);
     }
     setState(() {
       item['is_read'] = true;
@@ -316,22 +408,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           if (type == 'subscription' || type == 'langganan') {
             Navigator.pushNamed(context, route ?? '/langganan-saya');
           } else if (type == 'order' || type == 'pesanan') {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OrderTrackingScreen(
-                  orderId: item['order_id']?.toString() ?? '',
-                  packageName:
-                      item['package_name']?.toString() ??
-                      'Paket Menu NutriMeal',
-                  estimatedMinutes: item['estimated_minutes'] is int
-                      ? item['estimated_minutes']
-                      : int.tryParse('${item['estimated_minutes']}') ?? 30,
-                  isSubscription: false,
-                ),
-              ),
-            );
-          } else if (route != null && route.isNotEmpty) {
+            _showOrderNotificationDetail(item);
+          } else if (route != null &&
+              route.isNotEmpty &&
+              route != '/order-tracking') {
             Navigator.pushNamed(context, route);
           }
         },
@@ -486,7 +566,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Estimasi Tiba: ${item['estimated_minutes'] ?? 30} Menit • Lacak Pesanan',
+                              'Pesanan Diproses • Tap untuk detail',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,

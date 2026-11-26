@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
 import '../../controllers/menu_controller.dart';
 import '../beranda_screen.dart';
 import '../galeri_menu_screen.dart';
@@ -24,6 +25,22 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final auth = context.read<AuthController>();
+      final menu = context.read<NutriMealMenuController>();
+      final accountKey = (auth.customerId ?? '').trim().isNotEmpty
+          ? auth.customerId!.trim()
+          : (auth.currentUserEmail ?? '').trim();
+      if (accountKey.isNotEmpty) {
+        menu.syncAccountData(
+          accountKey,
+          fallbackAddress: auth.customerAddress,
+          fallbackName: auth.currentUserName,
+          fallbackPhone: auth.customerPhone,
+        );
+      }
+    });
   }
 
   void _onTabTapped(int index) {

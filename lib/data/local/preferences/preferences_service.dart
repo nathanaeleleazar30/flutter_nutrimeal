@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service untuk mengelola pengaturan dan data aplikasi kecil non-sensitif.
@@ -115,6 +116,74 @@ class PreferencesService {
     await prefs.remove(_keyQrisIdempotencyKey);
     await prefs.remove(_keyQrisIdempotencyFingerprint);
     await prefs.remove(_keyQrisIdempotencyCustomerId);
+  }
+
+  // --- Data Akun Persisten (Alamat & Notifikasi per akun, tidak dihapus saat logout) ---
+  String _accountSuffix(String accountKey) {
+    final normalized = accountKey.trim().toLowerCase();
+    return normalized.isEmpty ? 'guest' : normalized;
+  }
+
+  Future<void> saveAddressesForAccount(
+    String accountKey,
+    List<Map<String, dynamic>> addresses,
+  ) async {
+    final prefs = await _safePrefs;
+    await prefs.setString(
+      'saved_addresses_${_accountSuffix(accountKey)}',
+      jsonEncode(addresses),
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getAddressesForAccount(
+    String accountKey,
+  ) async {
+    final prefs = await _safePrefs;
+    final raw = prefs.getString(
+      'saved_addresses_${_accountSuffix(accountKey)}',
+    );
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<void> saveNotificationsForAccount(
+    String accountKey,
+    List<Map<String, dynamic>> notifications,
+  ) async {
+    final prefs = await _safePrefs;
+    await prefs.setString(
+      'saved_notifications_${_accountSuffix(accountKey)}',
+      jsonEncode(notifications),
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getNotificationsForAccount(
+    String accountKey,
+  ) async {
+    final prefs = await _safePrefs;
+    final raw = prefs.getString(
+      'saved_notifications_${_accountSuffix(accountKey)}',
+    );
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (_) {}
+    return [];
   }
 
   // Clear all non-sensitive preferences

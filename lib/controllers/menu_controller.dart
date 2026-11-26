@@ -1,5 +1,5 @@
-﻿import 'dart:async';
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:material_ui/material_ui.dart';
 import 'package:uuid/uuid.dart';
 import '../core/constants/api_config.dart';
 import '../data/local/preferences/preferences_service.dart';
@@ -179,6 +179,40 @@ class DeliveryAddress {
       isDefault: isDefault ?? this.isDefault,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'label': label,
+    'recipientName': recipientName,
+    'phoneNumber': phoneNumber,
+    'area': area,
+    'fullAddress': fullAddress,
+    'deliveryNote': deliveryNote,
+    'addressType': addressType,
+    'isDefault': isDefault,
+    'latitude': latitude,
+    'longitude': longitude,
+  };
+
+  factory DeliveryAddress.fromJson(Map<String, dynamic> json) {
+    return DeliveryAddress(
+      id: (json['id'] ?? '').toString(),
+      label: (json['label'] ?? 'Alamat').toString(),
+      recipientName: (json['recipientName'] ?? '').toString(),
+      phoneNumber: (json['phoneNumber'] ?? '').toString(),
+      area: (json['area'] ?? '').toString(),
+      fullAddress: (json['fullAddress'] ?? '').toString(),
+      deliveryNote: (json['deliveryNote'] ?? '').toString(),
+      addressType: (json['addressType'] ?? 'Rumah').toString(),
+      isDefault: json['isDefault'] == true,
+      latitude: json['latitude'] is num
+          ? (json['latitude'] as num).toDouble()
+          : double.tryParse('${json['latitude']}'),
+      longitude: json['longitude'] is num
+          ? (json['longitude'] as num).toDouble()
+          : double.tryParse('${json['longitude']}'),
     );
   }
 }
@@ -803,10 +837,10 @@ class NutriMealMenuController extends ChangeNotifier {
     return total > 0 ? total : 0;
   }
 
-  // Delivery Address State & Saved Addresses — setiap akun baru harus kosongan
+  // Delivery Address State & Saved Addresses — dipulihkan per akun dari PreferencesService
   final List<DeliveryAddress> _savedAddresses = [];
-
   DeliveryAddress? _customDeliveryAddress;
+  String? _activeAccountKey;
 
   List<DeliveryAddress> get savedAddresses =>
       List.unmodifiable(_savedAddresses);
@@ -846,9 +880,12 @@ class NutriMealMenuController extends ChangeNotifier {
   }
 
   void resetAllUserData() {
+    // Hanya bersihkan state in-memory untuk sesi logout;
+    // alamat & notifikasi yang sudah disimpan per akun tetap dipertahankan di storage.
     _cartItems.clear();
     _savedAddresses.clear();
     _customDeliveryAddress = null;
+    _activeAccountKey = null;
     _selectedSubscriptionPackage = null;
     _activePendingPayment = null;
     _cachedIdempotencyKey = null;
@@ -862,8 +899,62 @@ class NutriMealMenuController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> syncAccountData(
+    String? accountKey, {
+    String? fallbackAddress,
+    String? fallbackName,
+    String? fallbackPhone,
+  }) async {
+    final normalized = (accountKey ?? '').trim();
+    if (normalized.isEmpty) return;
+    if (_activeAccountKey == normalized && _savedAddresses.isNotEmpty) return;
+    _activeAccountKey = normalized;
+
+    final rawList = await _prefsService.getAddressesForAccount(normalized);
+    _savedAddresses.clear();
+    if (rawList.isNotEmpty) {
+      _savedAddresses.addAll(rawList.map(DeliveryAddress.fromJson));
+      _customDeliveryAddress = _savedAddresses.firstWhere(
+        (a) => a.isDefault,
+        orElse: () => _savedAddresses.first,
+      );
+    } else if (fallbackAddress != null &&
+        fallbackAddress.trim().isNotEmpty &&
+        !fallbackAddress.contains('Belum ada alamat')) {
+      final seeded = DeliveryAddress(
+        id: 'addr_default',
+        label: 'Alamat Utama',
+        recipientName: (fallbackName ?? '').trim().isNotEmpty
+            ? fallbackName!.trim()
+            : 'Pelanggan NutriMeal',
+        phoneNumber: (fallbackPhone ?? '').trim(),
+        area: '',
+        fullAddress: fallbackAddress.trim(),
+        deliveryNote: '',
+        addressType: 'Rumah',
+        isDefault: true,
+      );
+      _savedAddresses.add(seeded);
+      _customDeliveryAddress = seeded;
+      await _persistAddresses();
+    } else {
+      _customDeliveryAddress = null;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _persistAddresses() async {
+    final key = _activeAccountKey;
+    if (key == null || key.isEmpty) return;
+    await _prefsService.saveAddressesForAccount(
+      key,
+      _savedAddresses.map((e) => e.toJson()).toList(),
+    );
+  }
+
   void selectDeliveryAddress(DeliveryAddress address) {
     _customDeliveryAddress = address;
+    _persistAddresses().catchError((_) {});
     notifyListeners();
   }
 
@@ -873,6 +964,7 @@ class NutriMealMenuController extends ChangeNotifier {
     if (index != -1) {
       _savedAddresses[index] = address;
     }
+    _persistAddresses().catchError((_) {});
     notifyListeners();
   }
 
@@ -885,6 +977,7 @@ class NutriMealMenuController extends ChangeNotifier {
       _customDeliveryAddress = address;
     }
     _savedAddresses.add(address);
+    _persistAddresses().catchError((_) {});
     notifyListeners();
   }
 
@@ -902,6 +995,7 @@ class NutriMealMenuController extends ChangeNotifier {
         _customDeliveryAddress = address;
       }
       _savedAddresses[index] = address;
+      _persistAddresses().catchError((_) {});
       notifyListeners();
     }
   }
@@ -913,6 +1007,7 @@ class NutriMealMenuController extends ChangeNotifier {
     } else if (_savedAddresses.isEmpty) {
       _customDeliveryAddress = null;
     }
+    _persistAddresses().catchError((_) {});
     notifyListeners();
   }
 
