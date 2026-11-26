@@ -1601,10 +1601,11 @@ class _CheckoutScreenState extends State<CheckoutScreen>
                                 if (token == null) return;
                                 setState(() => _isCheckingStatus = true);
                                 try {
-                                  final paid = await _paymentService.simulatePay(
-                                    authToken: token,
-                                    paymentId: payment.paymentId,
-                                  );
+                                  final paid = await _paymentService
+                                      .simulatePay(
+                                        authToken: token,
+                                        paymentId: payment.paymentId,
+                                      );
                                   if (!mounted) return;
                                   setState(() => _isCheckingStatus = false);
                                   await _handlePaymentSucceeded(paid);
