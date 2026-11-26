@@ -8,7 +8,6 @@ import 'screens/address_screen.dart';
 import 'screens/admin_chat_screen.dart';
 import 'screens/bantuan_faq_screen.dart';
 import 'screens/checkout_screen.dart';
-import 'screens/device_permissions_debug_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/jadwal_screen.dart';
 import 'screens/keranjang_screen.dart';
@@ -111,8 +110,6 @@ class NutriMealApp extends StatelessWidget {
         '/langganan-saya': (context) => const LanggananSayaScreen(),
         '/langganan-katalog': (context) => const LanggananKatalogScreen(),
         '/preview': (context) => const PreviewShell(),
-        '/device-permissions': (context) =>
-            const DevicePermissionsDebugScreen(),
       },
     );
   }

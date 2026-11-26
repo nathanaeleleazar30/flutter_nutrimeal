@@ -10,7 +10,7 @@ class ApiConfig {
 
   /// IP Wi-Fi komputer host saat ini — sesuaikan dengan IP lokal laptop/PC
   /// Ganti ini dengan IP Wi-Fi laptop/PC Anda jika menggunakan HP fisik
-  static const String hostLanIp = '192.168.20.225';
+  static const String hostLanIp = '172.16.3.77';
 
   /// URL Produksi Backend (bisa disetel via build flag: --dart-define=API_URL=https://api.domain.com)
   static const String productionApiUrl = String.fromEnvironment('API_URL');
